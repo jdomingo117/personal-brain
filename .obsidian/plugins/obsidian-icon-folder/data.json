@@ -6,11 +6,11 @@
     "emojiStyle": "native",
     "iconColor": null,
     "recentlyUsedIcons": [
+      "LiFolderRoot",
       "LiNotebookPen",
       "LiBug",
       "LiBadge",
-      "LiBrainCircuit",
-      "LiFileCodeCorner"
+      "LiBrainCircuit"
     ],
     "recentlyUsedIconsSize": 5,
     "rules": [],
@@ -39,8 +39,8 @@
     "iconColor": "#97e91c"
   },
   "01_Projects": {
-    "iconName": "LiFolderCode",
-    "iconColor": "#b61fe0"
+    "iconName": "LiFolderRoot",
+    "iconColor": "#ea3e3e"
   },
   "03_Knowledge_Base": {
     "iconName": "LiBrainCircuit",
