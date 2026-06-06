@@ -43,6 +43,8 @@ tags:
 ## When you open the app, what is the very first piece of information you want to see on your dashboard?
 
 - Assuming the user has logged in already, they should see things like their net worth over time, their expense and spending by category information. I could be wrong with these, but generally the information that they should gather from opening the app is how is my financial health/trajectory looking? What is my current spending like? It should give them an overall picture. It should i guess also give information on what accounts are linked, and then maybe a snapshot of their 10 or so transactions. 
+- Some other UI/UX considerations is that i don't want the app to feel like 'AI-slop' and look like other vibe-coded apps. I'd like to have cool features like structural motion on the site if possible.
+- A cool idea would be for instead of the app to have standard tabs which the user clicks at the top nav, it would have a scrolling website (the entire app would feel like one webpage, with instant navigation and navigation animations). 
 
 ### Are there any existing finance apps, websites, or spreadsheets you’ve used that you liked or disliked? What stood out about them?
 
@@ -54,4 +56,4 @@ tags:
 ## Since you'll be building this with AI assistance, what is your preferred tech stack if you have one?
 
 - I don't really have a preference, but with the design aspirations i guess React and Node.js?
-- I guess 
+- I have recently found out about google stitch and am willing to make use of this new product.
