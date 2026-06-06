@@ -57,3 +57,12 @@ tags:
 
 - I don't really have a preference, but with the design aspirations i guess React and Node.js?
 - I have recently found out about google stitch and am willing to make use of this new product.
+- I have Antigravity with Gemini pro and flash, and claude pro as well to help me build the product.
+- At this stage im not sure how to implement google stitch with the current stack.
+- There are also a few rules i want to implement. I want the app to be efficient, and therefore.
+- As for modern practices, i previously built the alpha version using next.js with React, my database was prism orm, authentication was nextauth.js (JWT strategy), styling was tailwind css, charts were recharts, and ai-integration was gemini api. 
+- I am open to use more improved or better tooling upon recommendation. 
+
+### Is this strictly a desktop web app, or is optimized mobile viewing a priority for quick logging?
+
+- At the moment i think its desktop web app. I'm not sure at this stage how to implement mobile viewing, and how helpful it would be, but im sure it can be done.
