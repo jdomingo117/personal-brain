@@ -1,1 +1,7 @@
-{}
+{
+  "cssTheme": "Obsidianite",
+  "theme": "obsidian",
+  "enabledCssSnippets": [
+    "obsidianite-pdf"
+  ]
+}

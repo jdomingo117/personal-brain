@@ -1,0 +1,53 @@
+{
+  "settings": {
+    "migrated": 6,
+    "iconPacksPath": ".obsidian/icons",
+    "fontSize": 16,
+    "emojiStyle": "native",
+    "iconColor": null,
+    "recentlyUsedIcons": [
+      "LiNotebookPen",
+      "LiBug",
+      "LiBadge",
+      "LiBrainCircuit",
+      "LiFileCodeCorner"
+    ],
+    "recentlyUsedIconsSize": 5,
+    "rules": [],
+    "extraMargin": {
+      "top": 0,
+      "right": 4,
+      "bottom": 0,
+      "left": 0
+    },
+    "iconInTabsEnabled": false,
+    "iconInTitleEnabled": false,
+    "iconInTitlePosition": "above",
+    "iconInFrontmatterEnabled": false,
+    "iconInFrontmatterFieldName": "icon",
+    "iconColorInFrontmatterFieldName": "iconColor",
+    "iconsBackgroundCheckEnabled": false,
+    "iconsInNotesEnabled": true,
+    "iconsInLinksEnabled": true,
+    "iconIdentifier": ":",
+    "lucideIconPackType": "native",
+    "debugMode": false,
+    "useInternalPlugins": false
+  },
+  "_Templates": {
+    "iconName": "LiLayoutTemplate",
+    "iconColor": "#97e91c"
+  },
+  "01_Projects": {
+    "iconName": "LiFolderCode",
+    "iconColor": "#b61fe0"
+  },
+  "03_Knowledge_Base": {
+    "iconName": "LiBrainCircuit",
+    "iconColor": "#1996f5"
+  },
+  "04_Capabilities": {
+    "iconName": "LiBadge",
+    "iconColor": "#e27e3c"
+  }
+}

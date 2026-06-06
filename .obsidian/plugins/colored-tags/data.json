@@ -1,0 +1,29 @@
+{
+  "palette": {
+    "seed": 0,
+    "selected": "adaptive-soft",
+    "custom": "e12729-f37324-f8cc1b-72b043-007f4e"
+  },
+  "mixColors": true,
+  "transition": true,
+  "accessibility": {
+    "highTextContrast": false
+  },
+  "knownTags": {
+    "annual-planning": 9,
+    "bug-fix": 12,
+    "email": 13,
+    "fmh": 8,
+    "main": 1,
+    "meeting": 3,
+    "projects": 2,
+    "annual-planning/coursework": 1,
+    "annual-planning/hdr": 2,
+    "email/bug-fix": 1,
+    "main/dashboard": 1,
+    "projects/fmh-planning-space": 2,
+    "projects/semester-dashboard": 1
+  },
+  "tagColors": {},
+  "_version": 4
+}
