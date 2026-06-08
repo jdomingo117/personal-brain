@@ -60,7 +60,7 @@ Agents writing code for this repository MUST obey these absolute technical laws:
 
 ### Law 4: Secure Credential Storage
 
-* Third-party API tokens (like Bank Developer Keys) must be symmetrically encrypted via Node.js native `crypto` (`AES-256-GCM`) before being saved to the database. The encryption key must rely on a persistent local filesystem lock-key (`data/.prism_key`) generated on first boot to survive session rotations.
+* Third-party API tokens (like Bank Developer Keys) must be symmetrically encrypted via Node.js native `crypto` (`AES-256-GCM`) before Íbeing saved to the database. The encryption key must rely on a persistent local filesystem lock-key (`data/.prism_key`) generated on first boot to survive session rotations.
 
 ---
 ## 3. Tech Stack
