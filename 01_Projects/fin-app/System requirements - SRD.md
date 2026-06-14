@@ -166,3 +166,128 @@ Agents writing or refactoring code within this repository MUST obey these absolu
 > 
 > The frontend component architecture must strictly match layout constraints defined in `.stitch/DESIGN.md`. Any automated code generation or UI additions must reference the Google Stitch design token dictionary to preserve the Nothing OS typography, monochrome scaling, frosted glass materials, and restricted accent rules.
 
+---
+
+## 6. Detailed Page & Component Specifications
+
+This section defines the structural architecture, widgets, filters, and fields required for each user-facing viewport.
+
+### A. Main Dashboard Page
+* **Welcome Message Header:** Displays a dynamic welcome greeting paired with the current system date.
+* **Hero Performance Stats (3 High-Contrast Monospace Cards):**
+  * *Total Net Worth:* Aggregated sum of all accounts (liquid, credit, investments, managed funds) minus liabilities.
+  * *30-Day Income Flow:* Total net inflows recorded over the trailing 30 days.
+  * *30-Day Expense Flow:* Total net outflows recorded over the trailing 30 days.
+* **Asset Allocation Widget:**
+  * *Donut Chart:* Monochromatic visual tracking proportion of asset classes/categories relative to total net worth.
+  * *Category Progress Bars:* Vertical or horizontal stack tracking proportion of total, annotated with the absolute monetary value and the percentage of total net worth.
+* **Net Worth Over Time Chart:**
+  * *Time-Series Line Graph:* Tracks total net worth trajectory.
+  * *Timeline Selector Switch:* 30-Day, 3-Month, 6-Month, and 1-Year bounds.
+* **Connected Accounts Directory:**
+  * *Tabular Ledger:* Lists all connected financial accounts showing name, type (e.g., liquid, credit, investment), connection/ingestion type (e.g., API Sync, CSV import), and current valuation.
+* **Recent Transactions Feed:**
+  * *Tabular Feed:* Chronological transaction stream, paginated or capped to load 10 items at a time.
+
+### B. Accounts Detail Section
+*Focuses on granular details for a selected account, equipped with dynamic account context switching.*
+* **Account Selector Component:** Dropdown/list interface to switch active account context.
+* **Account Header:** Displays active account name, type, and primary ingestion method.
+* **Hero Cards (4 Monospace Performance Cards):**
+  * *Account Balance:* Current valuation of the selected account.
+  * *Income (Period):* Total inflows within the selected filter period.
+  * *Expenses (Period):* Total outflows within the selected filter period.
+  * *Net Cash Flow (Period):* Period Income minus Period Expenses.
+* **Chronological Net Balance Trend:** Line graph tracking account balance trajectory over the selected period.
+* **Expense Category Donut Chart:** Visual breakdown of outbound flow per category, presenting absolute category amounts and percentage of the selected account's total outbound flow.
+* **Multi-Dimensional Filter Bar:**
+  * *Quick Timeline Selectors:* All Time, This Week, This Month, Last Month, Last 3 Months, YTD, AU Financial Year to Date.
+  * *Keyword Search:* Filters transaction descriptions/merchants.
+  * *Transaction Type:* Filter by debit/credit (inflow/outflow).
+  * *Category Filter:* Multi-select category taxonomy.
+  * *Date Range Picker:* Custom start/end bounds.
+* **Account Transactions Ledger:**
+  * *Tabular Feed (10 items per page):* Displays date, description, category, and amount.
+  * *Inline Actions:* Modify (re-categorize or adjust description) or Remove (soft-delete/exclude transaction).
+
+### C. Income & Strategy Section
+*Equipped with a tab switcher to transition between the Income Analyser and Strategic Projections views.*
+
+#### Tab 1: Income Analyser
+* **Header:** Title and description.
+* **Time Range Selector:** Quick timeline switches + custom date range inputs.
+* **Account Multi-Select Filter:** Checkbox dropdown to select/deselect specific accounts in calculations.
+* **Hero Analytics Cards (4 Cards):**
+  * *Inflow (Period):* Sum of all inflows.
+  * *Prorated Monthly Average:* Calculated monthly run rate of inflows over the selected period.
+  * *Peak Deposit Item:* Single largest deposit transaction details (date, merchant/source, value).
+  * *Inflow/Outflow Coverage Ratio:* Ratio of total inflows to total outflows for the period.
+* **Net Cash Flow Pacing:** Line graph tracking income pacing vs. average baseline.
+* **Income Distribution Chart:** Monochromatic breakdown of income sources and parent categories.
+
+#### Tab 2: Strategic Projections
+* **AI Advisory Hub / Briefing:** Minimalist bulletin box displaying 3 tactical financial insights in heading and paragraph format (generated asynchronously).
+* **Strategic Financial Goals Section:**
+  * *Goal Tracking Card:* Shows goal name header, target milestone value, progress bar, and forecasted horizon date (along with a "Days Until Reached" counter calculated via AI).
+* **Wealth Trajectory Plot:**
+  * *Chart:* Combines actual historical net worth data with a projected future trajectory line and an explicit horizontal target goal marker.
+
+### D. Expenses Section
+*Equipped with a tab switcher to transition between Expense Analytics and the Recurring Hub views.*
+
+#### Tab 1: Analytics
+* **Header:** Section title, date bounds.
+* **Account Filter:** Select/deselect specific accounts in calculations.
+* **Query Parameter Filter Bar:**
+  * *Search:* Keyword input for descriptions/merchants.
+  * *Category & Sub-Category:* Hierarchical taxonomy selectors.
+  * *Date Range:* Custom start/end dates.
+  * *Amount Range:* Minimum and maximum value filters.
+  * *Quick Timeline Selectors:* This Week, This Month, Last Month, Last 3 Months, etc.
+* **Hero Cards (4 Cards):**
+  * *Outflow Period Total:* Sum of all expenses.
+  * *Daily Aggregate Average:* Average daily expense value over the period.
+  * *Heavyweight Category:* The category with the highest total expense.
+  * *Top Merchant/Vendor:* The vendor associated with the highest total expenditure.
+* **Net Expenses Chart:** Line graph of chronological cumulative expenses for the selected period.
+* **Daily Spikes Bar Chart:** Identifies days of unusual high-volume spending.
+* **Expense Hierarchy Flow Chart:** Monochromatic flow layout representing hierarchy from left to right: `Total Outflow` > `Category` > `Sub-Category`.
+* **Category Volatility & Pacing Component:**
+  * *Progress Indicators:* Progress bars comparing current period category spend against previous period baseline.
+  * *Metadata indicators:* Tracks absolute variance and percentage saved/exceeded.
+* **Ranked Top 10 Merchants List:** Clean high-density list of top 10 merchants by cost.
+* **Ledger Expenses:** Capped tabular display of expense transactions (10 loaded at a time).
+
+#### Tab 2: Recurring Hub
+* **Header:** Section title, date bounds.
+* **Hero Cards (4 Cards):**
+  * *Monthly Commitment:* Estimated monthly sum of all recurring obligations.
+  * *Annualized Cash Burn:* Projected annual recurring cost run rate (commitments multiplied out to 12-month bounds).
+  * *Fixed Outflow Pressure:* Ratio of recurring expenses against total 30-day expenditures.
+  * *Active Commitments:* Total count of active subscription/recurring structures.
+* **Recurring Commitments Directory:**
+  * *Sectional Table:* Organized by category, with sub-totals and totals.
+  * *Row Metadata:* Cadence (frequency), fixed vs. variable indicator, last charged date, expected next date, and source account link.
+* **30-Day Billing Calendar:**
+  * *Matrix Calendar Grid:* A 7-column grid highlighting calendar days where fixed expenses occur, with monochromatic heat intensity weighted by transaction amount.
+* **Smart Insights Bulletins:** Monochromatic insights box showing AI-analyzed patterns in recurring subscriptions.
+
+### E. Ingestion Portal
+* **Header:** Title, instructions, system date.
+* **"Import New Export" Widget:**
+  * *Account Context:* Select target account database to update.
+  * *Parser Ingestion Engine Selector:* Choose corresponding static profile/parser template.
+* **Drag-and-Drop Area:** Interactivity zone for statement CSV upload.
+* **Action Button:** "Analyze staging buffer" to execute schema parsing and direct transaction duplicates resolution.
+* **API Integration Card:** "Automate with bank API" CTA button to link/refresh API tokens.
+* **Same-Day Osko Linker:**
+  * *Reconciliation Panel:* Identifies and pairs matching counter-transfers (e.g., transfers between internal accounts on the same day) in the uploaded statements, presenting them to the user to accept/approve pairing with a single action.
+
+### F. Hidden Admin Portal
+*Accessible only to users carrying the authenticated role of ADMIN.*
+* **Platform Metrics:** Total platform users, total active API connections, master/tenant database files sizes.
+* **User Directory:** Interactive table of all registered platform users, email addresses, and their assigned roles (e.g., `ADMIN`, `USER`).
+
+### G. Settings & Profile Section
+* **Settings Panel:** Profile info, configuration settings, password rotation, theme preferences, and master account options.
+

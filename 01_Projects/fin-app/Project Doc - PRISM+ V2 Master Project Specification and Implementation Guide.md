@@ -84,11 +84,11 @@ This project must be built in sequential phases. Do not skip ahead. Create a new
 
 ### Phase 1: Foundation & Multi-Tenant Authentication
 
-**Goal:** Setup the Next.js app, configure Prisma, build the Master vs. Tenant SQLite logic, the LRU Cache, and NextAuth login.
+**Goal:** Setup the Next.js app, configure Prisma, build the Master vs. Tenant SQLite logic, the LRU Cache, and NextAuth login. Ensure the master database user schema supports a `role` field to allow role-based authorization (e.g. `ADMIN` or `USER`).
 
 * **Agent Prompt to copy/paste:**
 
-> "We are starting Phase 1 of PRISM+ V2. Read the PRISM_V2_SPEC.md. I need you to scaffold the multi-tenant database infrastructure. Create the Prisma schema for `user_master.db` (User model) and a separate schema for the tenant `template.db`. Build the `src/lib/db.ts` file featuring a `PrismaLRUCache` to manage connections. Finally, set up NextAuth with a Credentials provider that hashes passwords and provisions a physical SQLite file for new users."
+> "We are starting Phase 1 of PRISM+ V2. Read the PRISM_V2_SPEC.md. I need you to scaffold the multi-tenant database infrastructure. Create the Prisma schema for `user_master.db` (User model with an email, hashed password, and role field defaulting to 'USER') and a separate schema for the tenant `template.db`. Build the `src/lib/db.ts` file featuring a `PrismaLRUCache` to manage connections. Finally, set up NextAuth with a Credentials provider that hashes passwords, includes user roles in the JWT/session objects, and provisions a physical SQLite file for new users."
 
   
 ### Phase 2: Nothing OS UI Shell & Layout
@@ -103,31 +103,31 @@ This project must be built in sequential phases. Do not skip ahead. Create a new
 
 ### Phase 3: Accounts & Settings Hub
 
-**Goal:** Build the tenant database schema for Accounts, the AES-256-GCM encryption utility, and the frontend CRUD pages.
+**Goal:** Build the tenant database schema for Accounts (with ingestion/connection type indicators), the AES-256-GCM encryption utility, the frontend CRUD pages for accounts, the Settings & Profile configuration page, and the hidden Admin Portal.
 
 * **Agent Prompt to copy/paste:**
 
-> "We are on Phase 3 of PRISM+ V2. Extend the tenant Prisma schema to include an `Account` model (id, name, type, balance, encryptedToken, externalId). Build `src/lib/crypto.ts` utilizing `AES-256-GCM` with a filesystem lock-key (`data/.prism_key`). Build the `/accounts` page allowing users to create accounts and input Bank API tokens securely."
+> "We are on Phase 3 of PRISM+ V2. Extend the tenant Prisma schema to include an `Account` model (id, name, type, balance, ingestionType [API/CSV], encryptedToken, externalId). Build `src/lib/crypto.ts` utilizing `AES-256-GCM` with a filesystem lock-key (`data/.prism_key`). Build the `/accounts` view allowing users to create/manage accounts, select connection/ingestion types, and input Bank API tokens securely. Build the `/settings` page for user profiles and config preferences. Finally, build a hidden `/admin` portal (accessible only to users with the role 'ADMIN') that displays system metrics (total users, active connections, total master/tenant database size) and a directory of users with their email addresses and role controls."
 
   
 
 ### Phase 4: The Ingestion Engine (CSV & API Crawler)
 
-**Goal:** Build the staging buffer, generic CSV parser, Up Bank API fetcher (with Dual-Mode syncing), and linear deduplication.
+**Goal:** Build the staging buffer, generic CSV parser, Up Bank API fetcher (with Dual-Mode syncing), linear deduplication, the Ingestion Portal frontend, and the Same-Day Osko Linker transfer matching panel.
 
 * **Agent Prompt to copy/paste:**
 
-> "We are on Phase 4 of PRISM+ V2. Add `Transaction` and `StagedTransaction` models to the tenant schema. Build the ingestion staging resolver enforcing Law 3 (O(N) Map deduplication). Create a generic CSV parser that uses regex to auto-detect columns. Create an Up Bank API client that encrypts/decrypts tokens and supports a 'Delta' mode (90-day limit) and a 'Deep' mode (3-year limit) for pagination."
+> "We are on Phase 4 of PRISM+ V2. Add `Transaction` and `StagedTransaction` models to the tenant schema. Build the `/ingestion` portal containing: an 'Import new export' widget with target account select and parser engine profile selector; a drag-and-drop zone for statement CSV files; a CTA to automate using bank APIs; and an action button to analyze the staging buffer. Implement Law 3 (O(N) Map deduplication) in the staging resolver. Build the 'Same-Day Osko Linker' reconciliation UI and backend helper that scans incoming staged transactions, automatically flags/pairs matching offset transfers (internal accounts transfer on the same day with matching absolute amounts), and allows the user to accept/reconcile the pairs in one click. Support both automated API sync and manual CSV parser configurations."
 
   
 
 ### Phase 5: Transactions & AI Categorization
 
-**Goal:** Build the transaction review ledger and integrate the Gemini API for batch categorization.
+**Goal:** Build the transaction review ledger with filters, inline actions (modify/remove), and integrate the Gemini API for batch categorization.
 
 * **Agent Prompt to copy/paste:**
 
-> "We are on Phase 5 of PRISM+ V2. Build the `/transactions` UI page using a flat, high-density data table (monospaced numbers). Build the backend API route that queries transactions. Then, integrate `@google/generative-ai` to accept a batch of uncategorized transaction descriptions and return standardized categories in a single LLM prompt execution."
+> "We are on Phase 5 of PRISM+ V2. Build the `/transactions` UI page using a flat, high-density data table (monospaced numbers) paginated 10 at a time. The table must list: Date, Description, Category, Amount, and Actions (Modify/Remove). Implement action endpoints: Modify (updates description or re-categorizes a transaction) and Remove (soft-deletes/excludes a transaction). Integrate `@google/generative-ai` to accept a batch of uncategorized transactions and return standardized taxonomy category tags in a single prompt execution."
 
   
 
@@ -143,11 +143,20 @@ This project must be built in sequential phases. Do not skip ahead. Create a new
 
 ### Phase 7: Dashboards & Strategic Trajectory ("The Walk")
 
-**Goal:** Build the visual analytics, cash flow velocity math, and Recharts components.
+**Goal:** Build the visual analytics, cash flow velocity math, Recharts components, and the full multi-section dashboard layout. This includes the Main Dashboard, the Account Detail section, the Income & Strategy tabbed views, and the Expense Analytics & Recurring Hub.
 
 * **Agent Prompt to copy/paste:**
 
-> "We are on Phase 7 of PRISM+ V2 (Final). Build the root `/` dashboard. Implement a backend route that calculates a 30-day liquidity pulse and a 12-month net worth reconstruction. Build 'The Walk' trajectory logic: calculate the past 90-day cash flow velocity and project it forward to a target goal. Use Recharts with stark, monochromatic lines and dot-matrix inspired grids."
+> "We are on Phase 7 of PRISM+ V2 (Final). Build the primary analytical sections:
+1. **Main Dashboard (`/`):** Dynamic welcome header with current date; 3 Hero cards (Total Net Worth, 30-day Inflow, 30-day Outflow); Asset Allocation (donut chart + category progress bars showing value and percentage); Net Worth line graph (with 30-day, 3-month, 6-month, 1-year filters); Connected Accounts directory table (name, type, ingestion type, value); and Recent Transactions feed (limit 10).
+2. **Account Detail view:** Context selector dropdown, summary header, 4 Hero cards (Balance, Inflow, Outflow, Net Cash Flow), chronological net balance trend line graph, category distribution donut chart, period filter bar (quick timeline switches, search, type, category, date pickers), and transaction ledger with modify/remove actions.
+3. **Income & Strategy section:** Tab switcher between:
+   - *Income Analyser:* Time filters, accounts checklist filter, 4 Hero cards (Inflow, Prorated average, Peak deposit, Coverage ratio), net income pacing line graph, and income source breakdown chart.
+   - *Strategic Projections:* AI advisory hub card showing 3 tactical insights; Goals tracker card showing milestones, progress bar, target date, and AI-predicted horizon/day counter; and Projections Plot combining historical actuals, future project trajectory, and target line.
+4. **Expenses section:** Tab switcher between:
+   - *Analytics:* Accounts checklist, query filters (keyword search, category, sub-category, date range, min/max amount, quick selectors), 4 Hero cards (Total Outflow, Daily average, Heavyweight category, Top merchant), cumulative expenses line graph, daily spikes bar chart, hierarchical flow chart (Total > Category > Sub-category), category volatility & pacing indicators comparing spend vs. prior period with % saved/progress bars, top 10 merchants list, and expenses ledger.
+   - *Recurring Hub:* Commitments summary (Monthly commitment, Annualized cash burn, Fixed pressure ratio, Active commitments count); recurring obligations table organized by category with totals/sub-totals, cadence, fixed/variable flag, last charged/next expected dates; 30-day matrix billing calendar highlighting fixed expense days weighted by amount; and AI smart-insights box.
+Utilize Recharts styled minimally to match the monochromatic Nothing OS aesthetic."
 
   
 
