@@ -1,3 +1,20 @@
+---
+aliases:
+  - Migration Plan
+tags:
+  - halcyon
+  - projects/fin-app
+  - finance
+type: plan
+status: historical
+project: Halcyon
+up: "[[CONTEXT]]"
+related:
+  - "[[CONTEXT]]"
+  - "[[Halcyon_DesignSystem]]"
+  - "[[app/README|App README]]"
+---
+
 # Halcyon — Migration Plan
 
 **From** zero-build vanilla HTML/CSS/JS

@@ -1,3 +1,23 @@
+---
+aliases:
+  - Halcyon Context
+  - Handoff
+  - Start Here
+tags:
+  - halcyon
+  - projects/fin-app
+  - finance
+type: handoff
+status: canonical
+project: Halcyon
+related:
+  - "[[MVP_SCOPE]]"
+  - "[[Halcyon_DesignSystem]]"
+  - "[[System requirements - SRD]]"
+  - "[[MIGRATION_PLAN]]"
+  - "[[app/README|App README]]"
+---
+
 # Halcyon — Context & Handoff
 
 > **Start here.** This file orients a new developer or AI session on what Halcyon is, the state
@@ -18,7 +38,8 @@ phase is making it real (see §7–8).
 
 ## 2. Canonical decisions (locked — do not relitigate)
 
-These were decided deliberately; the SRD predates them and is partly superseded:
+These were decided deliberately. The SRD originally predated them; it has since been **reconciled
+to these decisions** (the deltas below are now reflected in the SRD itself):
 
 - **Halcyon (this app) is the canonical product.** Keep **Vite + React SPA**, the **light-editorial
   design language + mint `#11b596` + dark mode**, and the **view-router** navigation.
@@ -28,8 +49,8 @@ These were decided deliberately; the SRD predates them and is partly superseded:
 - **The SRD's 4-Pillar Security Matrix and Technical Laws are retained**, re-homed to Supabase
   (auth → Supabase Auth, RLS → Postgres policies, validation → Zod in Edge Functions, rate
   limiting → Upstash/edge). The Nothing-OS aesthetic, Google Stitch dependency, `#FF007F` accent,
-  and "infinite canvas" navigation are **dropped** in favour of Halcyon. See
-  [MVP_SCOPE.md](MVP_SCOPE.md) §6 for the full reconciliation backlog.
+  and "infinite canvas" navigation are **dropped** in favour of Halcyon. This reconciliation has
+  been applied to the SRD; [MVP_SCOPE.md](MVP_SCOPE.md) §6 records the deltas.
 
 ## 3. Documents (read in this order)
 
@@ -38,7 +59,7 @@ These were decided deliberately; the SRD predates them and is partly superseded:
 3. **[Halcyon_DesignSystem.md](Halcyon_DesignSystem.md)** — the definitive design system (tokens,
    components, motion, dark mode, the two-library animation split, file architecture).
 4. **[System requirements - SRD.md](System%20requirements%20-%20SRD.md)** — the full product vision +
-   security model. Strong on vision/security/AU-domain; **partly superseded** by §2 above, and
+   security model. Strong on vision/security/AU-domain; **reconciled** to §2 above, but still
    **missing a data model + API contract** (the key gap).
 5. **[MIGRATION_PLAN.md](MIGRATION_PLAN.md)** — historical (the vanilla→React port, already done).
 

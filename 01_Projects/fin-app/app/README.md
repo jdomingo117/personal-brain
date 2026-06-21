@@ -1,3 +1,21 @@
+---
+aliases:
+  - Halcyon App
+  - App README
+tags:
+  - halcyon
+  - projects/fin-app
+  - finance
+type: readme
+status: current
+project: Halcyon
+up: "[[CONTEXT]]"
+related:
+  - "[[MIGRATION_PLAN]]"
+  - "[[Halcyon_DesignSystem]]"
+  - "[[CONTEXT]]"
+---
+
 # Halcyon — App (React re-platform)
 
 The production re-platform of Halcyon onto **Vite 6 · React 18 · TypeScript · Tailwind v4

@@ -1,9 +1,27 @@
+---
+aliases:
+  - MVP Scope
+  - Plan of Record
+tags:
+  - halcyon
+  - projects/fin-app
+  - finance
+type: plan
+status: current
+project: Halcyon
+up: "[[CONTEXT]]"
+related:
+  - "[[System requirements - SRD]]"
+  - "[[Halcyon_DesignSystem]]"
+  - "[[MIGRATION_PLAN]]"
+---
+
 # Halcyon — MVP Scope Cut
 
 > Companion to `System requirements - SRD.md`. The SRD defines the full product vision;
 > **this document defines the ruthless thin-slice MVP** and what is explicitly deferred.
-> Where the two disagree, the canonical decisions below win (the SRD still needs a
-> reconciliation pass — see §6).
+> Where the two disagree, the canonical decisions below win. (The SRD has since been
+> reconciled to these decisions — see §6 for the applied deltas.)
 
 ## 1. Canonical decisions (locked)
 
@@ -79,7 +97,10 @@ is deferred.
 - **anime.js chart motion** — the SRD's "staggered SVG timeline animations" requirement is done.
 - Dark mode, motion toggle, reduced-motion, the design-system tokens & components.
 
-## 6. SRD reconciliation backlog (Halcyon-canonical deltas — separate pass)
+## 6. SRD reconciliation — applied ✅ (Halcyon-canonical deltas)
+
+These deltas have been **applied to `System requirements - SRD.md`** (it now reads as the canonical
+build); kept here as the record of what changed:
 
 - Stack: Next.js 15 → **Vite + React SPA**; backend → **Supabase-direct** (Auth/RLS/Edge Fns).
 - Aesthetic: Nothing OS monochrome + `#FF007F` → **Halcyon light-editorial + mint + dark mode**.

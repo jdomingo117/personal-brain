@@ -1,3 +1,25 @@
+---
+aliases:
+  - Halcyon
+  - Project README
+  - fin-app README
+tags:
+  - halcyon
+  - projects/fin-app
+  - finance
+type: readme
+status: current
+project: Halcyon
+up: "[[CONTEXT]]"
+related:
+  - "[[CONTEXT]]"
+  - "[[MVP_SCOPE]]"
+  - "[[Halcyon_DesignSystem]]"
+  - "[[System requirements - SRD]]"
+  - "[[MIGRATION_PLAN]]"
+  - "[[app/README|App README]]"
+---
+
 # Halcyon
 
 A personal finance webapp — light, editorial interface (frosted glass, mint accent, cinematic
@@ -24,7 +46,7 @@ npm run build      # → app/dist/
 CONTEXT.md                    ← read first (handoff / orientation)
 MVP_SCOPE.md                  the thin-slice MVP + deferred phases (plan of record)
 Halcyon_DesignSystem.md       definitive design system
-System requirements - SRD.md  full product vision + security model (partly superseded — see CONTEXT §2)
+System requirements - SRD.md  full product vision + security model (reconciled to the build; missing a data model + API contract)
 MIGRATION_PLAN.md             historical (vanilla → React port)
 app/                          the Vite + React + TS app (design source of truth: app/src/index.css)
 ```

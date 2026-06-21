@@ -1,3 +1,23 @@
+---
+aliases:
+  - Halcyon Design System
+  - Design System
+tags:
+  - halcyon
+  - projects/fin-app
+  - finance
+  - design-system
+type: design-system
+status: current
+project: Halcyon
+up: "[[CONTEXT]]"
+related:
+  - "[[System requirements - SRD]]"
+  - "[[MVP_SCOPE]]"
+  - "[[MIGRATION_PLAN]]"
+  - "[[app/README|App README]]"
+---
+
 # Halcyon — Design System
 
 **A light, editorial design language for premium personal finance.**
