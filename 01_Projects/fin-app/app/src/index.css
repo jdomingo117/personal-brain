@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Halcyon design tokens → Tailwind v4 (CSS-first @theme config).
+   The vanilla prototype's design system, encoded once.
+   ============================================================ */
+@theme {
+  --font-display: 'Archivo', sans-serif;
+  --font-body: 'Hanken Grotesk', -apple-system, sans-serif;
+
+  /* the single surface + ink scale */
+  --color-surface: #eceef1;
+  --color-ink: #15181c;
+  --color-ink2: #3b424a;
+  --color-muted: #868d95;
+  --color-faint: #c0c5cb;
+
+  /* accent (mint) */
+  --color-accent: #11b596;
+  --color-accent-ink: #0a7d67;
+
+  /* semantic */
+  --color-pos: #149a66;
+  --color-warn: #cf8a2b;
+  --color-neg: #d44a44;
+
+  /* chart palette */
+  --color-blue: #3b6fd4;
+  --color-gold: #c2a24e;
+
+  /* cinematic dark bars */
+  --color-bar: #0b0d11;
+
+  --shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 10px 30px rgba(28, 38, 58, 0.10);
+  --ease-halcyon: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* raw vars for hairlines / glass / controls (non-color-utility uses) */
+:root {
+  --hair: rgba(20, 24, 28, 0.12);
+  --hair-soft: rgba(20, 24, 28, 0.07);
+  --glass-fill: rgba(255, 255, 255, 0.34);
+  --glass-bd: rgba(255, 255, 255, 0.6);
+  --accent-wash: rgba(17, 181, 150, 0.10);
+  --track: rgba(20, 24, 28, 0.08);
+  --toast-bg: rgba(255, 255, 255, 0.92);
+  --input-bg: rgba(255, 255, 255, 0.6);
+  --switch-off: rgba(20, 24, 28, 0.15);
+}
+
+/* ============================================================
+   DARK MODE — "Slate + luminous background".
+   Most of the app flips via these token swaps; the scene + a few
+   hardcoded spots are handled in their components.
+   ============================================================ */
+.dark {
+  --color-surface: #181c22;   /* warm charcoal workspace */
+  --color-ink: #eef1f4;
+  --color-ink2: #b2bac4;
+  --color-muted: #7c8690;
+  --color-faint: #4a525c;
+  --color-bar: #0b0e12;       /* darker than the workspace → frame still reads */
+  --color-accent: #16c7a4;    /* luminous mint */
+  --color-accent-ink: #3ad9bd;
+  --color-pos: #36cf93;
+  --color-warn: #d9a23f;
+  --color-neg: #e0635c;
+
+  --hair: rgba(255, 255, 255, 0.12);
+  --hair-soft: rgba(255, 255, 255, 0.07);
+  --glass-fill: rgba(255, 255, 255, 0.05);
+  --glass-bd: rgba(255, 255, 255, 0.09);
+  --accent-wash: rgba(22, 199, 164, 0.16);
+  --track: rgba(255, 255, 255, 0.09);
+  --toast-bg: rgba(28, 33, 40, 0.92);
+  --input-bg: rgba(255, 255, 255, 0.06);
+  --switch-off: rgba(255, 255, 255, 0.16);
+  --shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 14px 36px rgba(0, 0, 0, 0.45);
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* minimal, auto-hiding scrollbar — hidden until scrolling, mint on hover.
+   visibility is driven by the `.is-scrolling` class (set in Screen.tsx). */
+.scroll-region {
+  scrollbar-width: thin;                       /* firefox */
+  scrollbar-color: transparent transparent;    /* hidden at rest */
+}
+.scroll-region.is-scrolling { scrollbar-color: var(--hair) transparent; }
+.scroll-region::-webkit-scrollbar { width: 9px; }
+.scroll-region::-webkit-scrollbar-thumb {
+  background: transparent;
+  border: 2px solid transparent;               /* inset → reads thinner */
+  background-clip: padding-box;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+}
+.scroll-region.is-scrolling::-webkit-scrollbar-thumb { background: var(--hair); background-clip: padding-box; }
+.scroll-region::-webkit-scrollbar-thumb:hover { background: var(--color-accent); background-clip: padding-box; }
+
+/* reusable component classes (the glass material + hairlines) */
+@layer components {
+  .glass {
+    border-radius: 16px;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-bd);
+    box-shadow: var(--shadow-glass);
+    -webkit-backdrop-filter: blur(22px) saturate(1.2);
+    backdrop-filter: blur(22px) saturate(1.2);
+  }
+  .micro {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+}
+
+/* ambient colour wash behind the lattice canvas */
+.scene-wash {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(42vw 42vw at 12% 8%, rgba(17, 181, 150, 0.16), transparent 60%),
+    radial-gradient(48vw 48vw at 90% 94%, rgba(59, 111, 212, 0.13), transparent 62%),
+    radial-gradient(36vw 36vw at 70% 12%, rgba(196, 162, 78, 0.06), transparent 60%);
+}
+/* luminous: brighter, deeper colour fields glow against the charcoal */
+.dark .scene-wash {
+  background:
+    radial-gradient(44vw 44vw at 10% 4%, rgba(22, 199, 164, 0.26), transparent 60%),
+    radial-gradient(50vw 50vw at 92% 98%, rgba(59, 111, 212, 0.22), transparent 62%),
+    radial-gradient(38vw 38vw at 72% 10%, rgba(196, 162, 78, 0.10), transparent 60%);
+}
+
+/* redact balances (Settings toggle) */
+.redacted .tabular-nums { filter: blur(7px); transition: filter 0.2s; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}

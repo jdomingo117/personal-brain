@@ -10,10 +10,10 @@
     "highTextContrast": false
   },
   "knownTags": {
-    "finance": 2,
-    "project": 1,
-    "projects": 4,
-    "projects/fin-app": 3,
+    "finance": 1,
+    "project": 2,
+    "projects": 3,
+    "projects/fin-app": 1,
     "projects/fin-app/project-doc": 1
   },
   "tagColors": {},
