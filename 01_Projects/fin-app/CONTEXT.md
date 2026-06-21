@@ -72,8 +72,9 @@ npm run dev        # → http://localhost:5300
 npm run build      # → app/dist/  (static)
 ```
 
-Fonts load from Google Fonts; no other external assets. App starts in **light mode** (toggle dark
-from Settings or the floating bottom-right button — no persistence by design). Wired into the
+Fonts load from Google Fonts; no other external assets. App starts in **light mode** on first
+visit; the theme choice (toggle dark from Settings or the floating bottom-right button) is
+**persisted in `localStorage`** under `halcyon-theme` and restored on return. Wired into the
 preview tooling as the `halcyon-app` launch config.
 
 ## 5. Architecture & stack
@@ -113,7 +114,9 @@ The 6 views map 1:1 to the SRD's pages, so the information architecture is alrea
   both. (The Area chart's traveling dot uses a nested `<g>`+`<circle>` so translate and scale never
   collide on one transform.)
 - **Dark mode** is a `.dark` class on `<html>` that swaps CSS-variable tokens — most of the app
-  flips for free. Keep authoring against tokens.
+  flips for free. Keep authoring against tokens. The choice persists in `localStorage`
+  (`halcyon-theme`); an inline script in [index.html](app/index.html) re-applies the class before
+  first paint so there's no flash of the wrong mode.
 - **Scroll chrome** ([Screen.tsx](app/src/components/Screen.tsx)): a scroll-position-driven
   top/bottom mask (content dissolves into the letterbox bars) + an auto-hiding scrollbar.
 
@@ -155,7 +158,8 @@ storage → Phase 3. Recurring hub + Osko reconciliation → Phase 4. Admin port
 
 ## 10. Intentional — do not "fix" these
 
-- Light mode is the **default**; theme has **no persistence** by design.
+- Light mode is the **default on first visit**; the theme choice then persists in `localStorage`
+  (`halcyon-theme`).
 - The mint accent is **live-retintable** from Settings (sets `--color-accent`).
 - `three/` is a folder name only — the scene is a **2D canvas**, not WebGL. (`three` is **not** a
   dependency.)

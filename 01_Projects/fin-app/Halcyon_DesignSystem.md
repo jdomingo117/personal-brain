@@ -126,8 +126,10 @@ Card bodies, text, and chrome stay monochrome. The accent is **live-retintable**
 Dark mode is a `.dark` class on `<html>`, toggled from **Settings → Dark mode** *or* a **floating
 quick toggle** pinned bottom-right ([`ThemeToggle.tsx`](app/src/components/ThemeToggle.tsx)) for
 one-tap access from any view; both share the same `dark`/`setDark` context, so they stay in sync.
-Starts light, no persistence by design. Because every component is authored against tokens, the whole app
-flips by re-declaring those tokens. The design intent: a **warm-charcoal workspace** with the
+Starts light on first visit, then **persists the choice in `localStorage`** (`halcyon-theme`); an
+inline script in [`index.html`](app/index.html) re-applies the `.dark` class before first paint so
+returning visitors never see a flash of the wrong mode. Because every component is authored against
+tokens, the whole app flips by re-declaring those tokens. The design intent: a **warm-charcoal workspace** with the
 letterbox bars kept *darker than the workspace* so the cinematic frame still reads, dark frosted
 glass, and a **brighter, glowing** lattice + colour wash for a Halo-HUD luminosity.
 

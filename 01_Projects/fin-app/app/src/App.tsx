@@ -28,7 +28,13 @@ export default function App() {
   const [booted, setBooted] = useState(false)
   const [view, setView] = useState<View>('landing')
   const [motionOn, setMotionOn] = useState(true)
-  const [dark, setDarkState] = useState(false)
+  const [dark, setDarkState] = useState(() => {
+    try {
+      return localStorage.getItem('halcyon-theme') === 'dark'
+    } catch {
+      return false
+    }
+  })
   const [toast, setToast] = useState<ToastData | null>(null)
   const toastId = useRef(0)
   const timer = useRef<number | undefined>(undefined)
@@ -36,6 +42,11 @@ export default function App() {
   const setDark = useCallback((on: boolean) => {
     setDarkState(on)
     document.documentElement.classList.toggle('dark', on)
+    try {
+      localStorage.setItem('halcyon-theme', on ? 'dark' : 'light')
+    } catch {
+      // localStorage unavailable (private mode, blocked) — theme just won't persist
+    }
   }, [])
 
   const fireToast = useCallback((a: { title: string; sub: string }) => {

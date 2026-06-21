@@ -10,6 +10,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   </head>
   <body>
+    <script>
+      // Apply the persisted theme before first paint to avoid a flash of the
+      // wrong mode. Mirrors the `halcyon-theme` key written in src/App.tsx.
+      try {
+        if (localStorage.getItem('halcyon-theme') === 'dark') {
+          document.documentElement.classList.add('dark')
+        }
+      } catch (e) {}
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
