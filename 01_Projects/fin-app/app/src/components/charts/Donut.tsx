@@ -53,12 +53,12 @@ export default function Donut({
         )
       })}
       {centerLabel && (
-        <text x={cx} y={cy - 3} textAnchor="middle" fill="var(--color-muted)" fontSize={8} letterSpacing="0.08em">
+        <text x={cx} y={cy - 4} textAnchor="middle" fill="var(--color-muted)" fontSize={9} letterSpacing="0.08em">
           {centerLabel}
         </text>
       )}
       {centerValue && (
-        <text className="donut-center" x={cx} y={cy + 15} textAnchor="middle" fill="var(--color-ink)" fontSize={17} fontWeight={700}>
+        <text className="donut-center" x={cx} y={cy + 14} textAnchor="middle" fill="var(--color-ink)" fontSize={20} fontWeight={700}>
           {centerValue}
         </text>
       )}

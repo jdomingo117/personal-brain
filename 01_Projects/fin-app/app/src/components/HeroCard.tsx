@@ -71,11 +71,12 @@ export default function HeroCard({ variant }: { variant: 'card' | 'tile' }) {
     <motion.div
       layoutId="hero"
       transition={morph}
-      className="glass relative h-full overflow-hidden p-6"
+      whileHover={{ y: -3, transition: { type: 'spring', stiffness: 300, damping: 22 } }}
+      className="glass relative h-full overflow-hidden p-5 cursor-default"
     >
       <motion.div layout="position">
         <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">Total net worth</div>
-        <div className="mt-2 text-[34px] font-bold tabular-nums tracking-tight">{fmt(data.operator.netWorth)}</div>
+        <div className="mt-2 text-[32px] font-bold tabular-nums tracking-tight">{fmt(data.operator.netWorth)}</div>
         <div className="mt-1.5 text-[12.5px] font-semibold text-pos">▲ {data.operator.netWorthDelta}% this month · +23% YTD</div>
       </motion.div>
     </motion.div>

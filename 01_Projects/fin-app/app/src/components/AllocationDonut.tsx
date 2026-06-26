@@ -6,7 +6,13 @@ import { useChartReveal, CHART_EASE } from '../hooks/useChartReveal'
 
 const STEP = 230 // ms between segments — segment N's legend row lands at N*STEP + 260
 
-export default function AllocationDonut({ data }: { data: AllocationSlice[] }) {
+export default function AllocationDonut({
+  data,
+  totalLabel = 'Gross Assets',
+}: {
+  data: AllocationSlice[]
+  totalLabel?: string
+}) {
   const total = data.reduce((a, d) => a + d.value, 0)
   const centerFmt = (n: number) => '$' + Math.round(n / 1000) + 'K'
 
@@ -52,26 +58,50 @@ export default function AllocationDonut({ data }: { data: AllocationSlice[] }) {
   )
 
   return (
-    <div ref={ref} className="flex items-center gap-5">
-      <Donut
-        size={150}
-        data={data.map((d) => ({ value: d.value, color: glowColor[d.glow] }))}
-        centerLabel="TOTAL"
-        centerValue={centerFmt(total)}
-      />
-      <ul className="grid flex-1 gap-2.5">
-        {data.map((d) => (
-          <li
-            key={d.label}
-            className="donut-legend-row flex items-center gap-2.5 text-[12.5px]"
-            style={{ opacity: 0 }}
-          >
-            <span className="h-2.5 w-2.5 flex-shrink-0 rounded-[3px]" style={{ background: glowColor[d.glow] }} />
-            <span className="flex-1 text-ink2">{d.label}</span>
-            <span className="font-semibold tabular-nums">{fmt(d.value)}</span>
-          </li>
-        ))}
-      </ul>
+    <div ref={ref} className="flex items-center gap-6">
+      <div className="flex-shrink-0">
+        <Donut
+          size={165}
+          data={data.map((d) => ({ value: d.value, color: glowColor[d.glow] }))}
+          centerLabel="TOTAL"
+          centerValue={centerFmt(total)}
+        />
+      </div>
+      <div className="flex-1 min-w-0">
+        <ul className="grid gap-2">
+          {data.map((d) => {
+            const pct = ((d.value / total) * 100).toFixed(1)
+            return (
+              <li
+                key={d.label}
+                className="donut-legend-row flex flex-col gap-1"
+                style={{ opacity: 0 }}
+              >
+                {/* Label and Percentage */}
+                <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.06em]">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: glowColor[d.glow] }} />
+                    <span className="truncate text-ink2">{d.label}</span>
+                  </div>
+                  <span className="text-muted text-[10px] tabular-nums">{pct}%</span>
+                </div>
+                {/* Progress Bar and Value */}
+                <div className="flex items-center gap-2.5">
+                  <div className="h-1 flex-1 rounded bg-[var(--track)] overflow-hidden">
+                    <div className="h-full rounded" style={{ width: `${pct}%`, background: glowColor[d.glow] }} />
+                  </div>
+                  <span className="text-[12.5px] font-bold tabular-nums text-ink">{fmt(d.value)}</span>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+        <div className="border-t border-[var(--hair-soft)] my-2" />
+        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.08em]">
+          <span className="text-muted">{totalLabel}</span>
+          <span className="text-[13px] font-extrabold text-ink tabular-nums">{fmt(total)}</span>
+        </div>
+      </div>
     </div>
   )
 }
