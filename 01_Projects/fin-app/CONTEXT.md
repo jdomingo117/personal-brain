@@ -91,7 +91,7 @@ app/src/
   index.css       ★ design tokens: @theme (light) + :root + .dark + .glass/.micro/.scene-wash
   components/     Shell Boot Tile Stat CapacityMeter Ledger AccountRow AllocationDonut
                   ObjectiveRing HeroCard MilestoneToast ThemeToggle Controls Screen motion.ts
-                  charts/ Area Donut
+                  charts/ Area Bar Donut
   views/          Landing Dashboard Accounts Income Expenses Ingestion Settings
   three/          SceneBackground.tsx  (2D canvas lattice — misnamed, NOT WebGL)
   hooks/          useScramble  useCountUp  useChartReveal (anime.js firewall)
@@ -123,7 +123,7 @@ The 6 views map 1:1 to the SRD's pages, so the information architecture is alrea
 ## 7. Current state: done vs. not
 
 **Done (mature):** all 6 views + landing, the design system + dark mode, Framer Motion choreography
-(boot, letterbox reveal, hero morph, blur-focus tile entrance), anime.js chart motion (area/donut/
+(boot, letterbox reveal, hero morph, blur-focus tile entrance), anime.js chart motion (area/bar/donut/
 rings/meters — satisfies the SRD's "staggered SVG timeline" requirement), scroll chrome, responsive,
 reduced-motion + motion toggle. Builds clean.
 

@@ -304,9 +304,9 @@ centre value; legend rows of `dot · label · value`.
 SVG progress ring (rounded cap, animated dashoffset over ~1.2s) with a tabular percentage
 centred; value + label beneath.
 
-### 8.8 Charts (`charts/Area.tsx`, `charts/Donut.tsx`)
+### 8.8 Charts (`charts/Area.tsx`, `charts/Bar.tsx`, `charts/Donut.tsx`)
 Hand-built SVG. **Area/line:** animated stroke draw-on, subtle gradient fill, hairline
-gridlines, tabular ticks. **Donut:** as above. Palette keys map to tokens
+gridlines, tabular ticks. **Bar:** animated vertical bars with dynamic height/y interpolation on sweep. **Donut:** as above. Palette keys map to tokens
 (`accent / pos / warn / neg / blue / gold`). No glow.
 
 ### 8.9 Forms (`Controls.tsx`)
@@ -418,6 +418,7 @@ morph or the blur-focus entrance.
 | Nav label | character scramble | per-frame |
 | Counters (landing) | ease-out count-up (Framer) | ~1.4s |
 | **Cash-flow area** (anime) | line draws on (scale-proof `pathLength=1`), fill fades up, end dot elastic-pops | ~1.3s |
+| **Bar chart** (anime) | bars sweep up from baseline with staggered delay | ~900ms |
 | **Allocation donut** (anime) | segments draw with `easeOutBack` overshoot, **each legend row lands as its segment completes**, centre value counts up | ~230ms/segment |
 | **Objective rings** (anime) | `easeOutElastic` dashoffset draw + synced % counter, staggered | 1.2–1.4s |
 | **Capacity meters** (anime) | cascade width fill + highlight that races ahead; threshold colour | ~1.0s |
@@ -486,7 +487,7 @@ app/
       Shell  Boot  Tile  Stat  CapacityMeter  Ledger  AccountRow
       AllocationDonut  ObjectiveRing  HeroCard  MilestoneToast  ThemeToggle
       Controls (Button/Chip/Switch)  Screen (Screen/ViewHeader/Grid)  motion.ts
-      charts/ Area  Donut
+      charts/ Area  Bar  Donut
     views/              Landing Dashboard Accounts Income Expenses Ingestion Settings
     three/              SceneBackground.tsx   (2D canvas lattice + network; misnamed, not WebGL)
     hooks/              useScramble  useCountUp  useChartReveal (anime.js firewall)

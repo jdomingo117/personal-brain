@@ -48,8 +48,7 @@ npm run preview     # serve the production build locally
 ```
 
 Fonts load from Google Fonts (Archivo + Hanken Grotesk) via `index.html`; no other external
-assets. The app starts in **light mode** — toggle dark from **Settings → Dark mode** (no
-persistence by design). (Also wired into the preview tooling as the `halcyon-app` launch config.)
+assets. The app starts in **light mode** on first visit; the theme choice is **persisted in `localStorage`** (under the `halcyon-theme` key) and restored on return (toggled from Settings → Dark mode or the floating ThemeToggle button). (Also wired into the preview tooling as the `halcyon-app` launch config.)
 
 ## Status vs the plan
 
@@ -83,28 +82,27 @@ Porting `card3d.js` and cross-fading it remains an *option*, not a requirement.
   lattice + colour wash for the Halo-HUD feel. Implemented as a `.dark` token swap on `<html>`
   (most of the app flips for free) + a handful of var-ised hardcoded spots (glass border,
   meter/ring/donut tracks, toast, inputs, switch, primary button, scroll-cue, profile avatar)
-  + a theme-aware scene. Wired to a **Settings → Dark mode** toggle (starts light; no persistence
-  by design). The hero card uses the shared `.glass` so it adapts too.
-- ⏳ Remaining: gesture drag-spin on the card, scroll-scrubbed (not just triggered) landing,
-  optional theme persistence (localStorage).
+  + a theme-aware scene. Wired to a **Settings → Dark mode** toggle *and* a floating ThemeToggle (starts light;
+  persists in `localStorage` under `halcyon-theme`). The hero card uses the shared `.glass` so it adapts too.
+- ⏳ Remaining: gesture drag-spin on the card, scroll-scrubbed (not just triggered) landing.
 
 ## Architecture
 
 ```
 src/
   main.tsx            no StrictMode (avoids double WebGL context)
-  App.tsx             boot gate · view state · toast · AnimatePresence
+  App.tsx             boot gate · view state · dark state · toast · AnimatePresence
   router.tsx          View type, NAV, ViewContext / useView
   data.ts             typed mock dataset + formatters
   index.css           Tailwind v4 @theme tokens + .glass / .micro + base
   components/
     Shell  Boot  Tile  Stat  CapacityMeter  Ledger  AccountRow
-    AllocationDonut  ObjectiveRing  HeroCard  MilestoneToast
+    AllocationDonut  ObjectiveRing  HeroCard  MilestoneToast  ThemeToggle
     Controls (Button/Chip/Switch)  Screen (Screen/ViewHeader/Grid)  motion.ts
-    charts/ Area  Donut
+    charts/ Area  Bar  Donut
   views/              Landing Dashboard Accounts Income Expenses Ingestion Settings
   three/              SceneBackground.tsx
-  hooks/              useScramble  useCountUp
+  hooks/              useScramble  useCountUp  useChartReveal (anime.js firewall)
 ```
 
 ## Key patterns (and the gotchas they encode)
