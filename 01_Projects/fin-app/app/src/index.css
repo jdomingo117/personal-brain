@@ -142,6 +142,10 @@ body {
     radial-gradient(38vw 38vw at 72% 10%, rgba(196, 162, 78, 0.10), transparent 60%);
 }
 
+/* native date pickers follow the app theme (calendar popup + picker glyph) */
+input[type="date"] { color-scheme: light; }
+.dark input[type="date"] { color-scheme: dark; }
+
 /* redact balances (Settings toggle) */
 .redacted .tabular-nums { filter: blur(7px); transition: filter 0.2s; }
 

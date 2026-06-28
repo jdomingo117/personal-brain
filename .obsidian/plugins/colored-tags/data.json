@@ -10,10 +10,11 @@
     "highTextContrast": false
   },
   "knownTags": {
-    "design-system": 4,
+    "design-system": 6,
     "finance": 1,
     "halcyon": 5,
     "projects": 3,
+    "typescript": 7,
     "projects/fin-app": 1
   },
   "tagColors": {},

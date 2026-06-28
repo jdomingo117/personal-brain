@@ -98,7 +98,8 @@ src/
   components/
     Shell  Boot  Tile  Stat  CapacityMeter  Ledger  AccountRow
     AllocationDonut  ObjectiveRing  HeroCard  MilestoneToast  ThemeToggle
-    Controls (Button/Chip/Switch)  Screen (Screen/ViewHeader/Grid)  motion.ts
+    Controls (Button/Chip/Select/DateInput/MultiSelect/DateRangePicker/Switch)
+    SegmentedTabs  Screen (Screen/ViewHeader/Grid)  motion.ts
     charts/ Area  Bar  Donut
   views/              Landing Dashboard Accounts Income Expenses Ingestion Settings
   three/              SceneBackground.tsx

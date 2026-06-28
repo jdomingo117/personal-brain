@@ -310,9 +310,27 @@ gridlines, tabular ticks. **Bar:** animated vertical bars with dynamic height/y 
 (`accent / pos / warn / neg / blue / gold`). No glow.
 
 ### 8.9 Forms (`Controls.tsx`)
-Inputs/selects: `var(--input-bg)` fill, `hair` border, rounded, `min-height ~46px`; focus →
-`accent` border + `accent-wash` ring. **Chips** for single-select (active = mint wash + accent
-border). Min tap target 44px.
+Shared chrome: `var(--input-bg)` fill, `hair` border, rounded `10px`, focus → `accent` border +
+`accent-wash` ring. Min tap target 44px. The family:
+- **Input** — raw `<input>` with the chrome above (e.g. Ingestion amount / merchant).
+- **`Chip`** — single-select pill (active = mint wash + accent border); also the **Quick range**
+  preset toggles inside the `DateRangePicker` popover.
+- **`Select`** — styled native `<select>` with the shared chrome + a chevron glyph; options inherit
+  OS theming on open.
+- **`DateInput`** — styled native `<input type="date">`; the native calendar popup + picker glyph
+  follow the theme via `color-scheme` (`light` by default, `dark` under `.dark` in `index.css`).
+- **`MultiSelect`** — checkbox dropdown for multi-select. Trigger mirrors `Select`; the panel is an
+  **opaque** frosted popover (`var(--toast-bg)` + blur, so it stays legible over content) with a
+  **Select all / Clear** header and per-row checkboxes (accent-filled when on) + an optional
+  right-aligned hint. Closes on outside-click or Escape; roled `listbox`/`option`. The summary label
+  collapses by count (all → `allLabel`, one → that option's label, many → "N {noun}", none →
+  `emptyLabel`). The host container needs an elevated `z-index` so the panel paints over following
+  content. Drives the Income analyzer **Linked accounts** filter.
+- **`DateRangePicker`** — unified range control: one compact trigger (range label + calendar glyph)
+  opening a frosted popover (same chrome as `MultiSelect`) with `Chip` **presets** over two
+  `DateInput`s (From / To). Trigger label collapses to `MMM D – MMM D`, adding `'YY` when the range
+  spans years. Closes on outside-click or Escape. Replaces the separate quick-range + custom-range
+  groups; drives the Income analyzer period.
 
 ### 8.10 Buttons (`Controls.tsx`)
 - **Primary CTA:** ink fill, surface-coloured text, micro-label, rounded; hover lifts 1px.
@@ -328,6 +346,34 @@ swatches** (Mint / Azure / Gold / Ink) that set `--color-accent`.
 A floating frosted chip (`var(--toast-bg)`, blur, `hair` border, glass shadow, `rounded-2xl`):
 mint icon tile + "Milestone reached" eyebrow + Archivo title + caption. Slides from top,
 auto-dismisses ~3.8s. Mounted in an `aria-live` region.
+
+### 8.13 Segmented tabs (`SegmentedTabs.tsx`)
+A mutually-exclusive view switcher: a `hair`-bordered glass track of options with a sliding
+`accent-wash` thumb (shared Framer `layoutId`, spring) under the active label (`accent-ink` text).
+Roled `tablist`/`tab`. Drives the Income view's **Income analyzer / Strategic projections** switch
+(top-right of the header); the two panels cross-fade via `AnimatePresence`.
+
+### 8.14 Income analyzer (header toolbar + tile layout)
+Filters are **chrome, not content**, so they live in the page header (a global element, no glass
+container) rather than a tile: a **`DateRangePicker`** (period) + **`MultiSelect`** (linked accounts)
+sit between the title and the `SegmentedTabs`, shown only on the analyzer tab. The header row carries
+an elevated `z-index` so the filter popovers overlay the content beneath. Below, the tiles follow a
+summary → trend → detail hierarchy:
+
+- **Row 1 — period KPIs:** four hero tiles (Total period inflow · Prorated monthly average · Peak
+  deposit item · Inflow/outflow coverage). Coverage flips `pos`/`neg` (surplus/deficit) by sign.
+- **Row 2 — pacing + savings:** a wide **cumulative cash-flow pacing** chart (two `Area` series —
+  cumulative inflow `pos` + cumulative net `blue` — so the gap reads as spending) and a narrow
+  **savings-rate** tile (an SVG ring of rate %, amount saved, a monthly-rate `Sparkline`, and a
+  delta vs a 20% target; the ring clamps to `[0,1]` and reads red on a deficit).
+- **Row 3 — sources + receipts:** an **income-source** breakdown (`AllocationDonut`; stream shares
+  are fixed by cadence-normalised monthly-equivalents, the period total scales them) and a **recent
+  deposits** `Ledger` (inflow txns within range, gated on having ≥1 account selected).
+
+The dataset is a trailing-12-month window keyed by month: dates bucket to their month and the
+selected accounts' shares sum to the period multiplier, so every tile recomputes live; empty
+filters (no inflow) fall back to per-tile empty states. (A single-month range feeds the pacing
+`Area` one point — it centres a lone point rather than dividing by zero.)
 
 ---
 
@@ -486,7 +532,8 @@ app/
     components/
       Shell  Boot  Tile  Stat  CapacityMeter  Ledger  AccountRow
       AllocationDonut  ObjectiveRing  HeroCard  MilestoneToast  ThemeToggle
-      Controls (Button/Chip/Switch)  Screen (Screen/ViewHeader/Grid)  motion.ts
+      Controls (Button/Chip/Select/DateInput/MultiSelect/DateRangePicker/Switch)
+      SegmentedTabs  Screen (Screen/ViewHeader/Grid)  motion.ts
       charts/ Area  Bar  Donut
     views/              Landing Dashboard Accounts Income Expenses Ingestion Settings
     three/              SceneBackground.tsx   (2D canvas lattice + network; misnamed, not WebGL)

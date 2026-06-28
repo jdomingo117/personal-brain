@@ -76,9 +76,12 @@ export const data = {
     { label: 'Crypto', value: 9300, glow: 'amber' },
   ] as AllocationSlice[],
   income: [
-    { source: 'Primary Salary // Employer', cadence: 'Biweekly', amount: 6900, glow: 'green' },
-    { source: 'Contract // Oracle', cadence: 'Monthly', amount: 1200, glow: 'green' },
-    { source: 'Dividend Yield', cadence: 'Quarterly', amount: 350, glow: 'cyan' },
+    // `amount` is per-cadence; normalised to a monthly-equivalent for share math.
+    // Salary ties to the recurring $3,450 payroll deposits in `transactions`.
+    { source: 'Primary Salary // Employer', cadence: 'Biweekly', amount: 3450, glow: 'green' },
+    { source: 'Contract // Oracle', cadence: 'Monthly', amount: 1200, glow: 'blue' },
+    { source: 'RSU Vesting // Equity', cadence: 'Quarterly', amount: 2400, glow: 'cyan' },
+    { source: 'Dividend Yield', cadence: 'Quarterly', amount: 350, glow: 'amber' },
   ] as IncomeStream[],
   objectives: [
     { name: 'Emergency Reserve // 6mo', current: 28800, target: 36000, glow: 'green', status: 'healthy' },
@@ -104,6 +107,18 @@ export const data = {
     { date: '06.09', merchant: 'Forge Coffee Outpost', cat: 'Food', amount: -6.75 },
     { date: '06.08', merchant: 'Index Fund // Auto-Invest', cat: 'Invest', amount: -1000.0 },
     { date: '06.07', merchant: 'Armory Outfitters', cat: 'Retail', amount: -212.3 },
+    // Recurring inflow spread across the trailing window so the deposits ledger
+    // and source shares stay populated as the date range changes.
+    { date: '05.30', merchant: 'Payroll Deposit', cat: 'Income', amount: 3450.0 },
+    { date: '05.16', merchant: 'Payroll Deposit', cat: 'Income', amount: 3450.0 },
+    { date: '05.02', merchant: 'Oracle Contract // Payout', cat: 'Income', amount: 1200.0 },
+    { date: '04.18', merchant: 'Payroll Deposit', cat: 'Income', amount: 3450.0 },
+    { date: '04.04', merchant: 'Payroll Deposit', cat: 'Income', amount: 3450.0 },
+    { date: '03.31', merchant: 'RSU Vesting // Equity', cat: 'Income', amount: 2400.0 },
+    { date: '03.21', merchant: 'Payroll Deposit', cat: 'Income', amount: 3450.0 },
+    { date: '03.14', merchant: 'Dividend // Brokerage', cat: 'Income', amount: 350.0 },
+    { date: '02.20', merchant: 'Payroll Deposit', cat: 'Income', amount: 3450.0 },
+    { date: '01.23', merchant: 'Payroll Deposit', cat: 'Income', amount: 3450.0 },
   ] as Txn[],
   achievements: [
     { id: 'debtfree', title: 'Debt-Free Specialist', points: 100, sub: 'Sapphire credit line cleared' },

@@ -44,7 +44,8 @@ export default function Area({
   const min = Math.min(0, Math.min(...all)) * 0.95
   const span = max - min || 1
   const n = series[0].data.length
-  const xOf = (i: number) => padL + (i / (n - 1)) * innerW
+  // a single point has no horizontal span — centre it instead of dividing by 0
+  const xOf = (i: number) => (n <= 1 ? padL + innerW / 2 : padL + (i / (n - 1)) * innerW)
   const yOf = (v: number) => padT + innerH - ((v - min) / span) * innerH
   const uid = useId().replace(/:/g, '')
 
