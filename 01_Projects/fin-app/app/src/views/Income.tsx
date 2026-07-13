@@ -6,7 +6,10 @@ import Area from '../components/charts/Area'
 import AllocationDonut from '../components/AllocationDonut'
 import Ledger from '../components/Ledger'
 import SegmentedTabs from '../components/SegmentedTabs'
-import { DateRangePicker, MultiSelect } from '../components/Controls'
+import HeroMetric from '../components/HeroMetric'
+import AnalyzerFilters from '../components/AnalyzerFilters'
+import { usePeriodRange } from '../hooks/usePeriodRange'
+import { MONTHS, dateToIdx, txnIso } from '../lib/period'
 import { data, fmt } from '../data'
 
 const TABS = [
@@ -18,68 +21,37 @@ export default function Income() {
   const [view, setView] = useState('analyzer')
   // Filter state lives here so the controls can sit in the page header toolbar
   // (a global element, not a tile), while the analyzer below consumes it.
-  const [from, setFrom] = useState(iso(monthStart(6)))
-  const [to, setTo] = useState(TODAY)
-  const [preset, setPreset] = useState<string | null>('6M')
+  const { preset, from, to, applyPreset, changeFrom, changeTo } = usePeriodRange()
   const [accounts, setAccounts] = useState<string[]>(INFLOW_ACCOUNTS.map((a) => a.name))
-
-  const applyPreset = (id: string) => {
-    const p = PRESETS.find((x) => x.id === id)
-    if (!p) return
-    setPreset(p.id)
-    setFrom(iso(p.back === null ? new Date(anchor.getFullYear(), 0, 1) : monthStart(LAST - p.back)))
-    setTo(TODAY)
-  }
-  // ISO date strings compare lexicographically, so keep from ≤ to with a plain compare
-  const changeFrom = (v: string) => {
-    setPreset(null)
-    setFrom(v)
-    if (v > to) setTo(v)
-  }
-  const changeTo = (v: string) => {
-    setPreset(null)
-    setTo(v)
-    if (v < from) setFrom(v)
-  }
 
   return (
     <Screen>
-      {/* Header toolbar — title (left) · period + account filters + tab switch
-          (right). Elevated z-index so the filter popovers overlay the content
-          below. The filters are analyzer-only. */}
-      <div className="relative z-30 flex flex-wrap items-start justify-between gap-4">
-        <ViewHeader index="03 — Inflow" title="Income" sub="Earning streams, cash flow & savings rate" />
-        <div className="flex flex-wrap items-center justify-end gap-2.5 pt-1.5">
-          {view === 'analyzer' && (
-            <>
-              <DateRangePicker
-                from={from}
-                to={to}
-                min={MIN_DATE}
-                max={MAX_DATE}
-                presets={PRESETS}
-                activePreset={preset}
-                onPreset={applyPreset}
-                onFrom={changeFrom}
-                onTo={changeTo}
-                ariaLabel="Date range"
-                className="w-[200px]"
-              />
-              <div className="w-[200px]">
-                <MultiSelect
-                  options={ACCOUNT_OPTIONS}
-                  selected={accounts}
-                  onChange={setAccounts}
-                  ariaLabel="Linked financial accounts"
-                  allLabel="All linked accounts"
-                  emptyLabel="No accounts"
-                  noun="accounts"
-                />
-              </div>
-            </>
-          )}
-          <SegmentedTabs tabs={TABS} active={view} onChange={setView} />
+      {/* Header — title + primary view switch (row 1), then an analyzer-only
+          filter bar (row 2): quick-range pills on the left, account filter +
+          custom-range picker on the right. Elevated z-index so the popovers
+          overlay the content below. */}
+      <div className="relative z-30 flex flex-col gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <ViewHeader index="03 — Inflow" title="Income" sub="Earning streams, cash flow & savings rate" />
+          <div className="pt-1.5">
+            <SegmentedTabs tabs={TABS} active={view} onChange={setView} layoutId="income-tabs" />
+          </div>
         </div>
+
+        {view === 'analyzer' && (
+          <AnalyzerFilters
+            preset={preset}
+            from={from}
+            to={to}
+            onPreset={applyPreset}
+            onFrom={changeFrom}
+            onTo={changeTo}
+            accounts={accounts}
+            accountOptions={ACCOUNT_OPTIONS}
+            onAccounts={setAccounts}
+            rangeLayoutId="income-range"
+          />
+        )}
       </div>
 
       <AnimatePresence mode="wait" initial={false}>
@@ -129,45 +101,6 @@ export default function Income() {
    row 1 — period KPI hero cards
    row 2 — cumulative cash-flow pacing chart + savings-rate visual
    row 3 — income source breakdown + a recent-deposits ledger */
-
-const MONTHS = data.cashflow.months
-const LAST = MONTHS.length - 1
-
-/* The dataset is a trailing 12-month window whose last bucket is the current
-   calendar month. These helpers bridge real dates (for the calendar pickers)
-   and the month buckets the figures are actually stored in. */
-const now = new Date()
-const anchor = new Date(now.getFullYear(), now.getMonth(), 1) // 1st of the current month
-const iso = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-const monthStart = (idx: number) => {
-  const d = new Date(anchor)
-  d.setMonth(d.getMonth() - (LAST - idx))
-  return d
-}
-const dateToIdx = (s: string) => {
-  const d = new Date(`${s}T00:00:00`)
-  const diff = (anchor.getFullYear() - d.getFullYear()) * 12 + (anchor.getMonth() - d.getMonth())
-  return Math.max(0, Math.min(LAST, LAST - diff))
-}
-/** `MM.DD` ledger date → ISO within the trailing window (months after the
- *  current one belong to last year). */
-const txnIso = (mmdd: string) => {
-  const [mm, dd] = mmdd.split('.')
-  const year = Number(mm) <= now.getMonth() + 1 ? now.getFullYear() : now.getFullYear() - 1
-  return `${year}-${mm}-${dd}`
-}
-const TODAY = iso(now)
-const MIN_DATE = iso(monthStart(0))
-const MAX_DATE = iso(new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0)) // last day of current month
-
-const PRESETS = [
-  { id: '1M', label: '1M', back: 0 },
-  { id: '3M', label: '3M', back: 2 },
-  { id: '6M', label: '6M', back: 5 },
-  { id: 'YTD', label: 'YTD', back: null as number | null },
-  { id: '12M', label: '12M', back: LAST },
-]
 
 /** Deposit-capable accounts + their stable share of total inflow (debt
  *  accounts can't receive deposits, so they're excluded from the filter). */
@@ -281,7 +214,7 @@ function IncomeAnalyzer({ from, to, accounts }: { from: string; to: string; acco
           value={`${m.coverage.toFixed(2)}×`}
           valueClass={covPositive ? 'text-pos' : 'text-neg'}
           sub={`${covPositive ? '▲' : '▼'} ${fmt(Math.abs(m.surplus))} ${covPositive ? 'surplus' : 'deficit'}`}
-          dir={covPositive ? 'up' : 'down'}
+          tone={covPositive ? 'pos' : 'neg'}
         />
       </div>
 
@@ -323,42 +256,6 @@ function IncomeAnalyzer({ from, to, accounts }: { from: string; to: string; acco
         )}
       </Tile>
     </Grid>
-  )
-}
-
-/** Period KPI card — micro-label, big tabular value (re-keys for a soft fade
- *  when the filters change it), optional delta line. */
-function HeroMetric({
-  label,
-  value,
-  sub,
-  dir,
-  valueClass = '',
-}: {
-  label: string
-  value: string
-  sub?: string
-  dir?: 'up' | 'down'
-  valueClass?: string
-}) {
-  return (
-    <Tile className="flex flex-col">
-      <div className="micro text-muted">{label}</div>
-      <motion.div
-        key={value}
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className={`mt-2 text-[28px] font-bold tabular-nums tracking-tight ${valueClass}`}
-      >
-        {value}
-      </motion.div>
-      {sub && (
-        <div className={`mt-1.5 text-[12px] font-semibold ${dir === 'down' ? 'text-neg' : dir === 'up' ? 'text-pos' : 'text-muted'}`}>
-          {sub}
-        </div>
-      )}
-    </Tile>
   )
 }
 

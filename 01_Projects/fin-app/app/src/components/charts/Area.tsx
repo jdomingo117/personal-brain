@@ -138,9 +138,9 @@ export default function Area({
           </g>
         )
       })}
-      {/* x labels */}
+      {/* x labels — capped to ~12 regardless of point count */}
       {labels.map((lab, i) =>
-        labels.length > 12 && i % 2 ? null : (
+        i % Math.max(1, Math.ceil(labels.length / 12)) ? null : (
           <text key={i} x={xOf(i)} y={H - 5} fill="var(--color-muted)" fontSize={9} textAnchor="middle">
             {lab}
           </text>

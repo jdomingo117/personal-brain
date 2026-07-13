@@ -40,6 +40,26 @@ export function Chip({ active, children, onClick }: { active?: boolean; children
   )
 }
 
+/** Dismissible chip for an applied filter — label + ✕, mint accent to read as
+ *  active state. */
+export function RemovableChip({ children, onRemove }: { children: ReactNode; onRemove: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-[9px] border border-accent bg-[var(--accent-wash)] py-1 pl-2.5 pr-1 text-[12px] font-medium text-accent-ink">
+      {children}
+      <button
+        type="button"
+        aria-label="Remove filter"
+        onClick={onRemove}
+        className="grid h-[18px] w-[18px] place-items-center rounded-full text-accent-ink transition hover:opacity-60"
+      >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </span>
+  )
+}
+
 /** Styled native select — `var(--input-bg)` fill, hairline border, accent
  *  focus ring (design system §8.9). Options inherit OS theming on open. */
 export function Select({
@@ -105,6 +125,87 @@ export function DateInput({
       onChange={(e) => onChange(e.target.value)}
       className={`cursor-pointer rounded-[10px] border border-[var(--hair)] bg-[var(--input-bg)] px-3 py-2.5 text-[13px] font-medium text-ink outline-none transition focus:border-accent focus:ring-4 focus:ring-[var(--accent-wash)] ${className}`}
     />
+  )
+}
+
+/** Text search field — shared input chrome with a leading magnifier glyph and a
+ *  trailing clear (✕) that appears once there's a value. */
+export function SearchInput({
+  value,
+  onChange,
+  placeholder = 'Search',
+  ariaLabel,
+  className = '',
+}: {
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+  ariaLabel?: string
+  className?: string
+}) {
+  return (
+    <div className={`relative ${className}`}>
+      <svg
+        aria-hidden
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+        width="15" height="15" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      >
+        <circle cx="11" cy="11" r="7" />
+        <path d="M20 20l-3.5-3.5" />
+      </svg>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        aria-label={ariaLabel ?? placeholder}
+        className="w-full rounded-[10px] border border-[var(--hair)] bg-[var(--input-bg)] py-2.5 pl-9 pr-8 text-[13px] font-medium text-ink outline-none transition placeholder:text-faint focus:border-accent focus:ring-4 focus:ring-[var(--accent-wash)]"
+      />
+      {value && (
+        <button
+          type="button"
+          aria-label="Clear search"
+          onClick={() => onChange('')}
+          className="absolute right-2.5 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full text-muted transition hover:bg-[var(--hair-soft)] hover:text-ink"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+      )}
+    </div>
+  )
+}
+
+/** Numeric `$` field for amount bounds. Empty string = unbounded; emits a
+ *  cleaned string (digits + at most one dot) so the caller owns parsing. */
+export function MoneyInput({
+  value,
+  onChange,
+  placeholder,
+  ariaLabel,
+  className = '',
+}: {
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+  ariaLabel?: string
+  className?: string
+}) {
+  return (
+    <div className={`relative ${className}`}>
+      <span aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-muted">$</span>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'))}
+        placeholder={placeholder}
+        aria-label={ariaLabel}
+        className="w-full rounded-[10px] border border-[var(--hair)] bg-[var(--input-bg)] py-2.5 pl-7 pr-3 text-[13px] font-medium tabular-nums text-ink outline-none transition placeholder:text-faint focus:border-accent focus:ring-4 focus:ring-[var(--accent-wash)]"
+      />
+    </div>
   )
 }
 
@@ -261,11 +362,65 @@ export function MultiSelect({
   )
 }
 
-/** Unified date-range picker — a single compact trigger (range label +
- *  calendar glyph) opening a frosted popover with `Chip` presets over two
- *  `DateInput`s. Mirrors `MultiSelect` chrome/close behaviour. Designed to live
- *  in a header toolbar; elevate the host's z-index so the panel overlays
- *  following content. */
+/** Visible quick-range segmented control — a compact pill row with a sliding
+ *  accent thumb (shared `layoutId`, like `SegmentedTabs`). Unlike the tabs it
+ *  tolerates a `null` active id: when a custom range is in effect no thumb is
+ *  drawn and nothing reads as selected. This is the primary "quick select"; the
+ *  `DateRangePicker` beside it is the custom-range escape hatch. */
+export function SegmentedRange({
+  options,
+  active,
+  onSelect,
+  ariaLabel,
+  layoutId = 'range-thumb',
+  className = '',
+}: {
+  options: { id: string; label: string; title?: string }[]
+  active: string | null
+  onSelect: (id: string) => void
+  ariaLabel?: string
+  layoutId?: string
+  className?: string
+}) {
+  return (
+    <div
+      role="group"
+      aria-label={ariaLabel}
+      className={`inline-flex w-max items-center gap-0.5 rounded-[12px] border border-[var(--hair)] bg-[var(--glass-fill)] p-1 ${className}`}
+    >
+      {options.map((o) => {
+        const isActive = o.id === active
+        return (
+          <button
+            key={o.id}
+            type="button"
+            aria-pressed={isActive}
+            title={o.title}
+            onClick={() => onSelect(o.id)}
+            className={`relative whitespace-nowrap rounded-[9px] px-2.5 py-1.5 text-[12px] font-semibold transition-colors ${
+              isActive ? 'text-accent-ink' : 'text-ink2 hover:text-ink'
+            }`}
+          >
+            {isActive && (
+              <motion.span
+                layoutId={layoutId}
+                className="absolute inset-0 rounded-[9px] border border-accent bg-[var(--accent-wash)]"
+                transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+              />
+            )}
+            <span className="relative z-10">{o.label}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/** Compact date-range picker — a single trigger (range label + calendar glyph)
+ *  opening a frosted popover with two `DateInput`s, plus optional `Chip`
+ *  presets. Mirrors `MultiSelect` chrome/close behaviour. Designed to live in a
+ *  header toolbar; elevate the host's z-index so the panel overlays following
+ *  content. Pass `active` to accent the trigger when a custom range is set. */
 export function DateRangePicker({
   from,
   to,
@@ -276,6 +431,7 @@ export function DateRangePicker({
   onPreset,
   onFrom,
   onTo,
+  active = false,
   ariaLabel,
   className = '',
 }: {
@@ -283,11 +439,12 @@ export function DateRangePicker({
   to: string
   min?: string
   max?: string
-  presets: { id: string; label: string }[]
-  activePreset: string | null
-  onPreset: (id: string) => void
+  presets?: { id: string; label: string }[]
+  activePreset?: string | null
+  onPreset?: (id: string) => void
   onFrom: (v: string) => void
   onTo: (v: string) => void
+  active?: boolean
   ariaLabel?: string
   className?: string
 }) {
@@ -325,10 +482,12 @@ export function DateRangePicker({
         aria-expanded={open}
         aria-label={ariaLabel}
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-2 rounded-[10px] border border-[var(--hair)] bg-[var(--input-bg)] py-2.5 pl-3.5 pr-3 text-[13px] font-medium text-ink outline-none transition focus:border-accent focus:ring-4 focus:ring-[var(--accent-wash)]"
+        className={`flex w-full items-center justify-between gap-2 rounded-[10px] border bg-[var(--input-bg)] py-2.5 pl-3.5 pr-3 text-[13px] font-medium outline-none transition focus:border-accent focus:ring-4 focus:ring-[var(--accent-wash)] ${
+          active ? 'border-accent text-accent-ink' : 'border-[var(--hair)] text-ink'
+        }`}
       >
         <span className="flex min-w-0 items-center gap-2">
-          <svg className="flex-shrink-0 text-muted" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg className={`flex-shrink-0 ${active ? 'text-accent' : 'text-muted'}`} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2" />
             <path d="M16 2v4M8 2v4M3 10h18" />
           </svg>
@@ -362,15 +521,20 @@ export function DateRangePicker({
               boxShadow: 'var(--shadow-glass)',
             }}
           >
-            <div className="micro mb-2 text-muted">Quick range</div>
-            <div className="flex flex-wrap gap-1.5">
-              {presets.map((p) => (
-                <Chip key={p.id} active={activePreset === p.id} onClick={() => onPreset(p.id)}>
-                  {p.label}
-                </Chip>
-              ))}
-            </div>
-            <div className="my-3 border-t border-[var(--hair-soft)]" />
+            {presets && presets.length > 0 && (
+              <>
+                <div className="micro mb-2 text-muted">Quick range</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {presets.map((p) => (
+                    <Chip key={p.id} active={activePreset === p.id} onClick={() => onPreset?.(p.id)}>
+                      {p.label}
+                    </Chip>
+                  ))}
+                </div>
+                <div className="my-3 border-t border-[var(--hair-soft)]" />
+              </>
+            )}
+            <div className="micro mb-2 text-muted">Custom range</div>
             <div className="flex items-end gap-2">
               <label className="grid flex-1 gap-1.5">
                 <span className="micro text-muted">From</span>

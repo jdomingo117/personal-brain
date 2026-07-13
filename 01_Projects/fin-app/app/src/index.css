@@ -46,6 +46,12 @@
   --toast-bg: rgba(255, 255, 255, 0.92);
   --input-bg: rgba(255, 255, 255, 0.6);
   --switch-off: rgba(20, 24, 28, 0.15);
+
+  /* categorical palette for the expense-flow Sankey — 7 fixed hues, one per
+     expense category (taxonomy order). Validated CVD-safe (worst adjacent
+     ΔE 24.2 light); low-contrast slots are relieved by direct node labels. */
+  --cat-1: #2a78d6; --cat-2: #1baf7a; --cat-3: #eda100; --cat-4: #008300;
+  --cat-5: #4a3aa7; --cat-6: #e34948; --cat-7: #e87ba4;
 }
 
 /* ============================================================
@@ -76,6 +82,11 @@
   --input-bg: rgba(255, 255, 255, 0.06);
   --switch-off: rgba(255, 255, 255, 0.16);
   --shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 14px 36px rgba(0, 0, 0, 0.45);
+
+  /* dark steps of the categorical palette (same hues, stepped for the dark
+     surface; all ≥ 3:1 contrast, validated as a set) */
+  --cat-1: #3987e5; --cat-2: #199e70; --cat-3: #c98500; --cat-4: #008300;
+  --cat-5: #9085e9; --cat-6: #e66767; --cat-7: #d55181;
 }
 
 html, body, #root { height: 100%; }

@@ -50,8 +50,11 @@ export default function Bar({
   const dataPoints = series[0]?.data || []
   const n = dataPoints.length
   const spacing = innerW / n
-  // Width of each bar is 55% of the spacing
-  const barW = Math.max(8, spacing * 0.55)
+  // Bar is ~55% of the spacing; for dense charts (many days) drop the 8px floor
+  // so bars stay within their slot instead of overlapping.
+  const barW = spacing >= 14 ? Math.max(8, spacing * 0.55) : Math.max(1.5, spacing * 0.7)
+  // cap visible x-labels to ~12 regardless of bar count
+  const labelStride = Math.max(1, Math.ceil(labels.length / 12))
 
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
@@ -70,7 +73,7 @@ export default function Bar({
             height: [0, finalH],
             opacity: [0, 0.85],
             duration: 900,
-            delay: i * 45,
+            delay: i * Math.min(45, 700 / Math.max(1, n)),
             easing: CHART_EASE,
           })
         )
@@ -144,7 +147,7 @@ export default function Bar({
 
       {/* X Labels */}
       {labels.map((lab, i) =>
-        labels.length > 12 && i % 2 ? null : (
+        i % labelStride ? null : (
           <text key={i} x={padL + i * spacing + spacing / 2} y={H - 5} fill="var(--color-muted)" fontSize={9} textAnchor="middle">
             {lab}
           </text>
