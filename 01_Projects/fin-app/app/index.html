@@ -5,6 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Halcyon · Private Wealth</title>
     <meta name="description" content="Halcyon — a premium personal finance interface." />
+
+    <!--
+      Content Security Policy.
+
+      This is the control that most reduces the impact of the remaining token
+      exposure: while the access token lives in memory and the session sits in
+      localStorage, an injected script is what would steal either. A policy
+      that blocks unknown script origins and forbids exfiltration to arbitrary
+      hosts turns most injection bugs into a broken page instead of a
+      compromised account.
+
+      'unsafe-inline' in script-src covers the pre-paint theme script above;
+      replace it with a nonce when this is served from a real backend that can
+      generate one per response. connect-src is deliberately narrow — it is
+      what stops a stolen token being POSTed to an attacker's server.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' data: blob:;
+        connect-src 'self' http://127.0.0.1:54321 http://localhost:54321 ws://localhost:5300 https://*.supabase.co wss://*.supabase.co;
+        frame-ancestors 'none';
+        base-uri 'self';
+        form-action 'self';
+        object-src 'none'
+      "
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />

@@ -1,6 +1,7 @@
 import { motion, useMotionValue, useSpring } from 'framer-motion'
 import type { PointerEvent } from 'react'
-import { data, fmt } from '../data'
+import { fmt } from '../data'
+import { useData } from '../contexts/DataContext'
 
 /**
  * The shared-element hero. The SAME `layoutId="hero"` is used by both the
@@ -16,7 +17,10 @@ import { data, fmt } from '../data'
 const morph = { type: 'spring', stiffness: 210, damping: 28 } as const
 const springCfg = { stiffness: 150, damping: 18 } as const
 
-export default function HeroCard({ variant }: { variant: 'card' | 'tile' }) {
+export default function HeroCard({ variant, monthChangePct }: { variant: 'card' | 'tile'; monthChangePct?: number }) {
+  const { profile, accounts } = useData()
+  const netWorth = accounts.reduce((sum, a) => sum + a.balance, 0)
+
   const mvX = useMotionValue(0)
   const mvY = useMotionValue(0)
   const rotateX = useSpring(mvX, springCfg)
@@ -53,9 +57,9 @@ export default function HeroCard({ variant }: { variant: 'card' | 'tile' }) {
               <span className="font-display text-xl font-black">H</span>
             </div>
             <div>
-              <div className="text-lg tabular-nums tracking-[0.18em]">0117 · 4492</div>
+              <div className="text-lg tabular-nums tracking-[0.18em]">0000 · 0000</div>
               <div className="mt-2 flex items-end justify-between">
-                <span className="text-[11px] uppercase tracking-[0.18em] text-white/55">{data.operator.callsign}</span>
+                <span className="text-[11px] uppercase tracking-[0.18em] text-white/55">{profile.callsign}</span>
                 <span className="text-[11px] uppercase tracking-[0.18em] text-accent">Reserve</span>
               </div>
               <div className="mt-3 h-[3px] w-full rounded bg-gradient-to-r from-accent/0 via-accent to-accent/0" />
@@ -76,8 +80,12 @@ export default function HeroCard({ variant }: { variant: 'card' | 'tile' }) {
     >
       <motion.div layout="position">
         <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">Total net worth</div>
-        <div className="mt-2 text-[32px] font-bold tabular-nums tracking-tight">{fmt(data.operator.netWorth)}</div>
-        <div className="mt-1.5 text-[12.5px] font-semibold text-pos">▲ {data.operator.netWorthDelta}% this month · +23% YTD</div>
+        <div className="mt-2 text-[32px] font-bold tabular-nums tracking-tight">{fmt(netWorth)}</div>
+        {netWorth !== 0 && monthChangePct !== undefined && (
+          <div className={`mt-1.5 text-[12.5px] font-semibold ${monthChangePct >= 0 ? 'text-pos' : 'text-neg'}`}>
+            {monthChangePct >= 0 ? '▲' : '▼'} {monthChangePct >= 0 ? '+' : ''}{monthChangePct}% this month
+          </div>
+        )}
       </motion.div>
     </motion.div>
   )

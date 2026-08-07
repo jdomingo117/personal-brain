@@ -2,6 +2,8 @@ import { motion } from 'framer-motion'
 import { useState, type ReactNode } from 'react'
 import { NAV, useView, type View } from '../router'
 import { useScramble } from '../hooks/useScramble'
+import { supabase } from '../lib/supabaseClient'
+import { useData } from '../contexts/DataContext'
 
 const barSpring = { type: 'spring', stiffness: 120, damping: 20 } as const
 
@@ -19,7 +21,7 @@ function Icon({ d, onClick, label }: { d: string; onClick?: () => void; label: s
   )
 }
 
-function RailItem({ item }: { item: (typeof NAV)[number] }) {
+function RailItem({ item, badge }: { item: (typeof NAV)[number]; badge?: number }) {
   const { view, go } = useView()
   const [hover, setHover] = useState(false)
   const active = view === item.id
@@ -31,9 +33,14 @@ function RailItem({ item }: { item: (typeof NAV)[number] }) {
       onMouseLeave={() => setHover(false)}
       onClick={() => go(item.id)}
       aria-current={active ? 'page' : undefined}
-      aria-label={item.label}
-      className="group flex cursor-pointer items-center text-left"
+      aria-label={badge ? `${item.label} · ${badge} transactions need transfer review` : item.label}
+      className="group relative flex cursor-pointer items-center text-left"
     >
+      {!!badge && (
+        <span className="absolute -left-1 -top-1 grid h-[15px] min-w-[15px] place-items-center rounded-full bg-accent px-[3px] font-display text-[9px] font-bold text-bar tabular-nums">
+          {badge > 9 ? '9+' : badge}
+        </span>
+      )}
       <span
         className={`w-[22px] font-display text-[14px] font-extrabold tabular-nums transition-colors ${
           active ? 'text-accent-ink' : hover ? 'text-ink' : 'text-faint'
@@ -66,7 +73,27 @@ function RailItem({ item }: { item: (typeof NAV)[number] }) {
 }
 
 export default function Shell({ children }: { children: ReactNode }) {
-  const { view, go } = useView()
+  const { view, go, toast } = useView()
+  const { profile, transactions } = useData()
+
+  const pendingTransferReview = transactions.filter(
+    (t) => t.transferState === 'suggested' || t.transferState === 'unmatched',
+  ).length
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) toast({ title: 'Sign out failed', sub: error.message })
+  }
+
+  const getInitials = (name: string) => {
+    if (!name) return 'OP'
+    const parts = name.trim().split(/\s+/)
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    }
+    return name.substring(0, 2).toUpperCase()
+  }
+
   return (
     <div className="relative z-[5] grid h-screen w-screen grid-rows-[auto_1fr_auto]">
       {/* top letterbox bar */}
@@ -84,15 +111,14 @@ export default function Shell({ children }: { children: ReactNode }) {
           <span className="border-l border-white/15 pl-3 text-[12px] text-white/45">Private Wealth</span>
         </button>
         <div className="flex items-center gap-2">
-          <Icon label="Search" d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14ZM20 20l-3.5-3.5" />
           <Icon
             label="Settings"
             onClick={() => go('settings')}
             d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V15Z"
           />
-          <Icon label="Notifications" d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6M10 20a2 2 0 0 0 4 0" />
+          <Icon label="Sign Out" onClick={handleSignOut} d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
           <div className="ml-1 grid h-[38px] w-[38px] place-items-center rounded-[11px] bg-white text-[13px] font-semibold text-bar">
-            AM
+            {getInitials(profile?.callsign)}
           </div>
         </div>
         <span className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-accent/55 to-transparent" />
@@ -106,7 +132,7 @@ export default function Shell({ children }: { children: ReactNode }) {
           transition={{ type: 'spring', stiffness: 160, damping: 24 }}
         >
           {NAV.map((item) => (
-            <RailItem key={item.id} item={item} />
+            <RailItem key={item.id} item={item} badge={item.id === 'ingestion' ? pendingTransferReview : undefined} />
           ))}
         </motion.nav>
         <main className="relative min-h-0">{children}</main>

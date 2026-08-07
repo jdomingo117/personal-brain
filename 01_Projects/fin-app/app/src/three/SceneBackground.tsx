@@ -20,6 +20,8 @@ const VIEW_SHIFT: Record<View, number> = {
   expenses: 24,
   ingestion: -8,
   settings: 12,
+  login: 0,
+  onboarding: 5,
 }
 
 interface Node {

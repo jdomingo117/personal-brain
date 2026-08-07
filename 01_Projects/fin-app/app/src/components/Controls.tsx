@@ -6,11 +6,15 @@ export function Button({
   onClick,
   variant = 'primary',
   type = 'button',
+  disabled,
+  className = '',
 }: {
   children: ReactNode
   onClick?: () => void
   variant?: 'primary' | 'ghost'
   type?: 'button' | 'submit'
+  disabled?: boolean
+  className?: string
 }) {
   const base =
     'micro rounded-lg px-5 py-3 transition will-change-transform'
@@ -19,7 +23,7 @@ export function Button({
       ? 'bg-ink text-surface hover:-translate-y-px hover:shadow-lg'
       : 'border border-[var(--hair)] text-ink hover:bg-black/[0.03]'
   return (
-    <motion.button type={type} onClick={onClick} whileTap={{ scale: 0.97 }} className={`${base} ${styles}`}>
+    <motion.button type={type} disabled={disabled} onClick={onClick} whileTap={disabled ? undefined : { scale: 0.97 }} className={`${base} ${styles} ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
       {children}
     </motion.button>
   )

@@ -47,11 +47,18 @@
   --input-bg: rgba(255, 255, 255, 0.6);
   --switch-off: rgba(20, 24, 28, 0.15);
 
-  /* categorical palette for the expense-flow Sankey — 7 fixed hues, one per
-     expense category (taxonomy order). Validated CVD-safe (worst adjacent
-     ΔE 24.2 light); low-contrast slots are relieved by direct node labels. */
+  /* categorical palette for the expense-flow Sankey — 8 fixed hues, one per
+     expense category (taxonomy order). 1–7 validated CVD-safe (worst adjacent
+     ΔE 24.2 light); low-contrast slots are relieved by direct node labels.
+     --cat-8 (Other) was added later and chosen for maximum distance from the
+     existing set: it is the only dark warm-neutral, and its lightness (L*≈43)
+     separates it from --cat-3 amber (L*≈70), the nearest hue. It has NOT been
+     through the same formal ΔE sweep as 1–7 — re-run that before adding a 9th.
+     --cat-unknown is deliberately NOT a category hue: it is the fallback for a
+     name absent from the taxonomy, and must never be mistaken for a real one. */
   --cat-1: #2a78d6; --cat-2: #1baf7a; --cat-3: #eda100; --cat-4: #008300;
-  --cat-5: #4a3aa7; --cat-6: #e34948; --cat-7: #e87ba4;
+  --cat-5: #4a3aa7; --cat-6: #e34948; --cat-7: #e87ba4; --cat-8: #8a5a2b;
+  --cat-unknown: #8a94a1;
 }
 
 /* ============================================================
@@ -84,9 +91,11 @@
   --shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 14px 36px rgba(0, 0, 0, 0.45);
 
   /* dark steps of the categorical palette (same hues, stepped for the dark
-     surface; all ≥ 3:1 contrast, validated as a set) */
+     surface; all ≥ 3:1 contrast, validated as a set). --cat-8 is lightened
+     well past its light-mode value: #8a5a2b is too dark to clear 3:1 here. */
   --cat-1: #3987e5; --cat-2: #199e70; --cat-3: #c98500; --cat-4: #008300;
-  --cat-5: #9085e9; --cat-6: #e66767; --cat-7: #d55181;
+  --cat-5: #9085e9; --cat-6: #e66767; --cat-7: #d55181; --cat-8: #b58150;
+  --cat-unknown: #7c8797;
 }
 
 html, body, #root { height: 100%; }
@@ -159,6 +168,18 @@ input[type="date"] { color-scheme: light; }
 
 /* redact balances (Settings toggle) */
 .redacted .tabular-nums { filter: blur(7px); transition: filter 0.2s; }
+
+/* React Flow (Expenses ▸ Where it goes) — theme the pane chrome to Halcyon */
+.react-flow { background: transparent; }
+.react-flow__controls { box-shadow: var(--shadow-glass); border-radius: 9px; overflow: hidden; border: 1px solid var(--hair); }
+.react-flow__controls-button {
+  background: var(--toast-bg);
+  border-bottom: 1px solid var(--hair-soft);
+  width: 24px; height: 24px;
+}
+.react-flow__controls-button:hover { background: var(--hair-soft); }
+.react-flow__controls-button svg { fill: var(--color-ink2); }
+.react-flow__attribution { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }

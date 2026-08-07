@@ -14,7 +14,10 @@ export default function AllocationDonut({
   totalLabel?: string
 }) {
   const total = data.reduce((a, d) => a + d.value, 0)
-  const centerFmt = (n: number) => '$' + Math.round(n / 1000) + 'K'
+  // `data[].value` is in CENTS, like every other amount in the app (see the
+  // comment on fmt()/fmtCents() in data.ts) — convert to dollars before the
+  // K-scaling, which otherwise divides cents by 1000 instead of 100,000.
+  const centerFmt = (n: number) => '$' + Math.round(n / 100 / 1000) + 'K'
 
   const ref = useChartReveal<HTMLDivElement>(
     (scope) => {

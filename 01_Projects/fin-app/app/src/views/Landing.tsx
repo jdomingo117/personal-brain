@@ -4,13 +4,14 @@ import HeroCard from '../components/HeroCard'
 import { copyGroup, copyItem } from '../components/motion'
 import { useCountUp } from '../hooks/useCountUp'
 import { useView } from '../router'
-import { data } from '../data'
+import { useData } from '../contexts/DataContext'
 
 const soft = { stiffness: 60, damping: 18 } as const
 
 export default function Landing() {
   const { go } = useView()
-  const netWorth = useCountUp(data.operator.netWorth)
+  const { profile } = useData()
+  const netWorth = useCountUp(profile.netWorth)
   const wheelLock = useRef(false)
 
   // cursor-parallax depth (copy and card move on opposing layers)
@@ -56,11 +57,11 @@ export default function Landing() {
 
         <motion.h1 variants={copyItem} className="font-display font-black leading-[0.88] tracking-[-0.03em] text-[clamp(48px,6vw,92px)]">
           <span className="mb-1.5 block text-[30px] font-bold tracking-tight text-ink2">Welcome back,</span>
-          {data.operator.callsign}
+          {profile.callsign}
         </motion.h1>
 
         <motion.p variants={copyItem} className="mt-5 max-w-[360px] text-[15px] leading-relaxed text-ink2">
-          Your portfolio is up {data.operator.netWorthDelta}% this month. Everything is nominal and on track.
+          Your portfolio is up {profile.netWorthDelta}% this month. Everything is nominal and on track.
         </motion.p>
 
         <motion.div variants={copyItem} className="mt-6 flex items-baseline gap-3">
@@ -68,7 +69,7 @@ export default function Landing() {
             <motion.span>{netWorth}</motion.span>
           </span>
           <span className="text-[13px] text-muted">
-            total net worth · <span className="font-semibold text-pos">+{data.operator.netWorthDelta}% MoM</span>
+            total net worth · <span className="font-semibold text-pos">+{profile.netWorthDelta}% MoM</span>
           </span>
         </motion.div>
 

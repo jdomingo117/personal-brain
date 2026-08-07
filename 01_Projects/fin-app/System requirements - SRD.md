@@ -121,7 +121,7 @@ flowchart TD
 
 The platform unifies disparate financial vehicles into a cohesive time-series graph:
 
-- **Liquid & Credit Accounts:** Automatic extraction via supported neobank APIs (AU CDR / Basiq, *Phase 3*); legacy bank ingestion processed through local file parsers (*MVP*).
+- **Liquid & Credit Accounts:** Automatic extraction via a direct neobank API (Up Bank, read-only Personal Access Token — built, see [INDEX.md](INDEX.md)); broader aggregator coverage (AU CDR / Basiq, for banks without their own API) remains *Phase 3*. Legacy bank ingestion processed through local file parsers (*MVP*), and can coexist with an API connection on the same account via a per-account `cutover_date`.
 
 - **Investment Vehicles (Stocks & Managed Funds):** Cost-basis tracked via historical transaction records (buys/sells) (*Phase 3*).
 
@@ -256,10 +256,14 @@ This section defines the structural architecture, widgets, filters, and fields r
   * *Chart:* Combines actual historical net worth data with a projected future trajectory line and an explicit horizontal target goal marker.
 
 ### D. Expenses Section
-*Equipped with a tab switcher to transition between Expense Analytics and the Recurring Hub views (Recurring Hub is Phase 4).*
+*Equipped with a tab switcher to transition between Expense Analytics and the Recurring Hub views. Both are **built** — see Halcyon_DesignSystem.md §8.15–§8.17. The Recurring Hub's read-only half (detection, directory, billing calendar) shipped ahead of its Phase 4 slot because it is pure deterministic maths over the ledger. The Osko same-day linker (§6.E below) also shipped ahead of its Phase 4 slot — see [MVP_SCOPE.md](MVP_SCOPE.md) for what that pulled forward. Recurring write-back remains Phase 4.*
 
 #### Tab 1: Analytics
 * **Header:** Section title, date bounds.
+* **Cross-filtering (view-wide):** A single category / sub-category **focus** is shared across the tab — clicking a category or sub-category in either comparison tile focuses the whole view, as does the ledger's category selector. Implemented as `lib/expenseSelection.ts`; see [Halcyon_DesignSystem.md](Halcyon_DesignSystem.md) §8.16.
+  * *Rule:* **Comparison tiles highlight; magnitude/detail tiles filter.** The flow chart and the pacing rail always show every category (dimming those out of focus) because filtering a part-to-whole view to one part deletes the comparison. The hero cards, the trend chart and the ledger follow the focus. The role belongs to the tile, not to whichever tile was clicked.
+  * *Interaction:* Plain click replaces the focus; clicking it again clears it. True multi-select remains available via the filter popover. Selecting a sub-category co-sets its parent.
+  * *Scope indicator:* A dismissible bar names the active focus and states which tiles follow it — a focused hero total sitting beside an unfiltered comparison tile is correct but needs saying out loud.
 * **Account Filter:** Select/deselect specific accounts in calculations.
 * **Query Parameter Filter Bar:**
   * *Search:* Keyword input for descriptions/merchants.
@@ -270,14 +274,19 @@ This section defines the structural architecture, widgets, filters, and fields r
 * **Hero Cards (4 Cards):**
   * *Outflow Period Total:* Sum of all expenses.
   * *Daily Aggregate Average:* Average daily expense value over the period.
-  * *Heavyweight Category:* The category with the highest total expense.
-  * *Top Merchant/Vendor:* The vendor associated with the highest total expenditure.
+  * *Heavyweight Category:* The category with the highest total expense. Under an active focus this is trivially the focused category, so the card swaps to **Share of Outflow** — the focused total as a percentage of the unfiltered period, which stays meaningful at category *and* sub-category depth and re-links the focused hero row to the whole.
+  * *Top Merchant/Vendor:* The vendor associated with the highest total expenditure (within the focus, when one is active).
+  * *Note:* The vs-prior-period deltas compare like with like — the prior window is filtered by the same focus as the current one.
 * **Net Expenses Chart:** Line graph of chronological cumulative expenses for the selected period.
 * **Daily Spikes Bar Chart:** Identifies days of unusual high-volume spending.
 * **Expense Hierarchy Flow Chart:** Restrained-palette flow layout representing hierarchy from left to right: `Total Outflow` > `Category` > `Sub-Category`.
-* **Category Volatility & Pacing Component:**
-  * *Progress Indicators:* Progress bars comparing current period category spend against previous period baseline.
-  * *Metadata indicators:* Tracks absolute variance and percentage saved/exceeded.
+* **Category Volatility & Pacing Component:** A scrollable list of bullet rails, one per category, expanding to sub-categories. Implemented as `ExpensePacingCard.tsx` over `lib/pacing.ts`; see [Halcyon_DesignSystem.md](Halcyon_DesignSystem.md) §8.15 for the mark-by-mark spec. A cross-filter source: rows and sub-rows focus the view, and the expansion *is* the focus (no separate accordion state). Its header names the month window it actually measures, which on sub-month ranges is deliberately wider than the page's.
+  * *Progress Indicators:* Progress bars comparing current period category spend against the previous period baseline, with the baseline pinned to a constant x across rows so it reads as one vertical rule.
+  * *Volatility:* A ±1σ "normal range" band drawn from the trailing 6 periods — its **width is the volatility**, so the reader can tell an ordinary 100% swing on a discretionary category from an alarming one on a fixed cost.
+  * *Metadata indicators:* Absolute spend against baseline per row, plus a percentage saved/exceeded chip. The chip and the state colour both report the **projected finish**, not the raw to-date ratio — mid-period the raw ratio reads as a saving on every row and is actively misleading.
+  * *Colour:* State only (`accent`/`warn`/`neg`/`muted`) — no category hues in this component (see the hue-vs-state rule, DesignSystem §2).
+  * *Grain:* Calendar months. The component snaps the selected range out to whole months, because monthly recurring costs make sub-month windows report the most predictable categories as the most erratic.
+  * *Degradation:* Under 3 populated periods the band is suppressed; with no comparable prior block the rows go neutral and state "no prior period" rather than inventing a baseline.
 * **Ranked Top 10 Merchants List:** Clean high-density list of top 10 merchants by cost.
 * **Ledger Expenses:** Capped tabular display of expense transactions (10 loaded at a time).
 
@@ -290,10 +299,10 @@ This section defines the structural architecture, widgets, filters, and fields r
   * *Active Commitments:* Total count of active subscription/recurring structures.
 * **Recurring Commitments Directory:**
   * *Sectional Table:* Organized by category, with sub-totals and totals.
-  * *Row Metadata:* Cadence (frequency), fixed vs. variable indicator, last charged date, expected next date, and source account link.
+  * *Row Metadata:* Cadence (frequency), fixed vs. variable indicator, last charged date, expected next date, and source account link (***Phase 3*** — transactions carry no account until the data model gains `accountId`; inferring one would contradict the analyzer's own account filter on the same page).
 * **30-Day Billing Calendar:**
   * *Matrix Calendar Grid:* A 7-column grid highlighting calendar days where fixed expenses occur, with restrained-palette heat intensity weighted by transaction amount.
-* **Smart Insights Bulletins:** Insights box showing AI-analyzed patterns in recurring subscriptions.
+* **Smart Insights Bulletins** (***Phase 2***)**:** Insights box showing AI-analyzed patterns in recurring subscriptions. Depends on the insights engine (deterministic maths; AI only phrases the bulletin).
 
 ### E. Ingestion Portal
 * **Header:** Title, instructions, system date.
@@ -302,11 +311,9 @@ This section defines the structural architecture, widgets, filters, and fields r
   * *Parser Ingestion Engine Selector:* Choose corresponding static profile/parser template.
 * **Drag-and-Drop Area:** Interactivity zone for statement CSV upload.
 * **Action Button:** "Analyze staging buffer" to execute schema parsing and direct transaction duplicates resolution.
-* **API Integration Card:** "Automate with bank API" CTA button to link/refresh API tokens (*Phase 3*).
-* **Same-Day Osko Linker (*Phase 4*):**
-  * *Reconciliation Panel:* Identifies and pairs matching counter-transfers (e.g., transfers between internal accounts on the same day) in the uploaded statements, presenting them to the user to accept/approve pairing with a single action.
-
-> *Implementation note:* the shipped Ingestion view is currently a **simulator** (no real mutation yet) — see [CONTEXT.md](CONTEXT.md) §10.
+* **API Integration Card (built, see [INDEX.md](INDEX.md)):** "Connect bank" CTA in `views/Accounts.tsx` opens `ConnectBankModal.tsx` to link an Up Bank Personal Access Token; refresh/disconnect live in `EditAccountModal.tsx`'s connection card.
+* **Same-Day Osko Linker (built, jumped the Phase 4 queue — see [INDEX.md](INDEX.md)):**
+  * *Reconciliation Panel:* Identifies and pairs matching counter-transfers (e.g., transfers between internal accounts on the same day) in the uploaded statements, presenting them to the user to accept/approve pairing with a single action. Implemented as `OskoLinker.tsx` + the `link-transfers`/`decide-transfer` Edge Functions; also surfaces transfer-looking legs with no matching counterpart for manual review, which this section's original scope didn't anticipate.
 
 ### F. Hidden Admin Portal (*Phase 5*)
 *Accessible only to users carrying the authenticated role of ADMIN.*

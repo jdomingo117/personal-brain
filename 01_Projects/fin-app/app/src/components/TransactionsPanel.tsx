@@ -4,28 +4,39 @@ import Ledger from './Ledger'
 import FiltersPopover from './FiltersPopover'
 import { SearchInput, RemovableChip } from './Controls'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
+import { matchesSelection } from '../lib/expenseSelection'
 import { CATEGORY_TAXONOMY, EXPENSE_CATEGORIES, type Txn } from '../data'
 
 /** Full-width transactions panel with list-level filters — free-text search
  *  (merchant), cascading category / sub-category multi-selects, and an amount
- *  min–max bound. `rows` arrives already scoped by the view's period + account
- *  filters; these filters compose on top and affect only this list. */
-export default function TransactionsPanel({ rows }: { rows: Txn[] }) {
+ *  min–max bound.
+ *
+ *  `categories`/`subcats` are **controlled**: they're the view's shared focus, so
+ *  clicking a category in the flow or pacing card lands here. Search and the
+ *  amount bound stay local — no other tile speaks them.
+ *
+ *  `rows` arrives scoped by the view's period + account filters but is otherwise
+ *  **unfiltered** — this panel is the filterer, not a passive sink. Pre-filtering
+ *  it upstream would collapse every unselected `categoryOptions` count to 0 and
+ *  reduce the `n of m` readout to `12 of 12`. */
+export default function TransactionsPanel({
+  rows,
+  categories,
+  subcats,
+  onCategories,
+  onSubcats,
+}: {
+  rows: Txn[]
+  categories: string[]
+  subcats: string[]
+  /** the caller prunes unreachable sub-cats (see `pruneSubcats`) */
+  onCategories: (next: string[]) => void
+  onSubcats: (next: string[]) => void
+}) {
   const [query, setQuery] = useState('')
-  const [categories, setCategories] = useState<string[]>([])
-  const [subcats, setSubcats] = useState<string[]>([])
   const [amountMin, setAmountMin] = useState('')
   const [amountMax, setAmountMax] = useState('')
   const debouncedQuery = useDebouncedValue(query, 180)
-
-  // Changing categories prunes any selected sub-cats no longer in the union.
-  const changeCategories = (next: string[]) => {
-    setCategories(next)
-    if (next.length) {
-      const allowed = new Set(next.flatMap((c) => CATEGORY_TAXONOMY[c] ?? []))
-      setSubcats((prev) => prev.filter((s) => allowed.has(s)))
-    }
-  }
 
   // Category options (stable set) with per-category counts over the scoped rows.
   const categoryOptions = useMemo(() => {
@@ -57,8 +68,7 @@ export default function TransactionsPanel({ rows }: { rows: Txn[] }) {
     const hi = min != null && max != null ? Math.max(min, max) : max
     return rows.filter((t) => {
       if (q && !t.merchant.toLowerCase().includes(q)) return false
-      if (categories.length && !categories.includes(t.cat)) return false
-      if (subcats.length && !(t.subcat && subcats.includes(t.subcat))) return false
+      if (!matchesSelection(t, { categories, subcats })) return false
       const abs = Math.abs(t.amount)
       if (lo != null && abs < lo) return false
       if (hi != null && abs > hi) return false
@@ -76,10 +86,11 @@ export default function TransactionsPanel({ rows }: { rows: Txn[] }) {
     setAmountMin('')
     setAmountMax('')
   }
+  // Note this now clears the view's shared focus too, not just this list.
   const clearAll = () => {
     setQuery('')
-    setCategories([])
-    setSubcats([])
+    onCategories([])
+    onSubcats([])
     clearAmount()
   }
 
@@ -104,10 +115,10 @@ export default function TransactionsPanel({ rows }: { rows: Txn[] }) {
           <FiltersPopover
             categoryOptions={categoryOptions}
             categories={categories}
-            onCategories={changeCategories}
+            onCategories={onCategories}
             subcatOptions={subcatOptions}
             subcats={subcats}
-            onSubcats={setSubcats}
+            onSubcats={onSubcats}
             amountMin={amountMin}
             amountMax={amountMax}
             onAmountMin={setAmountMin}
@@ -122,12 +133,12 @@ export default function TransactionsPanel({ rows }: { rows: Txn[] }) {
       {anyChip && (
         <div className="mb-3 flex flex-wrap items-center gap-1.5">
           {categories.map((c) => (
-            <RemovableChip key={`c-${c}`} onRemove={() => changeCategories(categories.filter((x) => x !== c))}>
+            <RemovableChip key={`c-${c}`} onRemove={() => onCategories(categories.filter((x) => x !== c))}>
               {c}
             </RemovableChip>
           ))}
           {subcats.map((s) => (
-            <RemovableChip key={`s-${s}`} onRemove={() => setSubcats(subcats.filter((x) => x !== s))}>
+            <RemovableChip key={`s-${s}`} onRemove={() => onSubcats(subcats.filter((x) => x !== s))}>
               {s}
             </RemovableChip>
           ))}

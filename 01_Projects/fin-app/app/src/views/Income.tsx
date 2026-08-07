@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Screen, ViewHeader, Grid } from '../components/Screen'
 import Tile from '../components/Tile'
@@ -9,8 +9,10 @@ import SegmentedTabs from '../components/SegmentedTabs'
 import HeroMetric from '../components/HeroMetric'
 import AnalyzerFilters from '../components/AnalyzerFilters'
 import { usePeriodRange } from '../hooks/usePeriodRange'
-import { MONTHS, dateToIdx, txnIso } from '../lib/period'
-import { data, fmt } from '../data'
+import { MONTHS, dateToIdx } from '../lib/period'
+import { CADENCE_PER_MONTH } from '../lib/cadence'
+import { fmt } from '../data'
+import { useData } from '../contexts/DataContext'
 
 const TABS = [
   { id: 'analyzer', label: 'Income analyzer' },
@@ -19,17 +21,31 @@ const TABS = [
 
 export default function Income() {
   const [view, setView] = useState('analyzer')
-  // Filter state lives here so the controls can sit in the page header toolbar
-  // (a global element, not a tile), while the analyzer below consumes it.
   const { preset, from, to, applyPreset, changeFrom, changeTo } = usePeriodRange()
-  const [accounts, setAccounts] = useState<string[]>(INFLOW_ACCOUNTS.map((a) => a.name))
+  
+  const { accounts: dbAccounts, transactions } = useData()
+
+  const INFLOW_ACCOUNTS = useMemo(() => {
+    if (!dbAccounts || dbAccounts.length === 0) return []
+    return dbAccounts.map(a => ({ id: a.id, name: a.name, share: 1 / dbAccounts.length }))
+  }, [dbAccounts])
+
+  const ACCOUNT_OPTIONS = useMemo(() => INFLOW_ACCOUNTS.map((a) => ({
+    value: a.id,
+    label: a.name,
+    hint: '',
+  })), [INFLOW_ACCOUNTS])
+
+  const [accounts, setAccounts] = useState<string[]>([])
+  
+  useEffect(() => {
+    if (dbAccounts.length > 0 && accounts.length === 0) {
+      setAccounts(dbAccounts.map(a => a.id))
+    }
+  }, [dbAccounts])
 
   return (
     <Screen>
-      {/* Header — title + primary view switch (row 1), then an analyzer-only
-          filter bar (row 2): quick-range pills on the left, account filter +
-          custom-range picker on the right. Elevated z-index so the popovers
-          overlay the content below. */}
       <div className="relative z-30 flex flex-col gap-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <ViewHeader index="03 — Inflow" title="Income" sub="Earning streams, cash flow & savings rate" />
@@ -63,7 +79,7 @@ export default function Income() {
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.25 }}
           >
-            <IncomeAnalyzer from={from} to={to} accounts={accounts} />
+            <IncomeAnalyzer from={from} to={to} accounts={accounts} dbAccountsLength={dbAccounts.length} />
           </motion.div>
         ) : (
           <motion.div
@@ -96,51 +112,42 @@ export default function Income() {
   )
 }
 
-/* ── Income analyzer ─────────────────────────────────────────────────────
-   Header toolbar (period range · linked accounts) drives:
-   row 1 — period KPI hero cards
-   row 2 — cumulative cash-flow pacing chart + savings-rate visual
-   row 3 — income source breakdown + a recent-deposits ledger */
-
-/** Deposit-capable accounts + their stable share of total inflow (debt
- *  accounts can't receive deposits, so they're excluded from the filter). */
-const INFLOW_ACCOUNTS = [
-  { name: 'Operations Checking', share: 0.68 },
-  { name: 'Reserve // High-Yield', share: 0.16 },
-  { name: 'Index Fund // VTSAX', share: 0.11 },
-  { name: 'Roth IRA', share: 0.05 },
-]
-const ACCOUNT_OPTIONS = INFLOW_ACCOUNTS.map((a) => ({
-  value: a.name,
-  label: a.name,
-  hint: `${Math.round(a.share * 100)}%`,
-}))
-
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0)
 
-/* Income sources normalised to a monthly-equivalent → fixed share of inflow.
-   (Composition is structural; the period total scales it in the donut.) */
-const CADENCE_PER_MONTH: Record<string, number> = {
-  Weekly: 52 / 12,
-  Biweekly: 26 / 12,
-  Monthly: 1,
-  Quarterly: 1 / 3,
-  Annual: 1 / 12,
-}
-const INCOME_SHARES = (() => {
-  const monthly = data.income.map((s) => s.amount * (CADENCE_PER_MONTH[s.cadence] ?? 1))
-  const total = sum(monthly)
-  return data.income.map((s, i) => ({ label: s.source, glow: s.glow, share: monthly[i] / total }))
-})()
+const INCOME_SHARES = [
+  { label: 'Primary Salary', glow: 'cyan' as const, share: 0.8 },
+  { label: 'Freelance', glow: 'green' as const, share: 0.15 },
+  { label: 'Dividends', glow: 'blue' as const, share: 0.05 }
+]
 
-function IncomeAnalyzer({ from, to, accounts }: { from: string; to: string; accounts: string[] }) {
+function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string; to: string; accounts: string[]; dbAccountsLength: number }) {
+  const { transactions } = useData()
   const m = useMemo(() => {
     const fromIdx = dateToIdx(from)
     const toIdx = dateToIdx(to)
-    // selected accounts' shares sum to the period multiplier (all → 1.0, none → 0)
-    const share = accounts.reduce((s, name) => s + (INFLOW_ACCOUNTS.find((a) => a.name === name)?.share ?? 0), 0)
-    const inc = data.cashflow.income.slice(fromIdx, toIdx + 1).map((v) => v * share)
-    const exp = data.cashflow.expense.slice(fromIdx, toIdx + 1)
+    const share = accounts.length > 0 ? accounts.length / (dbAccountsLength || 1) : 0
+    
+    // Group transactions by month to build dynamic inc/exp arrays
+    const monthlyInc = Array(12).fill(0)
+    const monthlyExp = Array(12).fill(0)
+    
+    transactions.forEach(t => {
+      // Only include transactions for selected accounts
+      if (!t.account_id || !accounts.includes(t.account_id) || t.isTransfer || t.pending) return
+
+      const monthIdx = dateToIdx(t.date)
+      if (monthIdx >= 0 && monthIdx < 12) {
+        if (t.amount > 0) {
+          monthlyInc[monthIdx] += t.amount
+        } else {
+          monthlyExp[monthIdx] += Math.abs(t.amount)
+        }
+      }
+    })
+
+    const inc = monthlyInc.slice(fromIdx, toIdx + 1)
+    const exp = monthlyExp.slice(fromIdx, toIdx + 1)
+    
     const net = inc.map((v, i) => v - exp[i])
     const n = inc.length || 1
     const totalInflow = sum(inc)
@@ -149,7 +156,7 @@ function IncomeAnalyzer({ from, to, accounts }: { from: string; to: string; acco
     const coverage = totalOutflow ? totalInflow / totalOutflow : 0
     const surplus = totalInflow - totalOutflow
     const peakVal = Math.max(...inc)
-    const peakMonth = MONTHS[fromIdx + inc.indexOf(peakVal)]
+    const peakMonth = peakVal > 0 ? MONTHS[fromIdx + inc.indexOf(peakVal)] : '—'
 
     // running totals for the pacing chart
     const cum = (xs: number[]) => {
@@ -161,16 +168,29 @@ function IncomeAnalyzer({ from, to, accounts }: { from: string; to: string; acco
     const monthlyRates = inc.map((v, i) => (v > 0 ? (v - exp[i]) / v : 0))
     const savingsRate = totalInflow > 0 ? surplus / totalInflow : 0
 
-    // income composition over the period (shares fixed, total scales)
-    const sourceSlices = INCOME_SHARES.map((sh) => ({ label: sh.label, value: totalInflow * sh.share, glow: sh.glow }))
+    // income composition over the period (compute real slices from categorized transactions)
+    const sourceMap: Record<string, number> = {}
+    transactions.forEach(t => {
+      if (t.amount > 0 && !t.isTransfer && !t.pending && t.account_id && accounts.includes(t.account_id) && t.date >= from && t.date <= to) {
+        sourceMap[t.cat || 'Other'] = (sourceMap[t.cat || 'Other'] || 0) + t.amount
+      }
+    })
+    
+    const colors = ['cyan', 'green', 'blue', 'purple', 'amber']
+    const sourceSlices = Object.entries(sourceMap)
+      .sort((a, b) => b[1] - a[1])
+      .map(([label, value], i) => ({
+        label,
+        value,
+        glow: colors[i % colors.length] as any
+      }))
 
     // inflow transactions within the selected range, most recent first
-    // (txns aren't account-mapped, so we gate on "any account selected")
     const deposits =
       share > 0
-        ? data.transactions
-            .filter((t) => t.amount > 0 && txnIso(t.date) >= from && txnIso(t.date) <= to)
-            .sort((a, b) => txnIso(b.date).localeCompare(txnIso(a.date)))
+        ? transactions
+            .filter((t) => t.amount > 0 && !t.isTransfer && t.account_id && accounts.includes(t.account_id) && t.date >= from && t.date <= to)
+            .sort((a, b) => b.date.localeCompare(a.date))
             .slice(0, 6)
         : []
 
@@ -178,15 +198,15 @@ function IncomeAnalyzer({ from, to, accounts }: { from: string; to: string; acco
       fromIdx, toIdx, share, inc, totalInflow, totalOutflow, prorated, coverage, surplus, n, peakVal, peakMonth,
       cumInflow, cumNet, monthlyRates, savingsRate, sourceSlices, deposits,
     }
-  }, [from, to, accounts])
+  }, [from, to, accounts, transactions, dbAccountsLength])
 
   const acctLabel =
-    accounts.length === INFLOW_ACCOUNTS.length
+    accounts.length === dbAccountsLength
       ? 'All accounts'
       : accounts.length === 0
         ? 'No accounts'
         : accounts.length === 1
-          ? accounts[0].split(' // ')[0]
+          ? '1 account'
           : `${accounts.length} accounts`
   const covPositive = m.coverage >= 1
 
@@ -268,7 +288,6 @@ function LegendDot({ color, label }: { color: string; label: string }) {
   )
 }
 
-/** Minimal axis-less trend line for the savings-rate history. */
 function Sparkline({ values, color, height = 30 }: { values: number[]; color: string; height?: number }) {
   if (values.length === 0) return null
   const w = 120
@@ -294,8 +313,6 @@ function Sparkline({ values, color, height = 30 }: { values: number[]; color: st
   )
 }
 
-/** Savings-rate ring (rate %) + amount saved, a monthly-rate sparkline and a
- *  delta vs a target benchmark. Ring fill clamps to [0,1]; deficit reads red. */
 function SavingsTile({
   rate,
   saved,

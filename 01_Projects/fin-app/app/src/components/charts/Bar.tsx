@@ -7,15 +7,18 @@ export interface BarSeries {
   color: string // CSS color
 }
 
+// Series data is in CENTS, like every other amount in the app (see the
+// comment on fmt()/fmtCents() in data.ts). Divide by 100 before the k-scaling
+// below, which otherwise operates on dollars.
 const formatChartVal = (v: number) => {
-  const absV = Math.abs(v)
+  const absV = Math.abs(v) / 100
   return absV >= 1000
     ? (v < 0 ? '-' : '') + '$' + (absV / 1000).toFixed(1) + 'k'
     : (v < 0 ? '-' : '') + '$' + Math.round(absV)
 }
 
 const formatChartTick = (v: number) => {
-  const absV = Math.abs(v)
+  const absV = Math.abs(v) / 100
   return absV >= 1000
     ? (v < 0 ? '-' : '') + '$' + Math.round(absV / 1000) + 'k'
     : (v < 0 ? '-' : '') + '$' + Math.round(absV)
@@ -25,10 +28,14 @@ export default function Bar({
   series,
   labels = [],
   height = 240,
+  selectedIndex = null,
+  onClickDataPoint,
 }: {
   series: BarSeries[]
   labels?: string[]
   height?: number
+  selectedIndex?: number | null
+  onClickDataPoint?: (idx: number) => void
 }) {
   const W = 640
   const H = height
@@ -109,9 +116,14 @@ export default function Bar({
       viewBox={`0 0 ${W} ${H}`}
       width="100%"
       preserveAspectRatio="none"
-      style={{ height, display: 'block', touchAction: 'none' }}
+      style={{ height, display: 'block', touchAction: 'none', cursor: onClickDataPoint ? 'pointer' : 'default' }}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
+      onClick={() => {
+        if (hoveredIdx !== null) onClickDataPoint?.(hoveredIdx)
+      }}
+      role="img"
+      aria-label="Outflow per-period bar chart"
     >
       {/* Gradients definitions */}
       <defs>
@@ -163,9 +175,23 @@ export default function Bar({
             const h = padT + innerH - y
             const gradId = `bar-grad-${uid}-${si}`
 
+            const isSelected = selectedIndex === i
+            const isAnySelected = selectedIndex !== null
             const isHovered = hoveredIdx === i
             const isAnyHovered = hoveredIdx !== null
-            const opacity = isHovered ? 1 : isAnyHovered ? 0.3 : 0.85
+
+            let opacity = 0.85
+            if (isAnySelected) {
+              if (isSelected) {
+                opacity = 1.0
+              } else if (isHovered) {
+                opacity = 0.85
+              } else {
+                opacity = 0.25
+              }
+            } else if (isAnyHovered) {
+              opacity = isHovered ? 1.0 : 0.3
+            }
 
             return (
               <rect
@@ -179,9 +205,9 @@ export default function Bar({
                 height={h}
                 rx={Math.max(2, Math.min(4, barW / 4))} // elegant rounded top
                 fill={`url(#${gradId})`}
-                stroke={s.color}
-                strokeWidth={1.2}
-                style={{ opacity, transition: 'opacity 0.15s ease' }}
+                stroke={isSelected ? 'var(--color-accent)' : s.color}
+                strokeWidth={isSelected ? 2 : 1.2}
+                style={{ opacity, transition: 'opacity 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease', filter: isSelected ? 'drop-shadow(0 0 3px var(--color-accent))' : undefined }}
               />
             )
           })}

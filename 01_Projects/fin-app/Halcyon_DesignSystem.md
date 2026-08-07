@@ -112,7 +112,29 @@ inside `.dark` (see §3).
 --toast-bg:   rgba(255,255,255,0.92);
 --input-bg:   rgba(255,255,255,0.6);
 --switch-off: rgba(20,24,28,0.15);
+
+/* categorical hues — one fixed hue per expense category, assigned by taxonomy
+   index. IDENTITY ONLY, never state (see §8.15). --cat-unknown is the
+   fallback for a name outside the expense taxonomy (Income, Transfer,
+   Investing, Uncategorized) and must never read as a real category. */
+--cat-1: #2a78d6;  --cat-2: #1baf7a;  --cat-3: #eda100;  --cat-4: #008300;
+--cat-5: #4a3aa7;  --cat-6: #e34948;  --cat-7: #e87ba4;  --cat-8: #8a5a2b;
+--cat-unknown: #8a94a1;
 ```
+
+**Adding a category.** The mapping is positional (`catColor` in
+`app/src/lib/categoryColor.ts` indexes `EXPENSE_CATEGORIES`), so **appending** a
+category is safe but **reordering** silently reassigns every existing hue. A 9th
+category needs a new `--cat-9` in both themes; without one it would wrap onto
+`--cat-1` and become indistinguishable from Food. Hues 1–7 were CVD-validated as
+a set (worst adjacent ΔE 24.2 light); `--cat-8` was chosen for maximum distance
+from that set but has not been through the same sweep — re-run it before a 9th.
+
+**Hue vs. state — the rule.** A colour in a tile means *either* "which thing this is" (`--cat-*`)
+*or* "how this thing is doing" (`pos`/`warn`/`neg`/`accent`) — **never both in one tile**. A hue
+that means "Retail" competes with a hue that means "overspent", and only one of those deserves an
+alarm. `ExpenseFlowCard` is an identity tile (hues, no judgement); `ExpensePacingCard` is a state
+tile (no hues, judgement only). Pick one per tile and hold the line.
 
 **Accent discipline:** at most one mint highlight per view region. The accent is reserved for
 the active nav state, links/CTAs, focus rings, the card edge, chart series, and status dots.
@@ -375,6 +397,203 @@ selected accounts' shares sum to the period multiplier, so every tile recomputes
 filters (no inflow) fall back to per-tile empty states. (A single-month range feeds the pacing
 `Area` one point — it centres a lone point rather than dividing by zero.)
 
+### 8.15 Category pacing rail (`ExpensePacingCard.tsx`, `lib/pacing.ts`)
+A full-width scrollable list of **bullet rails** — one per expense category, click to focus it (which
+also expands its sub-categories). It answers *"which category needs attention?"*, which is
+deliberately **not** "what did I spend?" (that's the flow card's job). It's a *source* of the shared
+focus and never filters itself — see §8.16.
+
+The accordion has no state of its own: it opens iff exactly one category is selected
+(`open = selection.categories.length === 1 ? selection.categories[0] : null`), so the chevron *means*
+"this is your focus" and a multi-select expands nothing — the honest answer to "which one would you
+open?".
+
+**The header names the window it actually measures** (`Jul 2026 · to date`). The card snaps to whole
+calendar months while the rest of the page uses the literal range, so on a Week or mid-month custom
+range it is genuinely measuring something wider. Saying so beats disagreeing silently — the
+alternative was a tile that shows all of July while the hero reads $0.
+
+Each row, left → right: name · `spent of baseline` · rail · delta chip. The rail's marks:
+
+| Mark | Meaning |
+| --- | --- |
+| Bar | Spend so far this period. Colour = **state only** (§2): `ok → accent`, `pacing over → warn`, `over last period → neg`, `dormant → muted` — the same encoding `CapacityMeter` uses (§8.3). |
+| Pale band (`--hair`) | The **±1σ normal range** over the trailing 6 periods. Its *width is the volatility* — a wide band is an unpredictable category. |
+| Caret | The **projected finish**. Inside the band = an ordinary period; outside = worth opening. |
+| Rule (`ink`, 2px) | The **baseline** — the last completed period. |
+| Dashed tick | Where you'd be pacing the baseline exactly. Hidden once the period closes. |
+| `›` chevron | The mark ran **off-scale**; the chip carries the true figure. |
+
+**The baseline is pinned to a constant x (66%)** on every row, so the rule reads as one vertical
+line you scan down and bars past it are over. That's what makes the list scannable — and it's a
+real trade: it caps the track at ~1.5× baseline, so erratic rows clamp and defer to the chip.
+
+**The caret, not the bar, is what the band judges.** The band is built from *completed* periods
+while the bar is a *partial* one, so comparing them directly is apples-to-oranges and would read
+"under" on every row mid-period. The caret is the only mark commensurate with the band.
+
+**Grain is the calendar month, not the raw range** (`buildPacing` snaps the range out to whole
+months via `dateToIdx`). Rent, internet and auto-invest recur once a month; sub-month windows chop
+one fixed cost into an alternating spend/no-spend series and report the app's *most* predictable
+rows as its most erratic. History is up to 6 trailing blocks of the same month-count.
+
+**Lumpy costs break naive pacing**, so `landingFor` projects **steady rows (σ/μ < 12%) to their
+baseline** rather than straight-lining them — otherwise rent, landing whole on day 1, screams "2×
+overspend" every period. Categories roll `landing` up **from their children** rather than
+recomputing it on the aggregate: a category blends fixed and discretionary costs, so its blended
+volatility is nobody's real behaviour.
+
+Degradations, in order: **< 3 populated periods** → band suppressed, rail only; **no prior block at
+all** (e.g. a 12-month range in a 12-month ledger) → no baseline to compare, so rows go neutral,
+chips read `—`, and the rail falls back to a plain magnitude bar rather than inventing a comparison.
+
+### 8.16 Cross-filtering the Expenses analyzer (`lib/expenseSelection.ts`, `ExpenseScopeBar.tsx`)
+One shared category focus and one shared time-series focus drive the analytics view. They replace independent static selections so the entire page behaves as a unified, interactive dashboard.
+
+**The rules of cross-filtering:**
+1. **Comparison/structural tiles highlight; magnitude/detail tiles filter.**
+   - **Category focus:** Clicking a category in `ExpenseFlowCard` or `ExpensePacingCard` highlights that category in those comparison tiles (dimming the rest) and filters the hero row, trend card, and transactions ledger.
+   - **Time focus:** Clicking a data point (line point or bar) on `ExpenseTrendCard` highlights that point in the chart (drawing selection markers / dimming other bars) and filters the hero row, category flow card, category pacing card, and transactions ledger to that specific day, week, or month.
+2. **The source tile never self-filters.** Clicking a week on the trend chart dims other weeks but doesn't remove them from the chart. This preserves context and allows clearing or changing selection.
+
+| Interaction Source | Highlight Target (Dims Rest) | Filter Target (Computes Subset) |
+| --- | --- | --- |
+| **Category Selection** (`ExpenseFlowCard` / `ExpensePacingCard`) | `ExpenseFlowCard`, `ExpensePacingCard` | hero row, `ExpenseTrendCard`, `TransactionsPanel` |
+| **Time Series Selection** (`ExpenseTrendCard`) | `ExpenseTrendCard` | hero row, `ExpenseFlowCard`, `ExpensePacingCard`, `TransactionsPanel` |
+
+Dimming defaults to `opacity: 0.42` (flow nodes), `opacity-40` (pacing rows), and `opacity: 0.25` (non-selected chart bars) when a focus is active. Plain click toggles selection (replace-or-clear).
+
+**Load-bearing details:**
+- **Dynamic Prior Periods:** When `timeFocus` is active, the "vs prev" indicators dynamically recalculate their comparison window to match the exact duration of the focused time interval.
+- **Scope Bar Union:** `ExpenseScopeBar` displays removable chips for both category and time focus. A clear button clears both, and the copy updates to state exactly which tiles follow the active focus.
+- **Date Reset:** Any active `timeFocus` is automatically cleared if the page-wide date range or preset filters change, preventing stale selections.
+- **Hero Card Swap:** Under focus, the third metric card swaps from "Heavyweight category" to "Share of outflow" so it remains meaningful.
+- **No global `Esc`.** `FiltersPopover` and the header pickers already listen on `document`; an Esc handler here would nuke the focus while you were only dismissing a popover.
+- `'Other'` (synthesized for txns with no `subcat`) is **not** in `CATEGORY_TAXONOMY` — clicking it would be pruned on the way in and match zero rows on the way out. Both cards guard it.
+
+### 8.17 Recurring hub (`RecurringHub.tsx`, `RecurringDirectory.tsx`, `BillingCalendar.tsx`, `lib/recurring.ts`)
+The Expenses view's second tab. Answers **"what am I committed to?"**, where the analyzer answers
+"what did I spend?". Read-only detection over `data.transactions` — nothing in the ledger says a
+charge is recurring, so it's inferred, exactly as it would be from a real bank feed.
+
+**Anchored to today; no period filter.** Every question here is present-tense (what do I owe monthly,
+what charges next, how much of my outflow is locked) and none sharpen under a date range — an
+annualized run-rate actively fights one. `AnalyzerFilters` stays `view === 'analytics'`-only, and the
+hub is outside the §8.16 cross-filter system entirely.
+
+**Three windows are in play, and each is named where it's used** — the §8.15 "name the window you
+actually measure" principle, which matters more here because there are three of them:
+
+| Window | Span | Drives |
+| --- | --- | --- |
+| Detection | trailing 12 months | the directory; stated in the header strip |
+| Pressure | trailing 30 days (`[today−29, today]`) | hero card 3; stated in its sub-line |
+| Horizon | next 30 days (`[today, today+29]`) | the calendar; stated in its tile `tag` |
+
+Pressure is **trailing**, not forward: the SRD says "against total 30-day *expenditures*", and a
+forward denominator would need a forecast of *discretionary* spend — that's the Phase 2 insights
+engine, so a forward window isn't a different choice, it's uncomputable.
+
+**Detection** (`buildRecurring`, day-gap analysis). `pacing.ts`'s `bucket()` is unusable here: it
+keys cat → subcat and buckets by whole calendar month, and month grain can't tell Quarterly from
+irregular (a quarterly charge is "present in 4 of 12 months" — identical to four one-offs) nor
+express a *day*, which is the directory's whole row metadata and the calendar's only input. Grouping
+is `merchant + cat + subcat` — the **full** merchant, since ` // ` is a display convention and
+splitting it would merge `Habitat // Rent Transfer` with a hypothetical `Habitat // Storage`.
+
+Gates, in order — a series must clear all four:
+
+| Gate | Value | Why |
+| --- | --- | --- |
+| `MIN_OBSERVATIONS` | 3 | 3 charges = 2 gaps = the fewest at which gaps can *agree*. One gap is a coincidence. Mirrors `MIN_BAND_PERIODS`. |
+| cadence window | `CADENCE_DAYS ± CADENCE_TOLERANCE` | median gap must land in a window. The windows are **provably non-overlapping**; the dead zones between them (9→11, 17→24, 37→79, 103→335 days) are correct rejections. |
+| `MIN_CONFORMANCE` | 0.6 | the median landing in a window isn't enough — the gaps must mostly sit there. Tolerates a skipped charge (gaps `[30,61,30,30]` → 0.75). Deliberately **not** `cv(gaps)`: that same obviously-monthly series scores 0.355 and would be thrown out. |
+| amount stability | `cv(amounts) < ERRATIC_CV` | **a commitment is predictable in amount as well as date.** Without this, a hardware store visited most months reads as a monthly commitment: real cadence, but $45 then $210 is shopping, not a standing charge. |
+
+That last gate is the one that isn't obvious, and it is load-bearing — it is the only thing
+separating "I shop here regularly" from "I am billed here regularly".
+
+**`STEADY_CV = 0.12` is shared with §8.15 via `lib/stats.ts` — one definition of "fixed cost", not
+two.** Under it a series is `fixed`, over it `variable`. Rent reads cv 1.2%, power 14.9%, water 17.5%.
+
+**`expected` is asymmetric on purpose:** `fixed` → the **last** amount, because that's the current
+price (rent's 12-month mean is $2,070.83 but you owe $2,100 — averaging would erase the price creep);
+`variable` → the **mean**, because the last amount is one draw from a distribution (July's power bill
+doesn't forecast August's) and the mean averages the seasonality out, which is what a run-rate wants.
+
+**Dormancy** is derived from `lastCharged` (silent > `DORMANT_CYCLES × CADENCE_DAYS`, 1.5 cycles),
+not from `nextExpected` — one derivation, not two that can drift. A dormant series' `nextExpected` is
+therefore in the past, and it is excluded from the calendar (projecting it is fiction), from
+`monthlyCommitment`, and from the pressure numerator.
+
+**`nextChargeDate` advances by whole calendar months**, never by `CADENCE_DAYS`: rent charged on the
+1st is charged on the *1st*, whereas 1 Jul + 30.44d lands on the 31st. Day-of-month is clamped to the
+target month's length or `Date` rolls 31 Jan + 1 month into early March.
+
+**Hero row** (the §8.14 idiom, 4 × `HeroMetric`). Monthly commitment · Annualized cash burn · Fixed
+outflow pressure · Active commitments. Two notes:
+- Card 2 is card 1 × 12, which is weak information design but SRD-mandated — so its **sub-line earns
+  the slot** by carrying what the multiplication throws away: the gap against what actually left the
+  account over the same 12 months. It's a live readout of the rent's price creep.
+- Pressure **sums actual rows in the window, never `monthly`**. A 30-day window isn't a calendar
+  month, so a monthly series can land 0, 1 or 2 times in it depending on its day. Naming both terms
+  in the sub-line (`$3,639 of $5,762`) is what makes a bare percentage auditable.
+
+**Directory.** Sectional by category; sub-totals and the footer total reconcile with hero card 1 **by
+construction** — both read `monthly` off the same model, because `buildRecurring` does the sectioning
+(mirroring `buildPacing`'s `cats[].subs[]`) and the component stays presentational. Sections are
+always open: the SRD asks for a sectional *table*, not a drill-down, and §8.16's accordion is
+load-bearing there only because the expansion **is** the focus — there's no focus here.
+Colour is **state only**: `active → accent`, `dormant → muted` (row at `opacity-40`).
+**Fixed-vs-variable is not a state and never a hue** — a colour meaning "variable" would compete with
+a colour meaning "dormant", and only one of those is worth an alarm. It's a monochrome `ink2` glyph:
+solid bar = fixed, broken bar = variable, with σ/μ in the `title`.
+
+**Billing calendar.** Forward 30 days, 7 columns, **Monday-first** (`(getDay()+6)%7` — the domain is
+AU; the SRD carries AU financial years and Osko). Forward rather than backward because the directory
+already gives `next expected` per row and this is that data spatially; a backward calendar would just
+duplicate §8.8's daily bars.
+
+*The heat encoding, and why it doesn't break the state-only rule:* §8.15 bans **category hues**, and
+§2's deeper rule is that a tile means either identity or state, never both. This encodes
+**magnitude** — no category identity, no state judgement, one hue, zero `--cat-*`. §2 reserves the
+accent for "the card edge, **chart series**, and status dots"; a heat matrix is a chart series.
+
+*The implementation matters as much as the argument:* the fill is
+`background: var(--color-accent)` with a computed **`opacity`**, never a baked
+`rgba(17,181,150,α)`. A hardcode would break the live-retintable accent (Settings rewrites
+`--color-accent`) **and** dark mode (accent is `#16c7a4` there). It also sidesteps the §11
+Tailwind-v4/oklab gotcha entirely, because opacity is a plain number Framer interpolates — **no
+colour is ever animated.** This trick generalises; reach for it before reaching for `rgba`.
+
+Alpha is **gamma-compressed** (`0.12 + 0.5 × (v/max)^0.6`): rent ($2,100) is 131× streaming ($15.99),
+so a linear ramp renders every non-rent day invisibly faint. The low end still clusters, and that's
+the right trade — **the calendar's job is *when*; the directory's job is *how much*.**
+
+**anime.js is out of scope here, deliberately.** The §11 firewall's remit is *chart internals* — SVG
+draw-on, dashoffset, fill sweeps, counters. The calendar is a CSS-grid DOM matrix: no path to draw,
+no timeline to orchestrate, and `useChartReveal`'s scoped SVG `querySelectorAll` is inapplicable.
+Every cell also lives inside a `Tile` whose `cell` variant Framer already animates, so routing cell
+opacity through anime would put both libraries on one subtree — the precise thing §11 forbids.
+
+**Gotcha (cost an hour):** a `motion` component whose `initial` names a variant its `variants` map
+doesn't define resolves to `undefined` and **silently aborts the animation batch for the whole
+variant tree** — every `Tile` in the `Grid` stays at `opacity: 0`, with no console error. Always pair
+`hidden: {}` with `show`, as `gridStagger` does.
+
+**Known carve-outs** (not oversights):
+- **No "source account link"**, though SRD §6.D asks for it. Transactions carry no account — the
+  codebase says so in three places and gates all-or-nothing *because* of it. Hashing merchant →
+  account would be inventing data, and worse here than elsewhere, because the analyzer's account
+  filter would contradict the column on the same page. Unblocks when the data model gains `accountId`.
+- **Annual cadence can't fire** from a 12-month ledger: one observation, zero gaps. An
+  information-theoretic limit, not a bug. It stays in the tables; it needs ~2 years of history.
+  Quarterly is the longest honestly-detectable cadence today.
+- **Weekly/Biweekly ship unexercised.** The realistic candidates fail on principle: a weekly grocery
+  shop is regular but isn't an *obligation*, and a fortnightly loan repayment has no home in the
+  taxonomy — an 8th category would break the 7-hue `--cat-*` cycle.
+- **Smart Insights Bulletins** (SRD §6.D) are Phase 2 — they need the AI insights engine.
+
 ---
 
 ## 9. Landing & the hero card
@@ -534,10 +753,23 @@ app/
       AllocationDonut  ObjectiveRing  HeroCard  MilestoneToast  ThemeToggle
       Controls (Button/Chip/Select/DateInput/MultiSelect/DateRangePicker/Switch)
       SegmentedTabs  Screen (Screen/ViewHeader/Grid)  motion.ts
+      HeroMetric  AnalyzerFilters  TransactionsPanel  ExpenseScopeBar
+      ExpenseTrendCard  ExpenseFlowCard  ExpensePacingCard
+      RecurringHub  RecurringDirectory  BillingCalendar        (§8.17)
       charts/ Area  Bar  Donut
     views/              Landing Dashboard Accounts Income Expenses Ingestion Settings
     three/              SceneBackground.tsx   (2D canvas lattice + network; misnamed, not WebGL)
     hooks/              useScramble  useCountUp  useChartReveal (anime.js firewall)
+                        usePeriodRange  useScrollIdle
+    lib/                period.ts     range presets · month bucketing · txnIso · date labels
+                        stats.ts      ★ mean/stdev/cv/median + STEADY_CV — the ONE definition
+                                        of "fixed cost", shared by §8.15 and §8.17
+                        cadence.ts    Cadence vocabulary + lookup tables. Imports NOTHING:
+                                        data.ts needs `Cadence` and period.ts imports data,
+                                        so any import here closes a cycle.
+                        pacing.ts     category volatility + pacing model (§8.15)
+                        recurring.ts  recurrence detection + billing projection (§8.17)
+                        expenseSelection.ts  the Expenses cross-filter (§8.16)
 ```
 
 `ViewContext` exposes `{ view, go, toast, motionOn, setMotionOn, dark, setDark }`. The `dark`

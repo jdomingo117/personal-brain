@@ -7,81 +7,51 @@ import Area from '../components/charts/Area'
 import Bar from '../components/charts/Bar'
 import AllocationDonut from '../components/AllocationDonut'
 import Ledger from '../components/Ledger'
-import { data, fmtCents, glowColor, type Glow, type Txn } from '../data'
+import { fmtCents, glowColor, type Glow, type Txn } from '../data'
 import { gridStagger } from '../components/motion'
+import { useData } from '../contexts/DataContext'
+import { MONTHS, iso, TODAY, monthStart, monthEnd, addDays, auFyStart, LAST } from '../lib/period'
+import AddAccountModal from '../components/AddAccountModal'
+import EditAccountModal from '../components/EditAccountModal'
+import ConnectBankModal from '../components/ConnectBankModal'
 
-interface AccountDetail {
-  income: number
-  expenses: number
-  trend: number[]
-  categories: { label: string; value: number; glow: Glow }[]
-}
-
-const getAccountDetails = (name: string, balance: number): AccountDetail => {
-  // Hash the name to generate deterministic, realistic mock data per account
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+/* Resolves a "Quick Timeframe Selector" label to a concrete ISO date range.
+   `null` means unbounded ('All Time'). Mirrors the semantics already
+   established for the Income/Expenses presets in lib/period.ts (e.g. "This
+   Week" = trailing 7 days, not the calendar week) so the same label means the
+   same thing everywhere in the app. */
+function timeframeRange(tf: string): { from: string; to: string } | null {
+  const now = new Date()
+  switch (tf) {
+    case 'This Week':
+      return { from: iso(addDays(now, -6)), to: TODAY }
+    case 'This Month':
+      return { from: iso(new Date(now.getFullYear(), now.getMonth(), 1)), to: TODAY }
+    case 'Last Month': {
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+      return { from: iso(start), to: iso(monthEnd(start)) }
+    }
+    case 'Last 3 Months':
+      return { from: iso(monthStart(LAST - 2)), to: TODAY }
+    case 'This Year YTD':
+      return { from: `${now.getFullYear()}-01-01`, to: TODAY }
+    case 'Financial YTD':
+      return { from: iso(auFyStart(now)), to: TODAY }
+    default: // 'All Time'
+      return null
   }
-  const seed = Math.abs(hash)
-
-  // Generate deterministic mock values (positive income and expenses)
-  const income = 1500 + (seed % 3500)
-  const expenses = 300 + (seed % 1000)
-
-  // Trend: base it around the current balance and walk backwards
-  const trend: number[] = []
-  let curr = balance
-  for (let i = 0; i < 11; i++) {
-    trend.unshift(curr)
-    // Walk back with a deterministic pseudo-random walk
-    curr -= (income - expenses) / 11 + ((seed + i) % 200) - 100
-  }
-  trend.unshift(curr) // 12 months total
-
-  // Categories
-  const categories = [
-    { label: 'Transportation', value: Math.round(expenses * 0.35), glow: 'blue' as const },
-    { label: 'Food & Beverage', value: Math.round(expenses * 0.30), glow: 'green' as const },
-    { label: 'Uncategorized', value: Math.round(expenses * 0.18), glow: 'red' as const },
-    { label: 'Bills & Utilities', value: Math.round(expenses * 0.12), glow: 'amber' as const },
-    { label: 'Entertainment & Leisure', value: Math.round(expenses * 0.05), glow: 'cyan' as const },
-  ]
-
-  return {
-    income,
-    expenses,
-    trend,
-    categories,
-    seed
-  }
-}
-
-const getAccountTransactions = (seed: number): Txn[] => {
-  const categories = ['Food', 'Utility', 'Transit', 'Income', 'Subs', 'Housing', 'Invest', 'Retail']
-  const txns: Txn[] = []
-  let currentDate = new Date('2026-06-14')
-  
-  for (let i = 0; i < 48; i++) {
-    const isIncome = (seed + i) % 7 === 0
-    const cat = isIncome ? 'Income' : categories[(seed + i) % categories.length]
-    const amount = isIncome ? 500 + ((seed * i) % 2000) : -10 - ((seed * i) % 150)
-    const dateStr = `${(currentDate.getMonth() + 1).toString().padStart(2, '0')}.${currentDate.getDate().toString().padStart(2, '0')}`
-    
-    txns.push({
-      date: dateStr,
-      merchant: isIncome ? 'Deposit / Transfer' : `Merchant ${(seed + i) % 100}`,
-      cat,
-      amount
-    })
-    currentDate.setDate(currentDate.getDate() - (1 + ((seed + i) % 3)))
-  }
-  return txns
 }
 
 export default function Accounts() {
-  const [selectedAccount, setSelectedAccount] = useState(data.accounts[0])
+  const { accounts, transactions } = useData()
+  // Default to the first account (the router prevents this view from loading if accounts is empty)
+  const [selectedAccountId, setSelectedAccountId] = useState(accounts[0]?.id)
+  
+  const selectedAccount = accounts.find(a => a.id === selectedAccountId) || accounts[0]
   const [chartType, setChartType] = useState<'line' | 'bar'>('line')
+  const [isAddingAccount, setIsAddingAccount] = useState(false)
+  const [isEditingAccount, setIsEditingAccount] = useState(false)
+  const [isConnectingBank, setIsConnectingBank] = useState(false)
   
   // Filter States
   const [page, setPage] = useState(0)
@@ -90,29 +60,95 @@ export default function Accounts() {
   const [filterFlow, setFilterFlow] = useState<'All' | 'Income' | 'Expense'>('All')
   const [timeframe, setTimeframe] = useState('All Time')
 
-  const details = getAccountDetails(selectedAccount.name, selectedAccount.balance)
-  const netCashFlow = details.income - details.expenses
-  const dates = ['07 Apr', '10 Apr', '13 Apr', '16 Apr', '19 Apr', '22 Apr', '25 Apr', '28 Apr', '01 May', '04 May', '06 May', '08 May']
+  if (!selectedAccount) {
+    return (
+      <Screen>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <p className="text-[13px] text-muted mb-4">No accounts found.</p>
+          <button
+            onClick={() => setIsAddingAccount(true)}
+            className="micro bg-ink text-surface hover:-translate-y-px hover:shadow-lg rounded-lg px-4 py-2 transition duration-200 cursor-pointer"
+          >
+            + Add Account
+          </button>
+        </div>
+        <AddAccountModal isOpen={isAddingAccount} onClose={() => setIsAddingAccount(false)} />
+      </Screen>
+    )
+  }
 
-  const txns = getAccountTransactions(details.seed)
-  const allCategories = ['All', ...Array.from(new Set(txns.map(t => t.cat))).sort()]
+  // Real transactions for this account. `t.account` is the account's NAME
+  // (see DataContext's mapping); the id lives on `t.account_id`. Comparing
+  // account to selectedAccount.id compared a name against a UUID and could
+  // never match, so this used to silently produce an empty list — flat
+  // trend line, $0 period stats, empty category donut, empty ledger.
+  const txns = transactions.filter(t => t.account_id === selectedAccount.id)
+
+  // The Quick Timeframe Selectors scope everything on this page EXCEPT the
+  // Vault Balance (a point-in-time authoritative figure, not a period sum)
+  // and the Chronological Net Balance Trend (a fixed 12-month rolling view —
+  // narrowing it to e.g. "This Week" would leave 11 empty buckets, same
+  // reasoning that keeps the Income/Expenses monthly charts fixed-span while
+  // their presets narrow the transactions list, see lib/period.ts).
+  const range = timeframeRange(timeframe)
+  const periodTxns = range ? txns.filter(t => t.date >= range.from && t.date <= range.to) : txns
+
+  // Dynamic details
+  const income = periodTxns.filter(t => t.amount > 0 && !t.isTransfer && !t.pending).reduce((sum, t) => sum + t.amount, 0)
+  const expenses = periodTxns.filter(t => t.amount < 0 && !t.isTransfer && !t.pending).reduce((sum, t) => sum + Math.abs(t.amount), 0)
+  const netCashFlow = income - expenses
+
+  // Trend (calculated dynamically from transactions)
+  const trend: number[] = []
+  let runningBal = selectedAccount.balance
+  const now = new Date()
+  for (let i = 0; i < 12; i++) {
+    trend.unshift(runningBal)
+    
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const monthStartIso = d.toISOString().split('T')[0]
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 1)
+    const nextMonthIso = nextMonth.toISOString().split('T')[0]
+    
+    const txnsInMonth = txns.filter(t => t.date >= monthStartIso && t.date < nextMonthIso)
+    const monthDelta = txnsInMonth.reduce((sum, t) => sum + t.amount, 0)
+    
+    runningBal -= monthDelta
+  }
+
+  // Expense Categories (calculate dynamic distribution)
+  const catMap: Record<string, number> = {}
+  periodTxns.filter(t => t.amount < 0 && !t.isTransfer && !t.pending).forEach(t => {
+    catMap[t.cat || 'Uncategorized'] = (catMap[t.cat || 'Uncategorized'] || 0) + Math.abs(t.amount)
+  })
   
-  const filteredTxns = txns.filter(t => {
+  const categoryColors: Glow[] = ['blue', 'green', 'amber', 'red', 'cyan']
+  const categories = Object.entries(catMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([label, value], i) => ({
+      label,
+      value,
+      glow: categoryColors[i % categoryColors.length]
+    }))
+
+  // Sourced from the full account history, not periodTxns — so switching
+  // timeframe never makes the current category selection vanish from the list.
+  const allCategories = ['All', ...Array.from(new Set(txns.map(t => t.cat))).sort()]
+
+  const filteredTxns = periodTxns.filter(t => {
     // 1. Category Filter
     if (filterCat !== 'All' && t.cat !== filterCat) return false
     
     // 2. Flow Filter
-    if (filterFlow === 'Income' && t.amount < 0) return false
-    if (filterFlow === 'Expense' && t.amount >= 0) return false
+    if (filterFlow === 'Income' && (t.amount < 0 || t.isTransfer)) return false
+    if (filterFlow === 'Expense' && (t.amount >= 0 || t.isTransfer)) return false
     
     // 3. Search Filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
-      if (!t.merchant.toLowerCase().includes(q) && !t.cat.toLowerCase().includes(q)) return false
+      if (!t.merchant.toLowerCase().includes(q) && !(t.cat || '').toLowerCase().includes(q)) return false
     }
-    
-    // Note: Timeframe filter ('All Time', 'This Month', etc.) is visual-only for this mock
-    // since the data only spans a few weeks. It sets up the UI structure for the real backend.
     
     return true
   })
@@ -137,12 +173,12 @@ export default function Accounts() {
             <select
               value={selectedAccount.name}
               onChange={(e) => {
-                const found = data.accounts.find((a) => a.name === e.target.value)
-                if (found) setSelectedAccount(found)
+                const found = accounts.find((a) => a.name === e.target.value)
+                if (found) setSelectedAccountId(found.id)
               }}
               className="appearance-none pr-8 pl-3.5 py-2 rounded-lg border border-[var(--hair)] bg-[var(--input-bg)] text-[12.5px] font-semibold outline-none cursor-pointer focus:border-accent transition duration-200"
             >
-              {data.accounts.map((a) => (
+              {accounts.map((a) => (
                 <option key={a.name} value={a.name}>
                   {a.name} ({a.type})
                 </option>
@@ -156,13 +192,39 @@ export default function Accounts() {
             </div>
           </div>
           <div className="text-[11px] text-muted sm:ml-2.5 uppercase tracking-[0.04em]">
-            Ingestion: <strong className="text-ink2">CSV_{selectedAccount.name.split(' ')[0].toUpperCase()}</strong>
+            Ingestion:{' '}
+            <strong className="text-ink2">
+              {selectedAccount.connectionId ? 'UP BANK (LIVE)' : `CSV_${selectedAccount.name.split(' ')[0].toUpperCase()}`}
+            </strong>
           </div>
         </div>
 
-        <button className="micro bg-ink text-surface hover:-translate-y-px hover:shadow-lg rounded-lg px-4 py-2 transition duration-200 cursor-pointer">
-          + Add Account
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsEditingAccount(true)}
+            className="micro text-muted hover:text-ink hover:bg-[var(--hair)] rounded-lg px-2 py-2 transition duration-200 cursor-pointer flex items-center justify-center"
+            title="Edit Account"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+
+          <button
+            onClick={() => setIsConnectingBank(true)}
+            className="micro border border-[var(--hair)] text-ink hover:bg-black/[0.03] rounded-lg px-4 py-2 transition duration-200 cursor-pointer"
+          >
+            Connect bank
+          </button>
+
+          <button
+            onClick={() => setIsAddingAccount(true)}
+            className="micro bg-ink text-surface hover:-translate-y-px hover:shadow-lg rounded-lg px-4 py-2 transition duration-200 cursor-pointer"
+          >
+            + Add Account
+          </button>
+        </div>
       </div>
 
       {/* Grid Container */}
@@ -187,7 +249,7 @@ export default function Accounts() {
           <Tile>
             <Stat
               label="Income (Period)"
-              value={"+" + fmtCents(details.income)}
+              value={"+" + fmtCents(income)}
               delta="Sum of deposits in range"
               dir="up"
               small
@@ -197,7 +259,7 @@ export default function Accounts() {
           <Tile>
             <Stat
               label="Expenses (Period)"
-              value={"-" + fmtCents(details.expenses)}
+              value={"-" + fmtCents(expenses)}
               delta="Sum of charges in range"
               dir="down"
               small
@@ -251,15 +313,15 @@ export default function Accounts() {
                 {chartType === 'line' ? (
                   <Area
                     key={selectedAccount.name + 'line'} // Force re-render on account swap for visual reveal animations
-                    series={[{ data: details.trend, color: glowColor[selectedAccount.glow as Glow] }]}
-                    labels={dates}
+                    series={[{ data: trend, color: glowColor[selectedAccount.glow as Glow] }]}
+                    labels={MONTHS}
                     height={240}
                   />
                 ) : (
                   <Bar
                     key={selectedAccount.name + 'bar'} // Force re-render on account swap for visual reveal animations
-                    series={[{ data: details.trend, color: glowColor[selectedAccount.glow as Glow] }]}
-                    labels={dates}
+                    series={[{ data: trend, color: glowColor[selectedAccount.glow as Glow] }]}
+                    labels={MONTHS}
                     height={240}
                   />
                 )}
@@ -272,7 +334,7 @@ export default function Accounts() {
             <Tile title="Expense Category Distribution" className="h-full pb-3.5">
               <AllocationDonut
                 key={selectedAccount.name} // Force re-render on account swap
-                data={details.categories}
+                data={categories}
                 totalLabel="Total Expenses"
               />
             </Tile>
@@ -413,6 +475,19 @@ export default function Accounts() {
         </div>
 
       </motion.div>
+      <AddAccountModal isOpen={isAddingAccount} onClose={() => setIsAddingAccount(false)} />
+      <ConnectBankModal isOpen={isConnectingBank} onClose={() => setIsConnectingBank(false)} />
+      <EditAccountModal
+        account={selectedAccount}
+        isOpen={isEditingAccount}
+        onClose={() => {
+          setIsEditingAccount(false)
+          // If the account was deleted, select the first available one
+          if (!accounts.find(a => a.id === selectedAccountId) && accounts.length > 0) {
+            setSelectedAccountId(accounts[0].id)
+          }
+        }}
+      />
     </Screen>
   )
 }

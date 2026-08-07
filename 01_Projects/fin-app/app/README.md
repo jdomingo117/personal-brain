@@ -100,10 +100,15 @@ src/
     AllocationDonut  ObjectiveRing  HeroCard  MilestoneToast  ThemeToggle
     Controls (Button/Chip/Select/DateInput/MultiSelect/DateRangePicker/Switch)
     SegmentedTabs  Screen (Screen/ViewHeader/Grid)  motion.ts
+    AnalyzerFilters  HeroMetric  TransactionsPanel
+    ExpenseTrendCard  ExpenseFlowCard  ExpensePacingCard  ExpenseScopeBar
     charts/ Area  Bar  Donut
   views/              Landing Dashboard Accounts Income Expenses Ingestion Settings
   three/              SceneBackground.tsx
   hooks/              useScramble  useCountUp  useChartReveal (anime.js firewall)
+                      usePeriodRange
+  lib/                period.ts (presets · month bucketing)  pacing.ts (volatility + pacing)
+                      expenseSelection.ts (the Expenses cross-filter)
 ```
 
 ## Key patterns (and the gotchas they encode)

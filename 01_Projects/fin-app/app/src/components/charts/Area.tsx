@@ -8,15 +8,18 @@ export interface Series {
   fill?: boolean
 }
 
+// Series data is in CENTS, like every other amount in the app (see the
+// comment on fmt()/fmtCents() in data.ts). Divide by 100 before the k-scaling
+// below, which otherwise operates on dollars.
 const formatChartVal = (v: number) => {
-  const absV = Math.abs(v)
+  const absV = Math.abs(v) / 100
   return absV >= 1000
     ? (v < 0 ? '-' : '') + '$' + (absV / 1000).toFixed(1) + 'k'
     : (v < 0 ? '-' : '') + '$' + Math.round(absV)
 }
 
 const formatChartTick = (v: number) => {
-  const absV = Math.abs(v)
+  const absV = Math.abs(v) / 100
   return absV >= 1000
     ? (v < 0 ? '-' : '') + '$' + Math.round(absV / 1000) + 'k'
     : (v < 0 ? '-' : '') + '$' + Math.round(absV)
@@ -26,10 +29,14 @@ export default function Area({
   series,
   labels = [],
   height = 240,
+  selectedIndex = null,
+  onClickDataPoint,
 }: {
   series: Series[]
   labels?: string[]
   height?: number
+  selectedIndex?: number | null
+  onClickDataPoint?: (idx: number) => void
 }) {
   const W = 640
   const H = height
@@ -113,9 +120,14 @@ export default function Area({
       viewBox={`0 0 ${W} ${H}`}
       width="100%"
       preserveAspectRatio="none"
-      style={{ height, display: 'block', touchAction: 'none' }}
+      style={{ height, display: 'block', touchAction: 'none', cursor: onClickDataPoint ? 'pointer' : 'default' }}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
+      onClick={() => {
+        if (hoveredIdx !== null) onClickDataPoint?.(hoveredIdx)
+      }}
+      role="img"
+      aria-label="Outflow cumulative trend line chart"
     >
       {/* gridlines + $ ticks */}
       {Array.from({ length: 5 }).map((_, g) => {
@@ -185,6 +197,32 @@ export default function Area({
           </g>
         )
       })}
+
+      {/* Selected index guide line & point highlights */}
+      {selectedIndex !== null && selectedIndex >= 0 && selectedIndex < n && (
+        <g pointerEvents="none">
+          <line
+            x1={xOf(selectedIndex)}
+            y1={padT}
+            x2={xOf(selectedIndex)}
+            y2={padT + innerH}
+            stroke="var(--color-accent)"
+            strokeWidth={1.5}
+            opacity={0.8}
+          />
+          {series.map((s, si) => {
+            const val = s.data[selectedIndex]
+            const x = xOf(selectedIndex)
+            const y = yOf(val)
+            return (
+              <g key={`sel-${si}`}>
+                <circle cx={x} cy={y} r={6} fill="var(--color-surface)" stroke="var(--color-accent)" strokeWidth={2.5} style={{ filter: 'drop-shadow(0 0 3px var(--color-accent))' }} />
+                <circle cx={x} cy={y} r={12} fill="var(--color-accent)" opacity={0.2} />
+              </g>
+            )
+          })}
+        </g>
+      )}
 
       {/* Tooltip elements */}
       {hoveredIdx !== null && (

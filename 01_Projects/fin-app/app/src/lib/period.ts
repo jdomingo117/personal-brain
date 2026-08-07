@@ -3,13 +3,15 @@
    is the current calendar month. These helpers bridge real dates (for the
    calendar pickers) and the month buckets the figures are stored in, and define
    the quick-select ranges surfaced as the pill bar. */
-import { data } from '../data'
-
-export const MONTHS = data.cashflow.months
-export const LAST = MONTHS.length - 1
-
 const now = new Date()
 const anchor = new Date(now.getFullYear(), now.getMonth(), 1) // 1st of the current month
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+export const MONTHS = Array.from({ length: 12 }, (_, i) => {
+  const d = new Date(anchor.getFullYear(), anchor.getMonth() - (11 - i), 1)
+  return MON[d.getMonth()]
+})
+export const LAST = MONTHS.length - 1
 
 export const iso = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -26,21 +28,27 @@ export const dateToIdx = (s: string) => {
   return Math.max(0, Math.min(LAST, LAST - diff))
 }
 
-const addDays = (d: Date, n: number) => {
+export const addDays = (d: Date, n: number) => {
   const x = new Date(d)
   x.setDate(x.getDate() + n)
   return x
 }
-const monthEnd = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0)
+export const monthEnd = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0)
 /** AU financial year opens 1 July; before July it began the previous calendar year. */
-const auFyStart = (d: Date) => new Date(d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1, 6, 1)
+export const auFyStart = (d: Date) => new Date(d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1, 6, 1)
 
 /** `MM.DD` ledger date → ISO within the trailing window (months after the
  *  current one belong to last year). */
-export const txnIso = (mmdd: string) => {
-  const [mm, dd] = mmdd.split('.')
-  const year = Number(mm) <= now.getMonth() + 1 ? now.getFullYear() : now.getFullYear() - 1
-  return `${year}-${mm}-${dd}`
+
+/** `17 Jul` — compact day form for surfaces that name a specific date. */
+export const dayLabel = (isoDate: string) => {
+  const d = new Date(`${isoDate}T00:00:00`)
+  return `${d.getDate()} ${MON[d.getMonth()]}`
+}
+/** `Aug 2025` */
+export const monthLabel = (isoDate: string) => {
+  const d = new Date(`${isoDate}T00:00:00`)
+  return `${MON[d.getMonth()]} ${d.getFullYear()}`
 }
 
 export const TODAY = iso(now)

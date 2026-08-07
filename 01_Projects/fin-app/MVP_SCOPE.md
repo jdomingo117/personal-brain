@@ -86,14 +86,26 @@ is deferred.
 |---|---|
 | **2 — Intelligence & deep analytics** (no external integrations) | AI async categorization (Gemini background); Insights engine (**deterministic math**, AI only phrases the bulletin); Income Analyser advanced cards; Expenses analytics (daily-spikes, hierarchy flow, top-10 merchants, volatility/pacing); Strategic Projections + goal-horizon forecast (deterministic) |
 | **3 — Automation & external data** | Bank/neobank sync (AU CDR / Basiq — regulated, large); live valuation engine (ticker APIs + background workers); investment cost-basis tracking; **AI-parsing ingestion fallback**; AES-256-GCM credential storage (needed only once third-party tokens exist) |
-| **4 — Recurring & reconciliation** | Recurring Hub (detection + 30-day billing calendar); Osko same-day linker |
+| **4 — Recurring & reconciliation** | Recurring **write-back** (edit / cancel / remind on a detected series); multi-year cadence detection (Annual can't fire from a 12-month ledger). ~~Osko same-day linker~~ — **shipped early, see below.** |
 | **5 — Admin & ops** | Hidden admin portal; platform metrics; user/role directory |
+
+> **The Recurring Hub's read-only half shipped early** — detection, the commitments directory and
+> the 30-day billing calendar are built (DesignSystem §8.17). It jumped the queue because it is pure
+> deterministic maths over `data.transactions`: no backend, no auth, no data-access seam, so it never
+> blocked on Phase 1. It also paid a debt — the ledger backfill it required is the one CONTEXT §7
+> prescribed, and it fixed the §8.15 pacing rail's false "+100% pacing over" on rent.
+>
+> **The Osko same-day linker also shipped early** (2026-08-05) — `link-transfers`/`decide-transfer`
+> Edge Functions, `app/src/lib/transfers/`, `OskoLinker.tsx`, plus an unmatched-single-leg review
+> path the original SRD scope didn't call out. See [INDEX.md](INDEX.md) for the file map. What
+> remains in Phase 4 is only recurring write-back and multi-year cadence detection.
 
 ## 5. Already satisfied by Halcyon (no MVP work needed)
 
 - Information architecture: the 6 views map to the SRD pages (Dashboard, Accounts, Income,
-  Expenses, Ingestion, Settings). SRD tabs (Income: Analyser/Projections; Expenses:
-  Analytics/Recurring) are **Phase 2** additions.
+  Expenses, Ingestion, Settings). The SRD's tabbed sub-views are **built**: Expenses
+  Analytics/Recurring (DesignSystem §8.15–§8.17) and Income Analyser (§8.14). Income's Strategic
+  Projections remains a **Phase 2** addition.
 - **anime.js chart motion** — the SRD's "staggered SVG timeline animations" requirement is done.
 - Dark mode, motion toggle, reduced-motion, the design-system tokens & components.
 

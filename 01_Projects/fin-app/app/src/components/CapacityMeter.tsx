@@ -1,5 +1,5 @@
 import anime from 'animejs'
-import type { Shield } from '../data'
+import { fmt, type Shield } from '../data'
 import { useChartReveal, CHART_EASE } from '../hooks/useChartReveal'
 
 export default function CapacityMeter({ shield, delay = 0 }: { shield: Shield; delay?: number }) {
@@ -46,7 +46,7 @@ export default function CapacityMeter({ shield, delay = 0 }: { shield: Shield; d
         <div className="meter-hi pointer-events-none absolute inset-y-0 left-0 w-[26px] rounded bg-white/55 opacity-0" />
       </div>
       <div className="mt-1.5 text-[10.5px] tabular-nums text-muted">
-        ${shield.spent.toLocaleString()} of ${shield.budget.toLocaleString()}
+        {fmt(shield.spent)} of {fmt(shield.budget)}
       </div>
     </div>
   )
