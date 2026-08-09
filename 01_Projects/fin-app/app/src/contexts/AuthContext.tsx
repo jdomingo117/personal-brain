@@ -15,16 +15,18 @@ interface AuthCtx {
   role: TenantRole | null
   /** True until the initial session lookup settles. Guards must wait on this. */
   initialising: boolean
+  recoveryError: string | null
   isAdmin: boolean
   signOut: () => Promise<void>
   /** Re-reads tenant membership, e.g. after onboarding creates one. */
   refreshMembership: () => Promise<void>
+  retryAccountRecovery: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthCtx>({
   session: null, user: null, tenantId: null, role: null,
-  initialising: true, isAdmin: false,
-  signOut: async () => {}, refreshMembership: async () => {},
+  initialising: true, recoveryError: null, isAdmin: false,
+  signOut: async () => {}, refreshMembership: async () => {}, retryAccountRecovery: async () => {},
 })
 
 export const useAuth = () => useContext(AuthContext)
@@ -33,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [initialising, setInitialising] = useState(true)
   const [membership, setMembership] = useState<{ tenantId: string; role: TenantRole } | null>(null)
+  const [recoveryError, setRecoveryError] = useState<string | null>(null)
   // Guards against a slow membership fetch resolving after sign-out and
   // repopulating state for a user who is no longer here.
   const currentUserId = useRef<string | null>(null)
@@ -75,26 +78,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setMembership({ tenantId: data.tenant_id, role: data.role as TenantRole })
 
-    // Register this device in the session list. The function keys off the
-    // session_id claim in the JWT, so the user_agent below is only a label —
-    // it cannot be used to forge or overwrite another session's row.
-    void supabase.rpc('record_user_session', {
-      p_user_agent: navigator.userAgent,
-    })
+    // Register this device in the session list through the same authenticated
+    // Edge Function boundary as every other application-table write. The RPC
+    // still keys off the JWT session_id; user_agent is only a display label.
+    void supabase.functions.invoke('record-user-session', {
+      body: { user_agent: navigator.userAgent },
+    }).catch((err) => console.error('could not record user session', err))
 
     // Signing in cancels a pending account deletion. This is the recovery
     // path that makes the 30-day grace period meaningful: the real owner
     // simply logs in and the scheduled deletion goes away.
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('deletion_scheduled_at')
       .eq('id', userId)
       .maybeSingle()
 
+    if (profileError) {
+      console.error('could not check deletion recovery status', profileError.message)
+      return
+    }
     if (profile?.deletion_scheduled_at) {
-      await supabase.from('profiles')
-        .update({ deletion_scheduled_at: null })
-        .eq('id', userId)
+      const { error } = await supabase.functions.invoke('restore-user-account', { body: {} })
+      if (error) {
+        console.error('could not cancel scheduled deletion', error.message)
+        setRecoveryError('We could not cancel your scheduled account deletion. Retry before continuing.')
+      } else {
+        setRecoveryError(null)
+      }
     }
   }, [])
 
@@ -120,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // user; re-fetching membership there would mean a needless query every
       // 15 minutes.
       if (changed || event === 'SIGNED_IN') {
+        setRecoveryError(null)
         void loadMembership(nextId)
       }
       if (event === 'SIGNED_OUT') setMembership(null)
@@ -142,10 +154,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setSession(null)
     setMembership(null)
+    setRecoveryError(null)
     currentUserId.current = null
   }, [])
 
   const refreshMembership = useCallback(
+    () => loadMembership(currentUserId.current),
+    [loadMembership],
+  )
+  const retryAccountRecovery = useCallback(
     () => loadMembership(currentUserId.current),
     [loadMembership],
   )
@@ -156,12 +173,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     tenantId: membership?.tenantId ?? null,
     role: membership?.role ?? null,
     initialising,
+    recoveryError,
     // Platform admin comes from app_metadata, which only the service role can
     // write. user_metadata is user-writable and must never be trusted for this.
     isAdmin: session?.user?.app_metadata?.admin === true,
     signOut,
     refreshMembership,
-  }), [session, membership, initialising, signOut, refreshMembership])
+    retryAccountRecovery,
+  }), [session, membership, initialising, recoveryError, signOut, refreshMembership, retryAccountRecovery])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

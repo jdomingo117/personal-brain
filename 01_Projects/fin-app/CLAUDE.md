@@ -30,8 +30,10 @@ before touching that area; don't guess from this file alone.
 - **RLS is never optional.** Every table needs a policy keyed on tenant membership
   (`is_tenant_member`/`has_tenant_role`), not `auth.uid() = user_id` — this app is multi-tenant
   even though each user currently owns exactly one personal tenant. See `supabase/CLAUDE.md`.
-- **No data payload from the client touches the database without Zod validation** in an Edge
-  Function first (`_shared/withAuth.ts`). Never validate only client-side.
+- **Application-data mutations never go directly from the browser to PostgREST or an RPC.** They
+  must use a Zod-validated Edge Function (`_shared/withAuth.ts`); direct reads remain RLS-scoped.
+  The sole client-side mutation exception is `supabase.auth.*` for GoTrue identity/session lifecycle
+  (sign-in, password/email changes, OAuth/OTP exchange, and sign-out), not Halcyon application data.
 - **Aggregates in SQL, matching in O(N).** Don't `.reduce()` over thousands of fetched rows for a
   total; don't nest loops when matching/deduping — see `supabase/CLAUDE.md` Laws 2–3.
 
@@ -54,6 +56,16 @@ task, but in general — run `/docs-audit`. It's the automated version of what a
 hand to find the transfer-linker gap.
 
 ## Recent changes
+
+- 2026-08-08 — Shipped order-independent bank-to-investment reconciliation: exact-value purchase/redemption links, durable review decisions, cash-flow analytics integration, transfer-review UI, activity-ledger provenance, and real-corpus/RLS regression coverage.
+
+- 2026-08-08 — Fixed priced investment re-imports zeroing the cached account value: duplicate imports are now monetary no-ops, while genuine new activities revalue only their account from stored NAVs.
+
+- 2026-08-08 — Shipped scalable managed-fund accounts: deterministic Vanguard activity import, official daily NAV history/sync, contribution-neutral valuation and mixed net-worth history, investment account UI, and Australian FY/AMMA record awareness.
+
+- 2026-08-08 — Routed signed-in loading/error UX through `ViewDataBoundary`, retaining visible data for background refresh failures; Dashboard now directs a transaction-empty user to statement import. Accounts, Income, Expenses, Ingestion, and Settings are route-lazy-loaded while Landing/Dashboard remain eager to preserve the shared hero morph.
+
+- 2026-08-08 — Reliability/write-boundary hardening: `DataContext` now differentiates required-load failure from an empty ledger and supplies a retry state instead of routing failed reads to onboarding; all remaining application-table writes for callsigns, account identifiers, session registry revocation, and deletion recovery now use Zod-validated, audited Edge Functions.
 
 - 2026-08-06 — Fixed a real-money bug found while testing against a live Up account: the
   reconciliation anchor was computed *before* backfill ran, which double-counts once `cutover_date`
@@ -85,51 +97,3 @@ hand to find the transfer-linker gap.
   missing "Transfer to Spending"/"Transfer from Savings" phrasing (Up's own generic Saver-sweep
   wording) to `LEXICON_RE`, which had been scoring a real pair 0.45 — just under
   `SUGGESTED_THRESHOLD` — because only compound phrases like "internal transfer" were recognised.
-- 2026-08-07 — Dashboard audit: fixed "30-day income/expense flow" (`Dashboard.tsx`) actually being
-  all-time income and a last-30-*transactions* slice respectively, neither a real calendar window —
-  both now filter on `t.date` against a proper trailing-30-day range. Six further Dashboard/HeroCard
-  bugs found in the same audit (Asset Allocation's stale account-type list, Holdings' hardcoded
-  6-row cap vs its own "N linked" tag, three hardcoded fake percentage badges, a mismatched "last 5"
-  tag on a 10-row list, the $500 budget fallback, pending rows in the net-worth trend) logged in
-  `INDEX.md`'s known-bugs entry, fixed the same day — see the next entry.
-- 2026-08-07 — Closed all six Dashboard/HeroCard issues from the audit above: Asset Allocation now
-  buckets `Savings` into Cash (was `Liquid`-only); Holdings renders all linked accounts instead of a
-  hardcoded 6-row cap; the three fabricated percentage badges are now real vs-prior-30-days /
-  vs-start-of-month computations (`HeroCard` gained a `monthChangePct?` prop, reusing
-  `Dashboard.tsx`'s existing `netWorthTrend` loop); Recent Activity's tag and row count share one
-  `RECENT_ACTIVITY_COUNT` constant; Budget Capacity drops the $500 fallback entirely (no
-  budgets-management UI exists anywhere in the app, so every category was hitting it — 100%
-  fabricated, not an edge case) in favour of an honest empty state; net worth trend now excludes
-  `pending` transactions. Verified against the real account: Asset Allocation went from $0/NaN% to
-  100% Cash/$132,116, Holdings from 6 to 8 accounts shown, badges from static +4.2%/-1.8%/+0% to
-  real -33.9%/+23.4%/+3.1%.
-- 2026-08-07 — Fixed the Recurring hub (Expenses tab) being completely non-functional for every real
-  user: `buildRecurring()` read a hardcoded-empty mock array instead of `useData()`, so it always
-  showed the empty state. Now `buildRecurring(transactions, accounts, today?)`, both required. Bundled:
-  the detection loop now excludes `isTransfer`/`pending` rows (a recurring savings sweep is not an
-  expense commitment); the fake 3-account funding breakdown (`Operations Checking`/`Sapphire Credit
-  Line`/`Auto Loan // Vehicle`) is replaced with a `fundingAccountGlow` resolved from the real account
-  list; added step-change detection (a subscription's one-time price rise now reads `'fixed'` with the
-  change annotated, not noisy `'variable'`) and a "renews in Nd" callout inside 14 days. New
-  `recurring.test.ts` — previously zero coverage. Verified on the real account: 8 active commitments
-  detected (was 0), funding accounts show real names (`AMEX CC`/`SG CC`), renewal callouts render.
-- 2026-08-07 — Recurring Hub Phase 2: AI early-detection layer for merchants with only 1-2 charges
-  (below the deterministic detector's `MIN_OBSERVATIONS=3`). New `merchant_recurrence_hints` cache
-  (mirrors `merchant_rules`) + `_shared/recurrenceHints.ts` (mirrors `categorize.ts`'s Gemini
-  batching/caching) + `detect-recurrence-hints` edge function, triggered out-of-band from the same
-  three call sites as `categorize-pending`. Needed its own keyset cursor (`after_id`) since, unlike
-  `categorize-pending`, it never mutates the rows it reads — a same-page infinite loop was caught and
-  fixed pre-ship. `buildRecurring()` produces a new `Recurring.candidates[]`, structurally separate
-  from `series`/`active`/`dormant` so an AI guess can never enter `monthlyCommitment`/`annualBurn`.
-  Read-only for this pass (no accept/dismiss). Verified on the real account: 27 real candidates
-  surfaced (Google Cloud, Anthropic Claude, etc.), confirmed $569/mo total unchanged.
-- 2026-08-07 — Part F: closed the unmatched-transfer review queue's biggest gap — Up's "Round Up"
-  sweep (always literal `original_description="Round Up"`, structurally one-sided) was 74% of it
-  (1,692 of 2,298 rows) and could never clear. Excluded at ingest (`isTransferCandidateText()` in
-  both mirrors) + a backfill migration for the existing rows; not a money bug (already excluded from
-  analytics via `category='Transfer'`), pure queue noise. For the real diverse remainder,
-  `OskoLinker.tsx`'s unmatched-leg list is now merchant-grouped (was flat/capped at 100) with the
-  same bulk-action shape as the suggested-pairs queue, backed by new `decide_transfer_legs_batch()`
-  RPC + a `txn_ids` branch on `decide-transfer`. Verified on the real account: unmatched count
-  2,298 → 606, `is_transfer` unchanged for the excluded rows, 606 legs now render as ~30 merchant
-  groups instead of a flat 100-row list.

@@ -49,6 +49,9 @@ copy lives in `supabase/functions/_shared/`, kept in sync by convention, not by 
 
 `src/lib/transfers/` (the transfer-matching engine) follows the same pure/mirrored-server pattern
 — see `supabase/CLAUDE.md` for the mirroring convention and the O(N) constraint it exists to satisfy.
+`src/lib/investments/cashMatch.ts` follows that pattern for exact-value cross-ledger
+purchase/redemption reconciliation; distributions and non-cash activity are intentionally outside
+its vocabulary.
 
 ## Testing
 

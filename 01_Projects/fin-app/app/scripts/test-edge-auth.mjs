@@ -104,6 +104,34 @@ async function main() {
   check('tenant_id stamped from the JWT', created.json?.tenant_id === A.tenantId)
   check('user_id stamped from the JWT', created.json?.user_id === A.userId)
 
+  console.log('\nProfile and identifier functions')
+  const badCallsign = await call('update-callsign', { token: A.token, body: { callsign: '' } })
+  check('callsign validation -> 422', badCallsign.status === 422, `got ${badCallsign.status}`)
+  const callsign = await call('update-callsign', { token: A.token, body: { callsign: 'Edge Operator' } })
+  check('callsign update -> 200', callsign.status === 200 && callsign.json?.callsign === 'Edge Operator')
+  const malformedIdentifier = await call('manage-account-identifier', { token: A.token, body: { action: 'add' } })
+  check('identifier validation -> 422', malformedIdentifier.status === 422, `got ${malformedIdentifier.status}`)
+  const identifier = await call('manage-account-identifier', {
+    token: A.token, body: { action: 'add', account_id: created.json.id, value: 'Account • 1234' },
+  })
+  check('identifier add -> 200', identifier.status === 200 && identifier.json?.value === '1234', JSON.stringify(identifier.json))
+  const foreignIdentifier = await call('manage-account-identifier', {
+    token: B.token, body: { action: 'add', account_id: created.json.id, value: '9999' },
+  })
+  check('cannot add identifier to another tenant account', foreignIdentifier.status === 400, `got ${foreignIdentifier.status}`)
+  const foreignRemove = await call('manage-account-identifier', {
+    token: B.token, body: { action: 'remove', id: identifier.json.id },
+  })
+  check('cannot remove another tenant identifier', foreignRemove.status === 200 && foreignRemove.json?.success === false, JSON.stringify(foreignRemove.json))
+  const restoreSchema = await call('restore-user-account', { token: A.token, body: { unexpected: true } })
+  check('account recovery validation -> 422', restoreSchema.status === 422, `got ${restoreSchema.status}`)
+  await A.client.from('profiles').update({ deletion_scheduled_at: new Date().toISOString() }).eq('id', A.userId)
+  const restored = await call('restore-user-account', { token: A.token, body: {} })
+  const restoredProfile = await A.client.from('profiles').select('deletion_scheduled_at').eq('id', A.userId).single()
+  check('account recovery clears deletion schedule', restored.status === 200 && restored.json?.restored === true && !restoredProfile.data?.deletion_scheduled_at)
+  const sessionSchema = await call('revoke-other-session-records', { token: A.token, body: { unexpected: true } })
+  check('session record validation -> 422', sessionSchema.status === 422, `got ${sessionSchema.status}`)
+
   console.log('\nTenant injection')
   // The client asks to write into A's tenant while holding B's token.
   const injected = await call('upsert-account', {
@@ -138,6 +166,9 @@ async function main() {
   const actions = (audit.data ?? []).map((r) => r.action)
   check('account.created recorded', actions.includes('account.created'), actions.join(','))
   check('auth.user_created recorded', actions.includes('auth.user_created'))
+  check('callsign update recorded', actions.includes('profile.callsign_updated'))
+  check('identifier add recorded', actions.includes('account_identifier.added'))
+  check('account recovery recorded', actions.includes('account.deletion_cancelled'))
 
   console.log('\nRate limiting')
   // analyze-csv is capped at 20/hour per user.

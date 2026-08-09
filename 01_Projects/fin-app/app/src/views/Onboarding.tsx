@@ -42,14 +42,8 @@ export default function Onboarding() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('No user found')
 
-      const { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).maybeSingle()
-      if (profile) {
-        const { error } = await supabase.from('profiles').update({ callsign }).eq('id', user.id)
-        if (error) throw error
-      } else {
-        const { error } = await supabase.from('profiles').insert({ id: user.id, callsign })
-        if (error) throw error
-      }
+      const { error } = await supabase.functions.invoke('update-callsign', { body: { callsign } })
+      if (error) throw error
       
       setStep(2)
     } catch (err: any) {

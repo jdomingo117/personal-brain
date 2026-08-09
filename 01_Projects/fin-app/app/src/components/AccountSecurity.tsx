@@ -160,9 +160,11 @@ export function SessionsCard() {
       toast({ title: 'Could not sign out other devices', sub: 'Try again in a moment.' })
       return
     }
-    await supabase.from('user_sessions')
-      .update({ revoked_at: new Date().toISOString(), revoked_reason: 'user_revoked_others' })
-      .is('revoked_at', null)
+    const { error: recordError } = await supabase.functions.invoke('revoke-other-session-records', { body: {} })
+    if (recordError) {
+      toast({ title: 'Sessions were signed out, but the session list could not update', sub: 'Refresh the page in a moment.' })
+      return
+    }
     toast({ title: 'Other devices signed out', sub: 'They will need to sign in again.' })
     void load()
   }

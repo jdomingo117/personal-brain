@@ -31,8 +31,10 @@ export default function Donut({
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
       <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--track)" strokeWidth={13} />
       {data.map((d, i) => {
-        const dash = (d.value / total) * CIRC
-        const rot = (cum / total) * 360 - 90
+        // An empty portfolio still renders the track and centre label. Avoid
+        // emitting NaN SVG attributes while its first valuation is pending.
+        const dash = total === 0 ? 0 : (d.value / total) * CIRC
+        const rot = total === 0 ? -90 : (cum / total) * 360 - 90
         cum += d.value
         return (
           <circle

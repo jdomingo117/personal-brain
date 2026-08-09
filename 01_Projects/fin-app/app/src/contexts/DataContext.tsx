@@ -17,7 +17,10 @@ interface Budget {
 }
 
 interface DataCtx {
-  loading: boolean
+  loadState: 'loading' | 'ready' | 'error'
+  loadError: string | null
+  isRefreshing: boolean
+  refreshError: string | null
   profile: ProfileData
   isAdmin: boolean
   accounts: Account[]
@@ -25,6 +28,7 @@ interface DataCtx {
   achievements: Achievement[]
   budgets: Budget[]
   recurrenceHints: Map<string, RecurrenceHint>
+  netWorthHistory: { month: string; value: number }[]
   refreshData: () => Promise<void>
 }
 
@@ -36,9 +40,13 @@ const defaultProfile: ProfileData = { callsign: 'Operator', netWorth: 0, netWort
 // re-trigger it (refreshData() runs after almost every mutation), tight
 // enough that "stale for days" can't happen just from not opening the app.
 const STALE_SYNC_MS = 30 * 60 * 1000
+const STALE_INVESTMENT_SYNC_MS = 30 * 60 * 60 * 1000
 
 export const DataContext = createContext<DataCtx>({
-  loading: true,
+  loadState: 'loading',
+  loadError: null,
+  isRefreshing: false,
+  refreshError: null,
   profile: defaultProfile,
   isAdmin: false,
   accounts: [],
@@ -46,6 +54,7 @@ export const DataContext = createContext<DataCtx>({
   achievements: [],
   budgets: [],
   recurrenceHints: new Map(),
+  netWorthHistory: [],
   refreshData: async () => {},
 })
 
@@ -53,17 +62,23 @@ export const useData = () => useContext(DataContext)
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const { session, isAdmin } = useAuth()
-  const [loading, setLoading] = useState(true)
+  const [loadState, setLoadState] = useState<DataCtx['loadState']>('loading')
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [refreshError, setRefreshError] = useState<string | null>(null)
   const [profile, setProfile] = useState<ProfileData>(defaultProfile)
   const [accounts, setAccounts] = useState<Account[]>([])
   const [transactions, setTransactions] = useState<Txn[]>([])
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [budgets, setBudgets] = useState<Budget[]>([])
   const [recurrenceHints, setRecurrenceHints] = useState<Map<string, RecurrenceHint>>(new Map())
+  const [netWorthHistory, setNetWorthHistory] = useState<{ month: string; value: number }[]>([])
   // Connection ids already given a stale-sync this session — refreshData()
   // runs after nearly every mutation, and without this a single session
   // would fire the same background sync repeatedly instead of once.
   const staleSyncTriggered = useRef(new Set<string>())
+  const staleInvestmentSyncTriggered = useRef(new Set<string>())
+  const hasLoaded = useRef(false)
 
   const refreshData = async () => {
     if (!session?.user) {
@@ -72,11 +87,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setProfile(defaultProfile)
       setAccounts([])
       setTransactions([])
+      setAchievements([])
+      setBudgets([])
       setRecurrenceHints(new Map())
-      setLoading(false)
+      setNetWorthHistory([])
+      setLoadError(null)
+      setRefreshError(null)
+      setIsRefreshing(false)
+      setLoadState('ready')
+      hasLoaded.current = false
       return
     }
-    setLoading(true)
+    const background = hasLoaded.current
+    if (background) {
+      setIsRefreshing(true)
+      setRefreshError(null)
+    } else {
+      setLoadState('loading')
+      setLoadError(null)
+    }
     try {
       // The explicit .eq('user_id', ...) filters that used to sit on these
       // queries are gone: membership-based RLS now scopes every row to the
@@ -87,7 +116,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       // The getUser() round-trip that used to guard this block is also gone;
       // RequireAuth already gates every route that mounts this provider, and
       // an invalid token now fails the queries themselves.
-      const [profileRes, accountsRes, txnsRes, achievementsRes, userAchievementsRes, budgetsRes, accountConnectionsRes, recurrenceHintsRes] = await Promise.all([
+      const [profileRes, accountsRes, txnsRes, achievementsRes, userAchievementsRes, budgetsRes, accountConnectionsRes, recurrenceHintsRes, netWorthHistoryRes] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle(),
         supabase.from('accounts').select('*'),
         supabase.from('transactions_analytic').select('*').order('date', { ascending: false }),
@@ -96,10 +125,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
         supabase.from('budgets').select('*'),
         supabase.from('account_connections').select('id, account_id, connection_id, balance_as_of, provider_connections(status)'),
         supabase.from('merchant_recurrence_hints').select('merchant_key, is_recurring, suggested_cadence, confidence'),
+        supabase.from('net_worth_monthly').select('month, value_cents').order('month', { ascending: true }),
       ])
 
-      const fetchedAccounts = accountsRes.data || []
-      const fetchedTxns = txnsRes.data || []
+      const requiredError = [profileRes, accountsRes, txnsRes].find((result) => result.error)?.error
+      if (requiredError) throw requiredError
+
+      const optionalResults = [achievementsRes, userAchievementsRes, budgetsRes, accountConnectionsRes, recurrenceHintsRes, netWorthHistoryRes]
+      for (const result of optionalResults) {
+        if (result.error) console.warn('Optional data enrichment failed:', result.error.message)
+      }
+
+      const fetchedAccounts = accountsRes.data ?? []
+      const fetchedTxns = txnsRes.data ?? []
       const fetchedProfile = profileRes.data
       const fetchedConnections = accountConnectionsRes.data || []
       const connectionByAccountId = new Map(fetchedConnections.map(c => [c.account_id, c.id]))
@@ -133,8 +171,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: a.type,
         balance: a.balance,
         glow: a.balance < 0 ? 'red' : 'cyan',
+        balanceSource: a.balance_source,
+        balanceAsOf: a.balance_as_of,
         connectionId: connectionByAccountId.get(a.id),
       }))
+
+      // Managed-fund NAV is end-of-day rather than intraday. Refresh an
+      // investment account at most once per session when its verified price
+      // is older than 30 hours; the provider adapter itself is idempotent and
+      // fetches once per instrument, not once per holding.
+      for (const account of mappedAccounts) {
+        if (account.balanceSource !== 'investment_valuation' || staleInvestmentSyncTriggered.current.has(account.id)) continue
+        const age = account.balanceAsOf ? Date.now() - new Date(account.balanceAsOf).getTime() : Infinity
+        if (age <= STALE_INVESTMENT_SYNC_MS) continue
+        staleInvestmentSyncTriggered.current.add(account.id)
+        void supabase.functions.invoke('sync-investment-prices', {
+          body: { account_id: account.id, trigger: 'stale' },
+        }).then(({ error }) => { if (!error) void refreshData() }).catch(() => {})
+      }
+      const accountNameById = new Map(mappedAccounts.map((account) => [account.id, account.name]))
 
       // Map DB transactions to UI Txn
       const mappedTxns: Txn[] = fetchedTxns.map(t => ({
@@ -144,7 +199,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         cat: t.category,
         subcat: t.subcategory,
         amount: t.amount,
-        account: mappedAccounts.find(a => a.id === t.account_id)?.name || 'Unknown',
+        account: accountNameById.get(t.account_id) || 'Unknown',
         account_id: t.account_id,
         upload_batch_id: t.upload_batch_id,
         isTransfer: t.is_transfer,
@@ -172,6 +227,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
           },
         ]),
       ))
+      setNetWorthHistory((netWorthHistoryRes.data ?? []).map((point) => ({
+        month: point.month,
+        value: Number(point.value_cents),
+      })))
 
       // Calculate 30-day net worth delta
       const thirtyDaysAgo = new Date()
@@ -195,10 +254,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
         netWorth,
         netWorthDelta
       })
+      setLoadState('ready')
+      setLoadError(null)
+      setRefreshError(null)
+      hasLoaded.current = true
     } catch (error) {
       console.error('Error fetching data:', error)
+      const message = 'We couldn\'t load your financial data. Check your connection and try again.'
+      if (background) setRefreshError(message)
+      else {
+        setLoadError(message)
+        setLoadState('error')
+      }
     } finally {
-      setLoading(false)
+      if (background) setIsRefreshing(false)
     }
   }
 
@@ -206,11 +275,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // produces a new session every 15 minutes with the same user, and refetching
   // the whole dataset on each one would be pure churn.
   useEffect(() => {
-    refreshData()
+    hasLoaded.current = false
+    void refreshData()
   }, [session?.user?.id])
 
   return (
-    <DataContext.Provider value={{ loading, profile, isAdmin, accounts, transactions, achievements, budgets, recurrenceHints, refreshData }}>
+    <DataContext.Provider value={{ loadState, loadError, isRefreshing, refreshError, profile, isAdmin, accounts, transactions, achievements, budgets, recurrenceHints, netWorthHistory, refreshData }}>
       {children}
     </DataContext.Provider>
   )

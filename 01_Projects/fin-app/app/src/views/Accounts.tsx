@@ -12,6 +12,7 @@ import { gridStagger } from '../components/motion'
 import { useData } from '../contexts/DataContext'
 import { MONTHS, iso, TODAY, monthStart, monthEnd, addDays, auFyStart, LAST } from '../lib/period'
 import AddAccountModal from '../components/AddAccountModal'
+import InvestmentAccountActivity from '../components/InvestmentAccountActivity'
 import EditAccountModal from '../components/EditAccountModal'
 import ConnectBankModal from '../components/ConnectBankModal'
 
@@ -234,6 +235,9 @@ export default function Accounts() {
         animate="show"
         className="mt-5 grid grid-cols-1 gap-3.5"
       >
+        {selectedAccount.type === 'Invest' ? (
+          <InvestmentAccountActivity accountId={selectedAccount.id} />
+        ) : <>
         
         {/* ROW 1: Four KPI Hero Cards (Standard Design System Stats) */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
@@ -474,6 +478,7 @@ export default function Accounts() {
           </Tile>
         </div>
 
+        </>}
       </motion.div>
       <AddAccountModal isOpen={isAddingAccount} onClose={() => setIsAddingAccount(false)} />
       <ConnectBankModal isOpen={isConnectingBank} onClose={() => setIsConnectingBank(false)} />

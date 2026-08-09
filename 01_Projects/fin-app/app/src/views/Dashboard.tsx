@@ -10,6 +10,7 @@ import Area from '../components/charts/Area'
 import Bar from '../components/charts/Bar'
 import { fmt, fmtCents, glowColor, type Glow } from '../data'
 import { useData } from '../contexts/DataContext'
+import { useView } from '../router'
 import { MONTHS, TODAY, addDays, iso } from '../lib/period'
 
 // Single source of truth for the Recent Activity tile, so its row count and
@@ -63,7 +64,8 @@ function getAccountIcon(type: string, name: string) {
 }
 
 export default function Dashboard() {
-  const { profile, accounts, transactions, budgets } = useData()
+  const { profile, accounts, transactions, budgets, netWorthHistory } = useData()
+  const { go } = useView()
   
   // Calculate flow — a real trailing 30-CALENDAR-day window (today - 29
   // through today), not "the last 30 transactions". A transaction-count slice
@@ -97,7 +99,7 @@ export default function Dashboard() {
   const investSum = accounts.filter(a => a.type.toLowerCase() === 'invest').reduce((sum, a) => sum + Math.max(0, a.balance), 0)
   
   const allocation = []
-  if (investSum > 0) allocation.push({ label: 'Equities', value: investSum, glow: 'green' as Glow })
+  if (investSum > 0) allocation.push({ label: 'Investments', value: investSum, glow: 'green' as Glow })
   if (liquidSum > 0) allocation.push({ label: 'Cash', value: liquidSum, glow: 'cyan' as Glow })
   if (allocation.length === 0) {
     allocation.push({ label: 'Cash', value: 0, glow: 'cyan' as Glow })
@@ -122,12 +124,12 @@ export default function Dashboard() {
   // Net worth trend calculated dynamically from transactions
   const currentNetWorth = accounts.reduce((sum, a) => sum + a.balance, 0)
   
-  const netWorthTrend: number[] = []
+  const fallbackNetWorthTrend: number[] = []
   let runningNW = currentNetWorth
   
   const now = new Date()
   for (let i = 0; i < 12; i++) {
-    netWorthTrend.unshift(runningNW)
+    fallbackNetWorthTrend.unshift(runningNW)
     
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
     const monthStartIso = d.toISOString().split('T')[0]
@@ -142,6 +144,13 @@ export default function Dashboard() {
 
     runningNW -= monthDelta
   }
+  const visibleNetWorthHistory = netWorthHistory.slice(-12)
+  const netWorthTrend = visibleNetWorthHistory.length > 0
+    ? visibleNetWorthHistory.map((point) => point.value)
+    : fallbackNetWorthTrend
+  const netWorthLabels = visibleNetWorthHistory.length > 0
+    ? visibleNetWorthHistory.map((point) => point.month.slice(0, 7))
+    : MONTHS
 
   // Net worth as of the start of the current calendar month — the second-to-
   // last trend point, a byproduct of the loop above. Reused instead of a
@@ -230,9 +239,9 @@ export default function Dashboard() {
             >
               <div className="mt-1">
                 {chartType === 'line' ? (
-                  <Area key="line" series={[{ data: netWorthTrend, color: 'var(--color-accent)' }]} labels={MONTHS} height={240} />
+                  <Area key="line" series={[{ data: netWorthTrend, color: 'var(--color-accent)' }]} labels={netWorthLabels} height={240} />
                 ) : (
-                  <Bar key="bar" series={[{ data: netWorthTrend, color: 'var(--color-accent)' }]} labels={MONTHS} height={240} />
+                  <Bar key="bar" series={[{ data: netWorthTrend, color: 'var(--color-accent)' }]} labels={netWorthLabels} height={240} />
                 )}
               </div>
             </Tile>
@@ -299,7 +308,11 @@ export default function Dashboard() {
           - 'span={3}' translates to 'md:col-span-2 xl:col-span-3', stretching this card across the full width (3 columns) at the bottom.
         */}
         <Tile title="Recent activity" tag={`last ${RECENT_ACTIVITY_COUNT}`} span={3}>
-          <Ledger rows={transactions.slice(0, RECENT_ACTIVITY_COUNT)} />
+          {transactions.length > 0 ? <Ledger rows={transactions.slice(0, RECENT_ACTIVITY_COUNT)} /> : (
+            <div className="py-10 text-center"><p className="text-[13px] text-muted">No settled transactions yet.</p>
+              <button type="button" onClick={() => go('ingestion')} className="mt-3 text-[13px] font-semibold text-accent hover:opacity-80">Import a statement</button>
+            </div>
+          )}
         </Tile>
       </Grid>
     </Screen>

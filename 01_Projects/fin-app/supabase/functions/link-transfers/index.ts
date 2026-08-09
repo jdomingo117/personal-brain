@@ -2,6 +2,7 @@ import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 import { withAuth } from '../_shared/withAuth.ts'
 import { LIMITS } from '../_shared/rateLimit.ts'
 import { runLinkTransfers } from '../_shared/runLinkTransfers.ts'
+import { runInvestmentCashLinks } from '../_shared/runInvestmentCashLinks.ts'
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -33,8 +34,14 @@ Deno.serve(
       to = ctx.body.to
     }
 
-    const result = await runLinkTransfers(ctx.db, ctx.tenantId, from, to, ctx.body.scope === 'all')
-    await ctx.audit('transfers.linked', { from, to, ...result, overflowed_amounts: result.overflowedAmounts.length })
-    return result
+    const [result, investmentCash] = await Promise.all([
+      runLinkTransfers(ctx.db, ctx.tenantId, from, to, ctx.body.scope === 'all'),
+      runInvestmentCashLinks(ctx.db, ctx.admin(), ctx.tenantId, from, to),
+    ])
+    await ctx.audit('transfers.linked', {
+      from, to, ...result, overflowed_amounts: result.overflowedAmounts.length,
+      investment_cash: investmentCash,
+    })
+    return { ...result, investmentCash }
   }),
 )

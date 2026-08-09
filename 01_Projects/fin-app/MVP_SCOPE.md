@@ -85,7 +85,7 @@ is deferred.
 | Phase | Scope |
 |---|---|
 | **2 — Intelligence & deep analytics** (no external integrations) | AI async categorization (Gemini background); Insights engine (**deterministic math**, AI only phrases the bulletin); Income Analyser advanced cards; Expenses analytics (daily-spikes, hierarchy flow, top-10 merchants, volatility/pacing); Strategic Projections + goal-horizon forecast (deterministic) |
-| **3 — Automation & external data** | Bank/neobank sync (AU CDR / Basiq — regulated, large); live valuation engine (ticker APIs + background workers); investment cost-basis tracking; **AI-parsing ingestion fallback**; AES-256-GCM credential storage (needed only once third-party tokens exist) |
+| **3 — Automation & external data** | ~~Direct neobank sync (Up)~~; broader AU CDR/Basiq coverage; ~~managed-fund daily NAV valuation + historical activity ingestion~~ (Vanguard Personal Investor is the first adapter); complete parcel-level cost-basis/CGT engine and broader instrument/provider coverage; **AI-parsing ingestion fallback**. AES-256-GCM credential storage shipped with Up. |
 | **4 — Recurring & reconciliation** | Recurring **write-back** (edit / cancel / remind on a detected series); multi-year cadence detection (Annual can't fire from a 12-month ledger). ~~Osko same-day linker~~ — **shipped early, see below.** |
 | **5 — Admin & ops** | Hidden admin portal; platform metrics; user/role directory |
 
@@ -98,7 +98,9 @@ is deferred.
 > **The Osko same-day linker also shipped early** (2026-08-05) — `link-transfers`/`decide-transfer`
 > Edge Functions, `app/src/lib/transfers/`, `OskoLinker.tsx`, plus an unmatched-single-leg review
 > path the original SRD scope didn't call out. See [INDEX.md](INDEX.md) for the file map. What
-> remains in Phase 4 is only recurring write-back and multi-year cadence detection.
+> remains in Phase 4 is only recurring write-back and multi-year cadence detection. Managed-fund
+> purchase/redemption reconciliation joined the same review surface on 2026-08-08 through a
+> separate cross-ledger link model; distributions remain income and non-cash activities are excluded.
 
 ## 5. Already satisfied by Halcyon (no MVP work needed)
 

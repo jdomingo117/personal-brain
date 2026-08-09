@@ -12,6 +12,8 @@ export type Account = {
   balance: number // cents
   credit_limit?: number // cents
   glow: Glow
+  balanceSource?: 'manual' | 'bank_provider' | 'investment_valuation'
+  balanceAsOf?: string
   /** Set when a provider (e.g. Up Bank) owns this account's balance and forward ledger from its cutover date. */
   connectionId?: string
 }

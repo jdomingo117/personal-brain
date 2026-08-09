@@ -10,8 +10,13 @@
     "highTextContrast": false
   },
   "knownTags": {
+    "architecture": 11,
+    "design-system": 8,
+    "elixir": 9,
     "finance": 1,
     "halcyon": 5,
+    "investments": 12,
+    "papaparse": 10,
     "projects": 3,
     "typescript": 7,
     "projects/fin-app": 1

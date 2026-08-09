@@ -13,6 +13,7 @@ import { MONTHS, dateToIdx } from '../lib/period'
 import { CADENCE_PER_MONTH } from '../lib/cadence'
 import { fmt } from '../data'
 import { useData } from '../contexts/DataContext'
+import StrategicProjections from '../components/StrategicProjections'
 
 const TABS = [
   { id: 'analyzer', label: 'Income analyzer' },
@@ -89,22 +90,7 @@ export default function Income() {
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.25 }}
           >
-            <Grid>
-              <Tile title="Strategic projections" tag="coming soon" span={3}>
-                <div className="grid place-items-center gap-3 py-16 text-center">
-                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 3v18h18" />
-                    <path d="m7 14 3-4 4 3 5-7" />
-                    <path d="M19 6h-4M19 6v4" />
-                  </svg>
-                  <div className="font-display text-[16px] font-bold text-ink">Project your trajectory</div>
-                  <p className="max-w-[420px] text-[13px] leading-relaxed text-muted">
-                    Model future inflow, run savings scenarios, and stress-test your objectives against
-                    different earning paths. This view is on the way.
-                  </p>
-                </div>
-              </Tile>
-            </Grid>
+            <StrategicProjections />
           </motion.div>
         )}
       </AnimatePresence>

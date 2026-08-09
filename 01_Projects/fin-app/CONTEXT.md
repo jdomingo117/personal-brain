@@ -318,3 +318,43 @@ The vanilla HTML/CSS/JS prototype (`index.html`, `styles.css`, `app.js`, `card3d
 scratch files, and `HalcyonHUD_DesignSystem.md` (the original dark "console HUD" concept). If you
 ever want the lineage, it's in the source `DesignTests/halcyon-prototype` folder; none of it is
 needed to move forward.
+
+## 12. Managed-fund accounts — shipped 2026-08-08
+
+The first scalable managed-investment vertical slice is live. Vanguard Personal Investor is an
+adapter and catalogue seed, not a hardcoded account path: the schema separates global instruments
+and prices from tenant-owned holdings, activities, valuations and tax-workflow records. The supplied
+anonymized High Growth export is now a regression corpus (9 activities, 21,492.49 units, $45,715.00
+external purchases, $1,662.59 DRP). Imports are reviewed, unit-reconciled and content-deduplicated;
+only the account suffix is stored.
+
+Official Vanguard NAV history drives set-based daily valuations and a cached account balance. Both
+scheduled and on-open/manual refresh paths preserve the real price date, serialize concurrent runs,
+replay provider corrections and retain the last good value on failure. Purchases are recorded as
+external flows rather than performance, so funding an investment does not falsely erase or create
+net worth; `net_worth_monthly` combines cash reconstruction with investment snapshots.
+
+The Invest account UI replaces bank-centric analytics with current value, precise units, net
+contributions, DRP, contribution-neutral return, NAV status, performance history and its own ledger.
+Australian FY summaries flag disposals and track AMMA statement status through an audited mutation;
+they explicitly do not claim to calculate tax, CGT or AMMA components. Remaining investment scope is
+parcel-level cost-base/disposal accounting and additional provider/instrument adapters.
+
+**Priced duplicate-import bug fixed the same day.** The first implementation correctly skipped all
+duplicate activity rows but then unconditionally reset `accounts.balance` to zero and cleared
+`balance_as_of`. Because stale NAV refresh is deduped once per account per browser session, the zero
+could persist even though valuation snapshots were still intact. A zero-row import is now a strict
+monetary no-op and reports the preserved value/date. Genuine new activity calls the service-only
+`rebuild_investment_account_valuations(account_id)` operation against stored NAVs, avoiding both a
+live provider dependency and a global all-tenant rebuild. The regression test follows the real user
+sequence—import → price → identical re-import—and asserts cached value, price date and snapshot count
+remain unchanged.
+
+**Bank-to-investment reconciliation shipped.** `investment_cash_links` now joins bank transactions
+to purchase/redemption activities without merging the ledgers or inventing synthetic rows. Matching
+is exact-value, four-day, bounded and order-independent; the four supplied Vanguard funding pairs
+auto-link, including Friday-to-Monday settlement. Suggestions and automatic matches are reviewable,
+linked bank legs are excluded from cash-flow analytics, and content-keyed decisions survive
+delete/re-import. DRP and other non-cash activity are ineligible, while cash distributions remain
+investment income. See `MANAGED_INVESTMENTS.md` for the contract, remaining split/combined-cash
+scope and validation matrix.

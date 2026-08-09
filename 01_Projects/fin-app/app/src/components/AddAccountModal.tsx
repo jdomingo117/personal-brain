@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabaseClient'
 import { useData } from '../contexts/DataContext'
-import { useAuth } from '../contexts/AuthContext'
 import { Button } from './Controls'
 
 type Props = {
@@ -22,7 +21,6 @@ const TYPE_DESCRIPTIONS: Record<AccountType, string> = {
 
 export default function AddAccountModal({ isOpen, onClose }: Props) {
   const { refreshData } = useData()
-  const { tenantId } = useAuth()
   const [name, setName] = useState('')
   const [type, setType] = useState<AccountType>('Savings')
   const [balance, setBalance] = useState('0')
@@ -42,7 +40,7 @@ export default function AddAccountModal({ isOpen, onClose }: Props) {
     setLoading(true)
     try {
       // Balance is input as dollars, needs to be cents in the DB
-      const parsedCents = Math.round(parseFloat(balance || '0') * 100)
+      const parsedCents = type === 'Invest' ? 0 : Math.round(parseFloat(balance || '0') * 100)
       const isLiability = ['Credit Card', 'Loan', 'Debt'].includes(type)
       const finalCents = isLiability ? -Math.abs(parsedCents) : Math.abs(parsedCents)
       const limitCents = limit ? Math.round(parseFloat(limit) * 100) : undefined
@@ -64,14 +62,9 @@ export default function AddAccountModal({ isOpen, onClose }: Props) {
       // the obvious user response, retrying, would create a second account.
       // A missing identifier only costs matching strength, and the linker
       // infers it back from the first confirmed pair anyway.
-      const digits = identifier.replace(/\D/g, '')
-      if (digits && tenantId && account?.id) {
-        const { error: idErr } = await supabase.from('account_identifiers').insert({
-          tenant_id: tenantId,
-          account_id: account.id,
-          kind: digits.length <= 6 ? 'mask' : 'account_number',
-          value: digits,
-          source: 'user',
+      if (identifier && account?.id) {
+        const { error: idErr } = await supabase.functions.invoke('manage-account-identifier', {
+          body: { action: 'add', account_id: account.id, value: identifier },
         })
         if (idErr) console.error('account identifier not saved', idErr.message)
       }
@@ -124,7 +117,7 @@ export default function AddAccountModal({ isOpen, onClose }: Props) {
                     type="text"
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    placeholder="e.g. Macquarie Savings"
+                    placeholder={type === 'Invest' ? 'e.g. Vanguard Personal Investor' : 'e.g. Macquarie Savings'}
                     className="rounded-lg border border-[var(--hair)] bg-[var(--input-bg)] px-3.5 py-2.5 text-[14px] text-ink outline-none transition focus:border-accent"
                     autoFocus
                   />
@@ -149,11 +142,12 @@ export default function AddAccountModal({ isOpen, onClose }: Props) {
                 </label>
 
                 <label className="flex flex-col gap-1.5">
-                  <span className="text-[12px] font-semibold tracking-wide text-ink2 uppercase">Initial Balance ($)</span>
+                  <span className="text-[12px] font-semibold tracking-wide text-ink2 uppercase">{type === 'Invest' ? 'Initial valuation' : 'Initial Balance ($)'}</span>
                   <input
                     type="number"
                     step="0.01"
                     value={balance}
+                    disabled={type === 'Invest'}
                     onChange={e => setBalance(e.target.value)}
                     onFocus={e => {
                       if (e.target.value === '0') setBalance('')
@@ -161,8 +155,9 @@ export default function AddAccountModal({ isOpen, onClose }: Props) {
                     onBlur={e => {
                       if (!e.target.value) setBalance('0')
                     }}
-                    className="rounded-lg border border-[var(--hair)] bg-[var(--input-bg)] px-3.5 py-2.5 text-[14px] text-ink outline-none transition focus:border-accent font-mono"
+                    className="rounded-lg border border-[var(--hair)] bg-[var(--input-bg)] px-3.5 py-2.5 text-[14px] text-ink outline-none transition focus:border-accent font-mono disabled:cursor-not-allowed disabled:opacity-50"
                   />
+                  {type === 'Invest' && <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted">Calculated from units and verified fund prices after you import investment activity.</p>}
                 </label>
 
                 {type === 'Credit Card' && (
@@ -179,7 +174,7 @@ export default function AddAccountModal({ isOpen, onClose }: Props) {
                   </label>
                 )}
 
-                <label className="flex flex-col gap-1.5">
+                {type !== 'Invest' && <label className="flex flex-col gap-1.5">
                   <span className="text-[12px] font-semibold tracking-wide text-ink2 uppercase">Last 4 digits (Optional)</span>
                   <input
                     type="text"
@@ -193,7 +188,7 @@ export default function AddAccountModal({ isOpen, onClose }: Props) {
                     Helps the transfer linker recognise this account from another
                     bank's description of it (e.g. "Linked Account Xx3692").
                   </p>
-                </label>
+                </label>}
 
                 {error && (
                   <div className="rounded-lg bg-red-500/10 p-3 text-[13px] text-red-500 font-medium">

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabaseClient'
 import { useData } from '../contexts/DataContext'
-import { useAuth } from '../contexts/AuthContext'
 import { runCategorizePending } from '../lib/categorizePending'
 import { runDetectRecurrenceHints } from '../lib/detectRecurrenceHints'
 import { Account } from '../data'
@@ -59,7 +58,6 @@ function timeAgo(iso: string | null): string {
 
 export default function EditAccountModal({ account, isOpen, onClose }: Props) {
   const { refreshData } = useData()
-  const { tenantId } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [confirmText, setConfirmText] = useState('')
@@ -234,20 +232,14 @@ export default function EditAccountModal({ account, isOpen, onClose }: Props) {
   }, [isOpen, account.id])
 
   const addIdentifier = async () => {
-    const digits = newIdentifier.replace(/\D/g, '')
-    if (!digits || !tenantId) return
+    if (!newIdentifier) return
     setSavingIdentifier(true)
     setIdentifierError('')
     try {
-      // PostgREST returns errors in the payload rather than throwing, so an
-      // unchecked insert would clear the field and silently show nothing —
-      // indistinguishable from success to the user.
-      const { error: insertErr } = await supabase.from('account_identifiers').insert({
-        tenant_id: tenantId,
-        account_id: account.id,
-        kind: digits.length <= 6 ? 'mask' : 'account_number',
-        value: digits,
-        source: 'user',
+      // The Edge Function validates and normalises the identifier, then
+      // stamps tenancy from the verified session rather than this component.
+      const { error: insertErr } = await supabase.functions.invoke('manage-account-identifier', {
+        body: { action: 'add', account_id: account.id, value: newIdentifier },
       })
       if (insertErr) {
         setIdentifierError(
@@ -266,7 +258,9 @@ export default function EditAccountModal({ account, isOpen, onClose }: Props) {
 
   const removeIdentifier = async (id: string) => {
     setIdentifierError('')
-    const { error: delErr } = await supabase.from('account_identifiers').delete().eq('id', id)
+    const { error: delErr } = await supabase.functions.invoke('manage-account-identifier', {
+      body: { action: 'remove', id },
+    })
     if (delErr) {
       setIdentifierError('Could not remove that identifier.')
       return

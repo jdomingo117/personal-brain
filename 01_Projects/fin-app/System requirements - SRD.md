@@ -123,9 +123,9 @@ The platform unifies disparate financial vehicles into a cohesive time-series gr
 
 - **Liquid & Credit Accounts:** Automatic extraction via a direct neobank API (Up Bank, read-only Personal Access Token — built, see [INDEX.md](INDEX.md)); broader aggregator coverage (AU CDR / Basiq, for banks without their own API) remains *Phase 3*. Legacy bank ingestion processed through local file parsers (*MVP*), and can coexist with an API connection on the same account via a per-account `cutover_date`.
 
-- **Investment Vehicles (Stocks & Managed Funds):** Cost-basis tracked via historical transaction records (buys/sells) (*Phase 3*).
+- **Investment Vehicles (Stocks & Managed Funds):** Managed-fund holdings, decimal-safe historical activities, DRP separation, unit reconciliation, Australian financial-year summaries and AMMA workflow tracking are built; Vanguard Personal Investor is the first import adapter. Exact-value bank funding/redemption movements are reconciled across ledgers with automatic/suggested review and durable decisions, while distributions remain income. Parcel-level disposal cost-basis, split/combined funding reconciliation and final CGT/tax calculations remain *Phase 3*.
 
-- **Live Valuation Engine:** A secure background worker periodically pulls asset price updates via lightweight ticker APIs, overlaying live asset prices onto the user's transaction history to maintain real-time net worth valuation (*Phase 3*).
+- **Live Valuation Engine:** Managed-fund NAV history and scheduled/on-demand refresh are built against verified provider-published prices, preserving the publication date and last good value. Valuations are derived from the activity ledger and included in mixed-account net-worth history. Broader ticker/provider coverage remains *Phase 3*.
 
 ### B. Two-Tier Data Ingestion Pipeline
 

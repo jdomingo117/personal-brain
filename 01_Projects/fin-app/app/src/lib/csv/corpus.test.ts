@@ -12,6 +12,7 @@ import { normalizeMerchant } from './normalizeMerchant'
 import { parseDate, detectDateFormat } from './parseDate'
 import { resolveRowAmountCents } from './parseAmount'
 import { mapBankCategory, unmappedBankCategories } from './bankCategoryMap'
+import { isVanguardPersonalInvestorCsv } from '../investments/vanguard'
 
 const SAMPLES = join(__dirname, '..', '..', '..', '..', 'Sample datasets')
 
@@ -55,10 +56,17 @@ const MAPPINGS: Record<string, { dateCol: string; descCol: string; amountCol?: s
 describe('sample corpus', () => {
   it('covers every file in Sample datasets/', () => {
     expect(FILES.length).toBeGreaterThan(0)
-    for (const f of FILES) expect(MAPPINGS[f], `no mapping for ${f}`).toBeDefined()
+    for (const f of FILES) {
+      const supportedInvestment = isVanguardPersonalInvestorCsv(load(f).header)
+      expect(Boolean(MAPPINGS[f]) || supportedInvestment, `no importer for ${f}`).toBe(true)
+    }
   })
 
-  for (const file of FILES) {
+  // This suite covers bank-statement invariants. Investment corpus fixtures
+  // have their own adapter suite: they carry units/prices, not debit/credit
+  // merchant rows, so forcing them through the bank mapping would be a false
+  // test rather than broader coverage.
+  for (const file of Object.keys(MAPPINGS)) {
     describe(file, () => {
       const { header, rows } = load(file)
       const map = MAPPINGS[file]

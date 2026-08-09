@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import {
   BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate,
@@ -7,6 +7,7 @@ import { ViewContext, VIEW_PATHS, pathToView, type View } from './router'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { DataProvider } from './contexts/DataContext'
 import { RequireAnon, RequireAuth, RequireOnboarded } from './components/Guards'
+import ViewDataBoundary, { ViewLoadingState } from './components/ViewDataBoundary'
 import SceneBackground from './three/SceneBackground'
 import Shell from './components/Shell'
 import ThemeToggle from './components/ThemeToggle'
@@ -18,11 +19,20 @@ import ResetPassword from './views/ResetPassword'
 import Onboarding from './views/Onboarding'
 import Landing from './views/Landing'
 import Dashboard from './views/Dashboard'
-import Accounts from './views/Accounts'
-import Income from './views/Income'
-import Expenses from './views/Expenses'
-import Ingestion from './views/Ingestion'
-import Settings from './views/Settings'
+
+const Accounts = lazy(() => import('./views/Accounts'))
+const Income = lazy(() => import('./views/Income'))
+const Expenses = lazy(() => import('./views/Expenses'))
+const Ingestion = lazy(() => import('./views/Ingestion'))
+const Settings = lazy(() => import('./views/Settings'))
+
+function DataRoute({ index, title, sub, children }: { index: string; title: string; sub?: string; children: ReactNode }) {
+  return <ViewDataBoundary index={index} title={title} sub={sub}>{children}</ViewDataBoundary>
+}
+
+function LazyDataRoute({ index, title, sub, children }: { index: string; title: string; sub?: string; children: ReactNode }) {
+  return <DataRoute index={index} title={title} sub={sub}><Suspense fallback={<ViewLoadingState index={index} title={title} sub={sub} />}>{children}</Suspense></DataRoute>
+}
 
 /** Chrome shared by the signed-in views. */
 function ShellLayout() {
@@ -75,7 +85,7 @@ function AppFrame({
 }) {
   const location = useLocation()
   const view = pathToView(location.pathname)
-  const { session } = useAuth()
+  const { session, recoveryError, retryAccountRecovery } = useAuth()
 
   return (
     <ViewBridge
@@ -89,7 +99,17 @@ function AppFrame({
         {!booted && <Boot key="boot" onDone={() => setBooted(true)} />}
       </AnimatePresence>
 
-      {booted && (
+      {booted && recoveryError ? (
+        <div className="absolute inset-0 flex items-center justify-center p-6">
+          <div className="max-w-sm text-center">
+            <p className="text-[15px] font-medium">Account recovery needs attention</p>
+            <p className="mt-2 text-[13px] text-muted">{recoveryError}</p>
+            <button type="button" className="mt-4 rounded-md border border-[var(--hair)] px-3 py-2 text-[13px] hover:border-accent" onClick={() => void retryAccountRecovery()}>
+              Retry recovery
+            </button>
+          </div>
+        </div>
+      ) : booted && (
         <Routes location={location} key={location.pathname}>
           {/* Pre-auth */}
           <Route element={<BareLayout />}>
@@ -113,12 +133,12 @@ function AppFrame({
             }
           >
             <Route path="/" element={<Landing />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/accounts" element={<Accounts />} />
-            <Route path="/income" element={<Income />} />
-            <Route path="/expenses" element={<Expenses />} />
-            <Route path="/ingestion" element={<Ingestion />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/dashboard" element={<DataRoute index="01 — Command" title="Dashboard" sub="Your finances at a glance"><Dashboard /></DataRoute>} />
+            <Route path="/accounts" element={<LazyDataRoute index="02 — Accounts" title="Accounts" sub="Balances, activity & connections"><Accounts /></LazyDataRoute>} />
+            <Route path="/income" element={<LazyDataRoute index="03 — Income" title="Income" sub="Inflow analysis & patterns"><Income /></LazyDataRoute>} />
+            <Route path="/expenses" element={<LazyDataRoute index="04 — Expenses" title="Expenses" sub="Outflow analysis, pacing & recurring costs"><Expenses /></LazyDataRoute>} />
+            <Route path="/ingestion" element={<LazyDataRoute index="05 — Ingestion" title="Ingestion" sub="Import statements, categorise, reconcile"><Ingestion /></LazyDataRoute>} />
+            <Route path="/settings" element={<LazyDataRoute index="⚙ — Configuration" title="Settings" sub="Interface, identity & preferences"><Settings /></LazyDataRoute>} />
           </Route>
 
           {/* Unknown URL: home for a signed-in user, login otherwise. */}

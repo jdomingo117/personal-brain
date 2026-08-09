@@ -35,12 +35,9 @@ export default function Settings() {
       return
     }
     setIsSaving(true)
-    const { data: user } = await supabase.auth.getUser()
-    if (user.user) {
-      const { error } = await supabase.from('profiles').update({ callsign: newCallsign.trim() }).eq('id', user.user.id)
-      if (error) toast({ title: 'Error updating callsign', sub: error.message })
-      else await refreshData()
-    }
+    const { error } = await supabase.functions.invoke('update-callsign', { body: { callsign: newCallsign } })
+    if (error) toast({ title: 'Error updating callsign', sub: error.message })
+    else await refreshData()
     setIsSaving(false)
     setEditingCallsign(false)
   }

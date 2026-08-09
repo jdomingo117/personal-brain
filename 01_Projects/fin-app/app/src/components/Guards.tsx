@@ -37,10 +37,9 @@ export function RequireAuth({ children }: { children: ReactNode }) {
  * Layered on top of RequireAuth rather than duplicating its check.
  */
 export function RequireOnboarded({ children }: { children: ReactNode }) {
-  const { loading, accounts } = useData()
+  const { loadState, accounts } = useData()
 
-  if (loading) return <Waiting />
-  if (accounts.length === 0) return <Navigate to="/onboarding" replace />
+  if (loadState === 'ready' && accounts.length === 0) return <Navigate to="/onboarding" replace />
   return <>{children}</>
 }
 

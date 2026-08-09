@@ -24,9 +24,11 @@ Deno.serve(
       // from the payload regardless of what the client sent, rather than
       // trust the client to know not to include it (e.g. an unrelated rename
       // would otherwise restate a balance the client no longer owns).
-      const { data: connection } = await ctx.db
-        .from('account_connections').select('id').eq('account_id', id).maybeSingle()
-      if (connection) delete payload.balance
+      const [{ data: connection }, { data: existingAccount }] = await Promise.all([
+        ctx.db.from('account_connections').select('id').eq('account_id', id).maybeSingle(),
+        ctx.db.from('accounts').select('balance_source').eq('id', id).maybeSingle(),
+      ])
+      if (connection || existingAccount?.balance_source === 'investment_valuation') delete payload.balance
 
       // No .eq('user_id', ...) needed: RLS scopes the update to the caller's
       // tenant, and a mismatched id simply matches no rows.

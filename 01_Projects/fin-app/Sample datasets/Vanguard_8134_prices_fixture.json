@@ -1,0 +1,12 @@
+{
+  "statusCode": 200,
+  "message": "Retrieved fund successfully",
+  "data": [{
+    "portId": "8134",
+    "navPrices": [
+      { "measureTypeCode": "NAV", "asOfDate": "2026-08-06", "currencyCode": "AUD", "price": 2.3601 },
+      { "measureTypeCode": "NAV", "asOfDate": "2026-08-05", "currencyCode": "AUD", "price": 2.3583 },
+      { "measureTypeCode": "NAV", "asOfDate": "2026-08-04", "currencyCode": "AUD", "price": 2.3493 }
+    ]
+  }]
+}

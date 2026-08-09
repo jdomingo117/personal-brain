@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Screen, ViewHeader, Grid } from '../components/Screen'
 import Tile from '../components/Tile'
 import CSVUploader from '../components/CSVUploader'
+import InvestmentCSVUploader from '../components/InvestmentCSVUploader'
 import OskoLinker from '../components/OskoLinker'
 import { useData } from '../contexts/DataContext'
 
@@ -67,16 +68,20 @@ export default function Ingestion() {
 
         {account && (
           <Tile title="Statement upload" span={3}>
-            <CSVUploader
-              key={account.id}
-              accountId={account.id}
-              accountName={account.name}
-              accountType={account.type}
-            />
+            {account.type === 'Invest' ? (
+              <InvestmentCSVUploader key={account.id} accountId={account.id} accountName={account.name} />
+            ) : (
+              <CSVUploader
+                key={account.id}
+                accountId={account.id}
+                accountName={account.name}
+                accountType={account.type}
+              />
+            )}
           </Tile>
         )}
 
-        <Tile title="Same-day transfer linker" span={3}>
+        <Tile title="Transfer review" span={3}>
           <OskoLinker />
         </Tile>
       </Grid>

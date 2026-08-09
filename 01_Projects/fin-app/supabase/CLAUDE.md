@@ -13,8 +13,10 @@ These are enforced by convention and review, not by a linter — treat them as h
 writing or refactoring anything in this directory.
 
 - **Law 1 — the 4-pillar security matrix.** Every protected route/function is behind Supabase Auth.
-  Every table has RLS keyed on tenant membership. Every client payload is Zod-validated inside an
-  Edge Function before touching the DB — never trust client-side validation alone. Auth and
+  Every table has RLS keyed on tenant membership. Every Halcyon application-data payload is
+  Zod-validated inside an Edge Function before touching the DB — never trust client-side validation
+  alone. Browser code may read through RLS but must not mutate PostgREST tables or call database RPCs;
+  `supabase.auth.*` is the explicit exception for GoTrue identity/session lifecycle. Auth and
   ingestion functions are rate-limited.
 - **Law 2 — aggregates belong in SQL.** `sum()`/`avg()`/`count()` via SQL views, RPC, or PostgREST —
   never fetch thousands of rows to run a JS `.reduce()`.
@@ -70,6 +72,8 @@ authorization. Current mirrored pairs:
 - `app/src/lib/csv/dedupe.ts` ↔ `_shared/dedupe.ts` (content-hash for duplicate detection)
 - `app/src/lib/transfers/{classify,match}.ts` ↔ `_shared/transferMatch.ts` (transfer candidate
   scoring)
+- `app/src/lib/investments/cashMatch.ts` ↔ `_shared/investmentCashMatch.ts` (bank-to-investment
+  purchase/redemption scoring)
 
 If you change one side, change the other — there's no shared import (Deno vs. the Vite build), so
 this is a discipline, not a compiler guarantee. `_shared/transferMatch.ts`'s docblock deliberately

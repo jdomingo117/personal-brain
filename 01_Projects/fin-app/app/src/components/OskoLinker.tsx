@@ -5,6 +5,7 @@ import { useData } from '../contexts/DataContext'
 import { Button } from './Controls'
 import { fmtCents } from '../data'
 import { normalizeMerchant } from '../lib/csv/normalizeMerchant'
+import InvestmentCashLinker from './InvestmentCashLinker'
 
 interface LinkedTxn {
   id: string
@@ -119,6 +120,7 @@ export default function OskoLinker() {
   const [unmatchedExpandedGroups, setUnmatchedExpandedGroups] = useState<Set<string>>(new Set())
   const [unmatchedDeselected, setUnmatchedDeselected] = useState<Set<string>>(new Set())
   const [unmatchedBatchBusy, setUnmatchedBatchBusy] = useState<string | null>(null)
+  const [investmentRefreshKey, setInvestmentRefreshKey] = useState(0)
 
   const accountName = (id: string) => accounts.find((a) => a.id === id)?.name ?? 'Unknown account'
 
@@ -179,6 +181,7 @@ export default function OskoLinker() {
       const { error: fnErr } = await supabase.functions.invoke('link-transfers', { body: { scope: 'all' } })
       if (fnErr) throw fnErr
       await load()
+      setInvestmentRefreshKey((value) => value + 1)
       await refreshData()
     } catch {
       setError('Rescan failed — please try again.')
@@ -301,6 +304,7 @@ export default function OskoLinker() {
   if (links.length === 0 && unmatchedTotal === 0 && overflow.length === 0) {
     return (
       <div className="grid gap-3">
+        <InvestmentCashLinker refreshKey={investmentRefreshKey} />
         <p className="text-[13px] text-muted">
           No internal transfers pending review. Import statements from more than one account
           to start finding them, or scan what's already in your ledger.
@@ -314,6 +318,7 @@ export default function OskoLinker() {
 
   return (
     <div className="grid gap-5">
+      <InvestmentCashLinker refreshKey={investmentRefreshKey} />
       {error && (
         <div className="rounded-[10px] border border-[var(--color-neg)] bg-[var(--color-neg)]/5 px-3 py-2 text-[12.5px] text-[var(--color-neg)]">
           {error}

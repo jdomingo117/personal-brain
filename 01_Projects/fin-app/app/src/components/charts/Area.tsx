@@ -31,12 +31,14 @@ export default function Area({
   height = 240,
   selectedIndex = null,
   onClickDataPoint,
+  ariaLabel = 'Financial trend line chart',
 }: {
   series: Series[]
   labels?: string[]
   height?: number
   selectedIndex?: number | null
   onClickDataPoint?: (idx: number) => void
+  ariaLabel?: string
 }) {
   const W = 640
   const H = height
@@ -127,7 +129,7 @@ export default function Area({
         if (hoveredIdx !== null) onClickDataPoint?.(hoveredIdx)
       }}
       role="img"
-      aria-label="Outflow cumulative trend line chart"
+      aria-label={ariaLabel}
     >
       {/* gridlines + $ ticks */}
       {Array.from({ length: 5 }).map((_, g) => {

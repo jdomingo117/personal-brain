@@ -73,7 +73,7 @@ export default function AllocationDonut({
       <div className="flex-1 min-w-0">
         <ul className="grid gap-2">
           {data.map((d) => {
-            const pct = ((d.value / total) * 100).toFixed(1)
+            const pct = (total === 0 ? 0 : (d.value / total) * 100).toFixed(1)
             return (
               <li
                 key={d.label}

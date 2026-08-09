@@ -131,6 +131,14 @@ Notes:
         }
       }
 
+      // Polarity inversion applies only to a single signed amount column.
+      // Debit/credit exports already encode direction by column, and models
+      // occasionally return an irrelevant true value despite the prompt.
+      // Normalize that non-semantic field so the mapping is deterministic.
+      if (!mapping.amountCol && (mapping.debitCol || mapping.creditCol)) {
+        mapping.invertAmount = false
+      }
+
       return mapping
     },
   ),

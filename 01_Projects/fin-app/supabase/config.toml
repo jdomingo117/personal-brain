@@ -79,6 +79,25 @@ verify_jwt = true
 [functions.upsert-transactions]
 verify_jwt = true
 
+[functions.import-investment-activities]
+verify_jwt = true
+
+[functions.delete-investment-upload-batch]
+verify_jwt = true
+
+[functions.sync-investment-prices]
+verify_jwt = true
+
+[functions.sync-investment-prices-cron]
+# This endpoint performs its own exact service-role bearer authentication.
+verify_jwt = false
+
+[functions.update-investment-tax-record]
+verify_jwt = true
+
+[functions.decide-investment-cash-link]
+verify_jwt = true
+
 [functions.upsert-profile]
 verify_jwt = true
 

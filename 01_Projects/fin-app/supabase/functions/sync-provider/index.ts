@@ -8,6 +8,7 @@ import { normalizeMerchant } from '../_shared/normalizeMerchant.ts'
 import { mapUpCategory } from '../_shared/upCategoryMap.ts'
 import { isTransferCandidateText } from '../_shared/transferMatch.ts'
 import { runLinkTransfers } from '../_shared/runLinkTransfers.ts'
+import { runInvestmentCashLinks } from '../_shared/runInvestmentCashLinks.ts'
 import {
   buildTransactionsUrl, fetchTransactionPage, getUpTransaction, listUpAccounts,
   UpAuthError, UpApiError, type UpTransaction,
@@ -295,6 +296,7 @@ Deno.serve(
       if (touchedFrom && touchedTo) {
         try {
           await runLinkTransfers(ctx.db, ctx.tenantId, touchedFrom, touchedTo)
+          await runInvestmentCashLinks(ctx.db, admin, ctx.tenantId, touchedFrom, touchedTo)
         } catch (err) {
           console.error('post-sync transfer rescan failed', String(err))
         }
