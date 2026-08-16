@@ -204,16 +204,16 @@ describe('resolveRowAmountCents', () => {
 describe('mapBankCategory', () => {
   it('maps the St George vocabulary', () => {
     expect(mapBankCategory('Food & Beverage', 'Dining out'))
-      .toEqual({ category: 'Food', subcategory: 'Dining' })
+      .toEqual({ category: 'Food & drink', subcategory: 'Dining & takeaway' })
     expect(mapBankCategory('Transport & Travel', 'Parking & Tolls'))
-      .toEqual({ category: 'Transport', subcategory: 'Parking' })
+      .toEqual({ category: 'Transport', subcategory: 'Parking & tolls' })
     expect(mapBankCategory('Bills & Payments', null))
-      .toEqual({ category: 'Utilities', subcategory: null })
+      .toEqual({ category: 'Bills & utilities', subcategory: null })
   })
 
-  it('defers unmappable categories to the AI instead of dumping them in Retail', () => {
-    expect(mapBankCategory('Entertainment & Recreation', 'TV, Movies, Music & Games')).toBeNull()
-    expect(mapBankCategory('Fees & Charges', 'Fees & Charges')).toBeNull()
+  it('uses the expanded taxonomy for formerly unmapped bank categories', () => {
+    expect(mapBankCategory('Entertainment & Recreation', 'TV, Movies, Music & Games')?.category).toBe('Lifestyle')
+    expect(mapBankCategory('Fees & Charges', 'Fees & Charges')?.category).toBe('Financial & admin')
   })
 
   it('maps income and transfers to the non-expense buckets', () => {
@@ -223,13 +223,13 @@ describe('mapBankCategory', () => {
   })
 
   it('rejects a subcategory that is invalid for its parent', () => {
-    // "Insurance" is a Housing subcategory, not a Food one.
+    // "Home insurance" is not a Food & drink subcategory.
     expect(mapBankCategory('Food & Beverage', 'Insurance')?.subcategory).toBeNull()
   })
 
   it('reports unmapped bank categories so the gap stays visible', () => {
     expect(unmappedBankCategories(['Food & Beverage', 'Fees & Charges', 'Entertainment & Recreation']))
-      .toEqual(['Entertainment & Recreation', 'Fees & Charges'])
+      .toEqual([])
   })
 })
 

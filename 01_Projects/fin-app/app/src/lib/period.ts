@@ -16,6 +16,27 @@ export const LAST = MONTHS.length - 1
 export const iso = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
+const DAY_MS = 86_400_000
+const utcDay = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number)
+  return Date.UTC(year, month - 1, day)
+}
+const utcIso = (value: number) => new Date(value).toISOString().slice(0, 10)
+
+/** Inclusive calendar-day length, deliberately UTC-based so DST cannot change a denominator. */
+export const inclusiveDayCount = (from: string, to: string) =>
+  Math.max(1, Math.round((utcDay(to) - utcDay(from)) / DAY_MS) + 1)
+
+/** Immediately preceding comparison window with exactly the same number of calendar days. */
+export const previousPeriodRange = (from: string, to: string) => {
+  const days = inclusiveDayCount(from, to)
+  const start = utcDay(from)
+  return {
+    from: utcIso(start - days * DAY_MS),
+    to: utcIso(start - DAY_MS),
+  }
+}
+
 export const monthStart = (idx: number) => {
   const d = new Date(anchor)
   d.setMonth(d.getMonth() - (LAST - idx))

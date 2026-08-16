@@ -84,7 +84,7 @@ async function main() {
   })
   if (txErr) throw new Error(`seed transaction: ${txErr.message}`)
 
-  await A.client.from('budgets').insert({ user_id: A.userId, tenant_id: A.tenantId, category: 'Food', amount_limit: 50000 })
+  await A.client.from('budgets').insert({ user_id: A.userId, tenant_id: A.tenantId, category: 'Food & drink', amount_limit: 50000 })
 
   // ── Transfer-linker data owned by A ─────────────────────────────────
   // These tables carry the same financial detail as `transactions` (account

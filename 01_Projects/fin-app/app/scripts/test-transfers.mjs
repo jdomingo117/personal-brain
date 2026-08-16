@@ -14,8 +14,7 @@
  *
  *   node app/scripts/test-transfers.mjs
  */
-import { createClient } from '@supabase/supabase-js'
-import { URL_, ANON, check, section, exitWithSummary, newUserWithAccount, invoke } from './lib/harness.mjs'
+import { check, section, exitWithSummary, newUserWithAccount, invoke } from './lib/harness.mjs'
 
 /** Adds a second/third account to an existing user. */
 async function addAccount(u, name, type) {
@@ -37,6 +36,30 @@ const txn = (accountId, date, description, amount) => ({
   amount,
 })
 
+/** Atomic CSV import deliberately accepts one account per request. Transfer
+ * tests need two ledgers, so import each account's rows independently and
+ * aggregate only the counts the harness asserts. */
+async function importByAccount(user, rows) {
+  const grouped = new Map()
+  for (const row of rows) {
+    const accountRows = grouped.get(row.account_id) ?? []
+    accountRows.push(row)
+    grouped.set(row.account_id, accountRows)
+  }
+  const responses = []
+  for (const accountRows of grouped.values()) {
+    responses.push(await invoke('upsert-transactions', user.token, accountRows))
+  }
+  const failed = responses.find((response) => response.status !== 200)
+  return {
+    status: failed?.status ?? 200,
+    json: failed?.json ?? {
+      inserted: responses.reduce((sum, response) => sum + (response.json?.inserted ?? 0), 0),
+      skipped: responses.reduce((sum, response) => sum + (response.json?.skipped ?? 0), 0),
+    },
+  }
+}
+
 async function main() {
   console.log('\n\x1b[1mInternal transfer linker\x1b[0m')
 
@@ -46,10 +69,10 @@ async function main() {
 
   // ── Detection ───────────────────────────────────────────────────────
   section('Detection')
-  const imported = await invoke('upsert-transactions', u.token, [
+  const imported = await importByAccount(u, [
     txn(u.accountId, '2026-07-12', 'To Linked Account Xx3692 - Internal Transfer', -50000),
     txn(savingsA, '2026-07-12', 'From Linked Account Xx3965 - Internal Transfer', 50000),
-    { ...txn(u.accountId, '2026-07-10', 'Woolworths Metro', -4250), category: 'Food', subcategory: 'Groceries' },
+    { ...txn(u.accountId, '2026-07-10', 'Woolworths Metro', -4250), category: 'Food & drink', subcategory: 'Groceries' },
   ])
   check('import succeeds', imported.status === 200, JSON.stringify(imported.json))
   check('all three rows land', imported.json?.inserted === 3, `inserted ${imported.json?.inserted}`)
@@ -102,7 +125,7 @@ async function main() {
   check('a rejected leg counts as real spending again', afterReject?.is_transfer === false)
 
   // The genuine counterpart arrives in a different account, later.
-  const second = await invoke('upsert-transactions', u.token, [
+  const second = await importByAccount(u, [
     txn(savingsB, '2026-07-12', 'From Linked Account Xx3965 - Internal Transfer', 50000),
   ])
   check('the true counterpart imports', second.json?.inserted === 1)
@@ -133,7 +156,7 @@ async function main() {
   // ── Batch confirm (grouped by account pair, OskoLinker's bulk action) ──
   section('Batch confirm')
   const savingsC = await addAccount(u, 'Savings C', 'Savings')
-  const batchImport = await invoke('upsert-transactions', u.token, [
+  const batchImport = await importByAccount(u, [
     txn(u.accountId, '2026-07-01', 'To Linked Account - Internal Transfer', -10000),
     txn(savingsC, '2026-07-01', 'From Linked Account - Internal Transfer', 10000),
     txn(u.accountId, '2026-07-15', 'To Linked Account - Internal Transfer', -12000),
@@ -193,7 +216,7 @@ async function main() {
   // untouched behaviour. This row must be flagged as a candidate purely by
   // its wording (the lexicon match on "Osko"), so it exercises the
   // no-counterpart-found path on its own.
-  const lonely = await invoke('upsert-transactions', u.token, [
+  const lonely = await importByAccount(u, [
     { ...txn(u.accountId, '2026-07-20', 'Transfer to Sarah - Osko Payment', -8800), category: 'Uncategorized', subcategory: undefined },
   ])
   check('the lonely leg imports', lonely.json?.inserted === 1)
@@ -235,7 +258,7 @@ async function main() {
 
   // ── Batch decide on unmatched legs (OskoLinker's merchant-grouped UI) ──
   section('Batch deciding on a merchant-grouped set of unmatched legs')
-  const legBatchImport = await invoke('upsert-transactions', u.token, [
+  const legBatchImport = await importByAccount(u, [
     { ...txn(u.accountId, '2026-07-02', 'PayID Payment Received, Thank you', -2500), category: 'Uncategorized', subcategory: undefined },
     { ...txn(u.accountId, '2026-07-09', 'PayID Payment Received, Thank you', -3100), category: 'Uncategorized', subcategory: undefined },
     { ...txn(u.accountId, '2026-07-16', 'PayID Payment Received, Thank you', -1800), category: 'Uncategorized', subcategory: undefined },
@@ -277,21 +300,21 @@ async function main() {
 
   // ── Round Up exclusion (never enters the candidate pool at all) ────────
   section('Round Up sweep never becomes a transfer candidate')
-  const roundUp = await invoke('upsert-transactions', u.token, [
+  const roundUp = await importByAccount(u, [
     txn(u.accountId, '2026-07-25', 'Round Up', -70),
   ])
   check('the Round Up row imports', roundUp.json?.inserted === 1, JSON.stringify(roundUp.json))
 
   const { data: roundUpRow } = await u.client
     .from('transactions').select('transfer_candidate').eq('original_description', 'Round Up').single()
-  check('it never becomes a transfer_candidate, even though category=Transfer would otherwise flag it',
+  check('it never becomes a transfer_candidate, even though transfer kind would otherwise flag it',
     roundUpRow?.transfer_candidate === false, JSON.stringify(roundUpRow))
 
   const { data: roundUpAnalytic } = await u.client
     .from('transactions_analytic')
     .select('is_transfer, transfer_state')
     .eq('original_description', 'Round Up').single()
-  check('it is still excluded from spend/income analytics (category=Transfer alone does that)',
+  check('it is still excluded from spend/income analytics (first-class transfer kind does that)',
     roundUpAnalytic?.is_transfer === true, JSON.stringify(roundUpAnalytic))
   check('and it never appears in the review queue at all',
     roundUpAnalytic?.transfer_state === 'none', JSON.stringify(roundUpAnalytic))

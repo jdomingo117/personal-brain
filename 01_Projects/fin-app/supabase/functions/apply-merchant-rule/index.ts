@@ -1,6 +1,7 @@
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 import { withAuth } from '../_shared/withAuth.ts'
 import { ALL_CATEGORIES, FULL_TAXONOMY, UNCATEGORIZED } from '../_shared/taxonomy.ts'
+import { normalizeMerchant } from '../_shared/normalizeMerchant.ts'
 
 /**
  * Records a user's categorisation as a permanent rule.
@@ -16,6 +17,7 @@ import { ALL_CATEGORIES, FULL_TAXONOMY, UNCATEGORIZED } from '../_shared/taxonom
  */
 
 const RuleSchema = z.object({
+  action: z.enum(['preview', 'apply']).default('apply'),
   merchantKey: z.string().min(1).max(200),
   merchantDisplay: z.string().min(1).max(200),
   category: z.string().max(100),
@@ -25,7 +27,10 @@ const RuleSchema = z.object({
 
 Deno.serve(
   withAuth({ schema: RuleSchema, requireRole: 'member' }, async (ctx) => {
-    const { merchantKey, merchantDisplay, category, subcategory, applyToExisting } = ctx.body
+    const { action, merchantKey, merchantDisplay, category, subcategory, applyToExisting } = ctx.body
+    if (normalizeMerchant(merchantDisplay).key !== merchantKey) {
+      throw new Error('Merchant identity does not match its display name.')
+    }
 
     // Validate against the taxonomy here too. The UI only offers valid values,
     // but the UI is not the security boundary — a hand-rolled request must not
@@ -36,44 +41,58 @@ Deno.serve(
       throw new Error(`Unknown category: ${category}`)
     }
     const validSubs = FULL_TAXONOMY[matchedCat] ?? []
-    const matchedSub = subcategory
+    let matchedSub = subcategory
       ? validSubs.find((s) => s.toLowerCase() === subcategory.trim().toLowerCase()) ?? null
       : null
+    if (subcategory && !matchedSub) {
+      const { data: categoryRow } = await ctx.db.from('taxonomy_categories').select('id').eq('display_name', matchedCat).maybeSingle()
+      const { data: custom } = categoryRow ? await ctx.db.from('tenant_subcategories').select('display_name').eq('category_id', categoryRow.id).eq('active', true).ilike('display_name', subcategory.trim()).maybeSingle() : { data: null }
+      matchedSub = custom?.display_name ?? null
+      if (!matchedSub) throw new Error('Subcategory does not belong to this category')
+    }
 
-    // Upsert WITHOUT ignoreDuplicates: a user correction is meant to replace
-    // whatever the AI previously cached for this merchant.
-    const { error: ruleErr } = await ctx.db
-      .from('merchant_rules')
-      .upsert({
-        tenant_id: ctx.tenantId,
-        merchant_key: merchantKey,
-        merchant_display: merchantDisplay,
-        category: matchedCat,
-        subcategory: matchedSub,
-        source: 'user',
-        confidence: 1,
-      }, { onConflict: 'tenant_id,merchant_key' })
-    if (ruleErr) throw ruleErr
+    if (matchedCat === 'Transfer' && matchedSub === 'Reconciliation') {
+      throw new Error('Reconciliation is reserved for system entries.')
+    }
 
-    let updated = 0
-    if (applyToExisting) {
-      const { data, error } = await ctx.db.rpc('apply_merchant_rule', {
+    if (action === 'preview') {
+      const { data: impact, error: impactError } = await ctx.admin().rpc('preview_user_merchant_rule', {
         p_tenant_id: ctx.tenantId,
-        p_merchant_key: merchantDisplay,
+        p_merchant_key: merchantKey,
         p_category: matchedCat,
         p_subcategory: matchedSub,
       })
-      if (error) throw error
-      updated = Number(data ?? 0)
+      if (impactError) throw impactError
+      return {
+        merchant_key: merchantKey,
+        existing_matches: Number(impact.existing_matches),
+        transactions_to_update: Number(impact.transactions_to_update),
+        category: matchedCat,
+        subcategory: matchedSub,
+      }
     }
+
+    const { data, error } = await ctx.admin().rpc('apply_user_merchant_rule', {
+      p_tenant_id: ctx.tenantId,
+      p_merchant_key: merchantKey,
+      p_merchant_display: merchantDisplay,
+      p_actor_id: ctx.user.id,
+      p_category: matchedCat,
+      p_subcategory: matchedSub,
+      p_apply_to_existing: applyToExisting,
+    })
+    if (error) throw error
 
     await ctx.audit('merchant_rule.applied', {
       merchant_key: merchantKey,
       category: matchedCat,
       subcategory: matchedSub,
-      transactions_updated: updated,
+      transactions_updated: data.updated,
+      existing_matches: data.existing_matches,
+      operation_id: data.operation_id,
+      scope: 'merchant_rule',
     })
 
-    return { success: true, category: matchedCat, subcategory: matchedSub, updated }
+    return { success: true, ...data }
   }),
 )

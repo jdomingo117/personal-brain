@@ -1,5 +1,4 @@
 import type { Account, Txn } from '../data'
-import { INVESTING_CATEGORY } from '../data'
 
 export type ProjectionMetric = 'cash' | 'netWorth'
 
@@ -78,7 +77,7 @@ export function deriveProjectionBaseline(
 
     // Buying an investment reduces available cash, but merely exchanges one
     // asset for another in a net-worth forecast.
-    if (metric === 'netWorth' && transaction.cat === INVESTING_CATEGORY) {
+    if (metric === 'netWorth' && transaction.kind === 'investment') {
       if (transaction.amount < 0) {
         investmentTotals.set(key, (investmentTotals.get(key) ?? 0) + Math.abs(transaction.amount))
       }

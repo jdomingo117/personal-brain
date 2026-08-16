@@ -107,6 +107,7 @@ Deno.serve(
           // that this row HAS been through the tier, so the next sweep skips
           // it instead of paying for the same unanswerable merchant forever.
           category_source: r.source,
+          category_confidence: r.confidence,
           needs_review: r.needsReview || r.category === UNCATEGORIZED,
         })
       }

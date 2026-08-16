@@ -29,18 +29,18 @@ export const ELAPSED = 15 / 31
 
 const RAW: RawCat[] = [
   {
-    name: 'Housing',
+    name: 'Home',
     subs: [
       { name: 'Rent', current: 2100, history: [2100, 2100, 2100, 2100, 2100, 2100] },
-      { name: 'Insurance', current: 0, history: [96, 96, 96, 96, 96, 96] },
+      { name: 'Home insurance', current: 0, history: [96, 96, 96, 96, 96, 96] },
       { name: 'Maintenance', current: 240, history: [0, 310, 0, 0, 120, 0] },
     ],
   },
   {
-    name: 'Food',
+    name: 'Food & drink',
     subs: [
       { name: 'Groceries', current: 268, history: [388, 441, 372, 455, 402, 410] },
-      { name: 'Dining', current: 186, history: [142, 210, 96, 188, 155, 130] },
+      { name: 'Dining & takeaway', current: 186, history: [142, 210, 96, 188, 155, 130] },
       { name: 'Coffee', current: 62, history: [58, 61, 55, 64, 60, 59] },
     ],
   },
@@ -49,33 +49,33 @@ const RAW: RawCat[] = [
     subs: [
       { name: 'Fuel', current: 139, history: [128, 141, 112, 156, 138, 132] },
       { name: 'Rideshare', current: 43, history: [24, 62, 18, 88, 31, 43] },
-      { name: 'Transit', current: 32, history: [32, 32, 32, 32, 32, 32] },
-      { name: 'Parking', current: 18, history: [12, 24, 8, 30, 16, 14] },
+      { name: 'Public transport', current: 32, history: [32, 32, 32, 32, 32, 32] },
+      { name: 'Parking & tolls', current: 18, history: [12, 24, 8, 30, 16, 14] },
     ],
   },
   {
-    name: 'Utilities',
+    name: 'Bills & utilities',
     subs: [
-      { name: 'Power', current: 138, history: [131, 142, 128, 149, 138, 140] },
+      { name: 'Electricity & gas', current: 138, history: [131, 142, 128, 149, 138, 140] },
       { name: 'Water', current: 0, history: [58, 58, 62, 58, 58, 58] },
       { name: 'Internet', current: 79, history: [79, 79, 79, 79, 79, 79] },
       { name: 'Mobile', current: 45, history: [45, 45, 45, 45, 45, 45] },
     ],
   },
   {
-    name: 'Subscriptions',
+    name: 'Lifestyle',
     subs: [
       { name: 'Streaming', current: 16, history: [16, 16, 16, 16, 16, 16] },
-      { name: 'Software', current: 29, history: [29, 29, 29, 44, 29, 29] },
+      { name: 'Software & digital services', current: 29, history: [29, 29, 29, 44, 29, 29] },
       { name: 'Memberships', current: 0, history: [0, 0, 55, 0, 0, 55] },
     ],
   },
   {
-    name: 'Retail',
+    name: 'Shopping',
     subs: [
-      { name: 'Apparel', current: 212, history: [88, 212, 0, 340, 120, 96] },
+      { name: 'Clothing', current: 212, history: [88, 212, 0, 340, 120, 96] },
       { name: 'Electronics', current: 330, history: [0, 0, 329, 0, 890, 120] },
-      { name: 'Home', current: 74, history: [45, 130, 0, 210, 60, 88] },
+      { name: 'Household', current: 74, history: [45, 130, 0, 210, 60, 88] },
     ],
   },
   {

@@ -47,8 +47,9 @@ async function main() {
   const rows = stGeorgeRows(u.accountId)
 
   section('First import')
+  const firstBatch = BATCH()
   const first = await invoke('upsert-transactions', u.token,
-    rows.map((r) => ({ ...r, upload_batch_id: BATCH() })))
+    rows.map((r) => ({ ...r, upload_batch_id: firstBatch })))
   check('request succeeds', first.status === 200, JSON.stringify(first.json).slice(0, 200))
   check('all rows inserted', first.json?.inserted === rows.length,
     `inserted=${first.json?.inserted} of ${rows.length}`)
@@ -60,8 +61,9 @@ async function main() {
     `${afterFirst.data?.length} rows`)
 
   section('Re-import of the SAME file — the bug this closes')
+  const secondBatch = BATCH()
   const second = await invoke('upsert-transactions', u.token,
-    rows.map((r) => ({ ...r, upload_batch_id: BATCH() })))
+    rows.map((r) => ({ ...r, upload_batch_id: secondBatch })))
   check('request succeeds (a re-import is not an error)', second.status === 200,
     JSON.stringify(second.json).slice(0, 200))
   check('ZERO rows inserted', second.json?.inserted === 0, `inserted=${second.json?.inserted}`)
@@ -78,7 +80,7 @@ async function main() {
   const coffee = {
     account_id: u.accountId, date: '2026-07-01',
     original_description: 'THE COFFEE PLACE  SYDNEY', merchant: 'The Coffee Place',
-    category: 'Food', subcategory: 'Coffee', amount: -450,
+    category: 'Food & drink', subcategory: 'Coffee', amount: -450,
   }
   const twice = await invoke('upsert-transactions', u.token, [coffee, coffee])
   check('both identical rows inserted', twice.json?.inserted === 2,

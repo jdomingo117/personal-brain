@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Papa from 'papaparse'
 import { AnimatePresence, motion } from 'framer-motion'
 import { supabase } from '../lib/supabaseClient'
@@ -12,7 +12,14 @@ import DropZone from './ingest/DropZone'
 
 type Step = 'upload' | 'review' | 'reconcile' | 'processing' | 'success'
 
-export default function InvestmentCSVUploader({ accountId, accountName }: { accountId: string; accountName: string }) {
+type Props = {
+  accountId: string
+  accountName: string
+  onImportStateChange?: (active: boolean) => void
+  onReviewTransfers?: () => void
+}
+
+export default function InvestmentCSVUploader({ accountId, accountName, onImportStateChange, onReviewTransfers }: Props) {
   const { refreshData } = useData()
   const [step, setStep] = useState<Step>('upload')
   const [staged, setStaged] = useState<InvestmentImport | null>(null)
@@ -25,6 +32,13 @@ export default function InvestmentCSVUploader({ accountId, accountName }: { acco
     valuation: { status: 'preserved' | 'revalued' | 'awaiting_price'; value_cents: number; price_date: string | null }
     cashLinks: { auto: number; suggested: number }
   } | null>(null)
+
+  useEffect(() => {
+    const active = step !== 'upload' && step !== 'success'
+    onImportStateChange?.(active)
+  }, [step, onImportStateChange])
+
+  useEffect(() => () => onImportStateChange?.(false), [onImportStateChange])
 
   const reset = () => {
     setStep('upload'); setStaged(null); setConfirmedUnits(''); setError(''); setResult(null)
@@ -118,11 +132,11 @@ export default function InvestmentCSVUploader({ accountId, accountName }: { acco
 
   return (
     <div className="grid gap-4">
-      {error && <div role="alert" className="rounded-[10px] border border-[var(--color-neg)] bg-[var(--color-neg)]/5 px-3 py-2 text-[12.5px] text-[var(--color-neg)]">{error}</div>}
+      {error && <div role="alert" className="rounded-[10px] border border-[var(--color-neg)] bg-[var(--color-neg)]/5 px-3 py-2 text-[13px] text-[var(--color-neg)]">{error}</div>}
       <AnimatePresence mode="wait">
         {step === 'upload' && <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid gap-3">
           <DropZone onFile={handleFile} />
-          <p className="text-[12px] text-muted">Supported now: Vanguard Personal Investor managed-fund transaction exports. Your full account number stays in the browser and is not stored.</p>
+          <p className="text-[13px] text-ink2">Supported now: Vanguard Personal Investor managed-fund transaction exports. Your full account number stays in the browser and is not stored.</p>
         </motion.div>}
 
         {step === 'review' && staged && <motion.div key="review" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid gap-4">
@@ -137,28 +151,29 @@ export default function InvestmentCSVUploader({ accountId, accountName }: { acco
             <Metric label="Derived units" value={staged.summary.calculatedUnits} />
           </div>
           <div className="overflow-x-auto rounded-[10px] border border-[var(--hair)]">
-            <table className="w-full min-w-[720px] text-left text-[12.5px]">
+            <table className="w-full min-w-[720px] text-left text-[13px]">
+              <caption className="sr-only">Managed-investment activities staged for import</caption>
               <thead className="bg-black/[0.025] text-muted"><tr><th className="p-3">Date</th><th>Activity</th><th>Units</th><th>Unit price</th><th>Value</th><th>Status</th></tr></thead>
               <tbody>{staged.activities.map((activity) => <tr key={activity.id} className="border-t border-[var(--hair-soft)]">
-                <td className="p-3">{activity.tradeDate ?? 'Invalid'}</td><td>{activity.activityType?.replaceAll('_', ' ') ?? activity.sourceLabel}</td>
+                <td className="p-3">{activity.tradeDate ?? 'Invalid'}</td><td>{activity.activityType?.replace(/_/g, ' ') ?? activity.sourceLabel}</td>
                 <td className="font-mono">{activity.quantity ?? '—'}</td><td className="font-mono">{activity.unitPrice ? `$${activity.unitPrice}` : '—'}</td>
                 <td className="font-mono">{activity.valueCents === null ? '—' : fmtCents(activity.valueCents)}</td>
                 <td className={activity.include ? 'text-pos' : 'text-neg'}>{activity.include ? 'Ready' : activity.issues.join(', ')}</td>
               </tr>)}</tbody>
             </table>
           </div>
-          {blocked > 0 && <p className="text-[12.5px] text-neg">{blocked} blocked row{blocked === 1 ? '' : 's'} must be corrected in the source export before import.</p>}
+          {blocked > 0 && <p role="alert" className="text-[13px] font-medium text-neg">{blocked} blocked row{blocked === 1 ? '' : 's'} must be corrected in the source export before import.</p>}
           <div className="flex gap-2"><Button onClick={() => setStep('reconcile')} disabled={importable === 0 || blocked > 0}>Continue with {importable} activities</Button><Button variant="ghost" onClick={reset}>Cancel</Button></div>
         </motion.div>}
 
         {step === 'reconcile' && staged && <motion.div key="reconcile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid gap-4">
-          <div><p className="text-[14px] font-semibold">Confirm the unit balance</p><p className="mt-1 text-[12.5px] text-muted">Halcyon calculated {staged.summary.calculatedUnits} units from the complete export. Compare this once with the units Vanguard currently shows.</p></div>
+          <div><p className="text-[14px] font-semibold">Confirm the unit balance</p><p className="mt-1 text-[13px] text-ink2">Halcyon calculated {staged.summary.calculatedUnits} units from the complete export. Compare this once with the units Vanguard currently shows.</p></div>
           <label className="grid max-w-[340px] gap-1.5"><span className="micro text-muted">Current units in {accountName}</span><input value={confirmedUnits} onChange={(event) => setConfirmedUnits(event.target.value)} inputMode="decimal" className="min-h-[46px] rounded-[10px] border border-[var(--hair)] bg-[var(--input-bg)] px-3.5 font-mono text-[14px] outline-none focus:border-accent" /></label>
           {canonicalDecimal(confirmedUnits) && !decimalEquals(canonicalDecimal(confirmedUnits)!, staged.summary.calculatedUnits) && <div className="rounded-[10px] border border-[var(--color-warn)] bg-[var(--color-warn)]/5 px-3 py-2 text-[12.5px]">The confirmed balance differs from the activity by <strong>{subtractDecimals(canonicalDecimal(confirmedUnits)!, staged.summary.calculatedUnits)} units</strong>. Halcyon will record a visible unit reconciliation adjustment rather than rewriting a transaction.</div>}
           <div className="flex gap-2"><Button onClick={commit}>Confirm and import</Button><Button variant="ghost" onClick={() => setStep('review')}>Back</Button></div>
         </motion.div>}
 
-        {step === 'processing' && <motion.p key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-8 text-center text-[13px] text-muted">Importing and reconciling the holding…</motion.p>}
+        {step === 'processing' && <motion.p role="status" aria-live="polite" key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-8 text-center text-[13px] text-ink2">Importing and reconciling the holding…</motion.p>}
         {step === 'success' && result && <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid gap-3">
           <p className="text-[15px] font-semibold">{result.inserted === 0 ? 'No new investment activity' : 'Investment activity imported'}</p>
           <ul className="grid gap-1 text-[13px] text-muted"><li><strong className="text-ink">{result.inserted}</strong> activities imported</li>{result.skipped > 0 && <li><strong className="text-ink">{result.skipped}</strong> duplicates skipped</li>}<li><strong className="text-ink">{result.units}</strong> units held</li></ul>
@@ -169,7 +184,10 @@ export default function InvestmentCSVUploader({ accountId, accountName }: { acco
             <strong className="text-ink">{result.cashLinks.auto}</strong> bank movement{result.cashLinks.auto === 1 ? '' : 's'} linked automatically
             {result.cashLinks.suggested > 0 ? <> · <strong className="text-ink">{result.cashLinks.suggested}</strong> need review in Transfer review</> : null}.
           </p>}
-          <div><Button onClick={reset}>Import another export</Button></div>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={reset}>Import another export</Button>
+            {onReviewTransfers && <Button variant="ghost" onClick={onReviewTransfers}>Review transfers</Button>}
+          </div>
         </motion.div>}
       </AnimatePresence>
     </div>

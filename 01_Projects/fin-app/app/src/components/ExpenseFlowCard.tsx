@@ -5,6 +5,7 @@ import Tile from './Tile'
 import { catInScope, isActive, subInScope, type CatSelection } from '../lib/expenseSelection'
 import { catColor } from '../lib/categoryColor'
 import { fmt, type Txn } from '../data'
+import { isGrossExpense } from '../lib/classification'
 
 /* √-scaled, capped edge width — keeps "thicker = bigger" but bounds the dominant
    flow so it doesn't crowd the node cards, and keeps small flows visible. */
@@ -27,7 +28,9 @@ function FlowNode({
         padding: '7px 12px',
         borderRadius: 12,
         background: 'var(--toast-bg)',
-        border: `1px solid ${data.selected ? data.color : 'var(--hair)'}`,
+        borderTop: `1px solid ${data.selected ? data.color : 'var(--hair)'}`,
+        borderRight: `1px solid ${data.selected ? data.color : 'var(--hair)'}`,
+        borderBottom: `1px solid ${data.selected ? data.color : 'var(--hair)'}`,
         borderLeft: `4px solid ${data.color}`,
         boxShadow: data.selected ? `0 0 0 3px color-mix(in srgb, ${data.color} 22%, transparent)` : 'var(--shadow-glass)',
         fontFamily: 'Hanken Grotesk, sans-serif',
@@ -73,7 +76,7 @@ export default function ExpenseFlowCard({
   const { cats, total } = useMemo(() => {
     const catMap = new Map<string, Map<string, number>>()
     outflows.forEach((t) => {
-      if (t.amount >= 0) return
+      if (!isGrossExpense(t) || t.isTransfer) return
       const subs = catMap.get(t.cat) ?? new Map<string, number>()
       const sk = t.subcat ?? 'Other'
       subs.set(sk, (subs.get(sk) ?? 0) + Math.abs(t.amount))

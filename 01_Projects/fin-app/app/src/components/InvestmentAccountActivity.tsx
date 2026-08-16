@@ -121,7 +121,7 @@ export default function InvestmentAccountActivity({ accountId }: { accountId: st
     </div>
     {monthly.length > 0 && <div className="mt-5 rounded-[10px] border border-[var(--hair-soft)] p-3">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><div><p className="text-[13px] font-semibold">Value vs contributions</p><p className="text-[11.5px] text-muted">Market movement is separated from money you added.</p></div><div className="flex gap-3 text-[11px] text-muted"><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-accent" />Value</span><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-muted" />Contributions</span></div></div>
-      <Area series={[{ data: monthly.map((point) => Number(point.value_cents)), color: glowColor.green }, { data: monthly.map((point) => Number(point.cumulative_contributions_cents)), color: glowColor.blue, fill: false }]} labels={monthly.map((point) => point.valuation_date.slice(0, 7))} height={220} ariaLabel="Investment value compared with cumulative contributions" />
+      <Area series={[{ data: monthly.map((point) => Number(point.value_cents)), color: glowColor.green, label: 'Value' }, { data: monthly.map((point) => Number(point.cumulative_contributions_cents)), color: glowColor.blue, fill: false, label: 'Contributions' }]} labels={monthly.map((point) => point.valuation_date.slice(0, 7))} height={220} ariaLabel="Investment value compared with cumulative contributions" />
     </div>}
     <InvestmentTaxAwareness accountId={accountId} />
     <div className="mt-4 overflow-x-auto">

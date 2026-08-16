@@ -8,7 +8,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:browser": "node scripts/run-browser-tests.mjs",
+    "test:browser:install": "playwright install chromium",
+    "test:browser:typecheck": "tsc --noEmit -p e2e/tsconfig.json"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.7",
@@ -22,8 +25,10 @@
     "three": "^0.169.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.0.0",
     "@types/animejs": "^3.1.13",
+    "@types/node": "^26.2.0",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

@@ -7,6 +7,7 @@ import {
   firstTargetPoint,
   requiredMonthlyAdjustment,
 } from './projections'
+import { defaultTransactionKind } from './classification'
 
 const accounts: Account[] = [
   { id: 'cash', name: 'Everyday', type: 'Liquid', balance: 50_000_00, glow: 'cyan' },
@@ -16,7 +17,7 @@ const accounts: Account[] = [
 ]
 
 const txn = (id: string, date: string, amount: number, account_id = 'cash', cat = 'Income', isTransfer = false): Txn => ({
-  id, date, amount, account_id, cat, isTransfer, merchant: id,
+  id, date, amount, account_id, cat, kind: defaultTransactionKind(cat, null, amount), isTransfer, merchant: id,
 })
 
 describe('strategic projection model', () => {
@@ -28,12 +29,12 @@ describe('strategic projection model', () => {
   it('uses complete months, excludes transfers, and treats investing differently by metric', () => {
     const transactions = [
       txn('salary-jan', '2026-01-15', 8_000_00),
-      txn('spend-jan', '2026-01-20', -3_000_00, 'cash', 'Food'),
+      txn('spend-jan', '2026-01-20', -3_000_00, 'cash', 'Food & drink'),
       txn('invest-jan', '2026-01-25', -1_000_00, 'cash', 'Investing'),
       txn('transfer-jan', '2026-01-28', -2_000_00, 'cash', 'Transfer', true),
       txn('transfer-in-jan', '2026-01-28', 2_000_00, 'save', 'Transfer', true),
       txn('salary-feb', '2026-02-15', 8_000_00),
-      txn('spend-feb', '2026-02-20', -3_000_00, 'cash', 'Food'),
+      txn('spend-feb', '2026-02-20', -3_000_00, 'cash', 'Food & drink'),
       txn('invest-feb', '2026-02-25', -1_000_00, 'cash', 'Investing'),
       txn('partial-current', '2026-03-02', 20_000_00),
     ]

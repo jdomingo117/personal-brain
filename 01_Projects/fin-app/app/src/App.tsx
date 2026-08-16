@@ -23,7 +23,9 @@ import Dashboard from './views/Dashboard'
 const Accounts = lazy(() => import('./views/Accounts'))
 const Income = lazy(() => import('./views/Income'))
 const Expenses = lazy(() => import('./views/Expenses'))
+const LedgerView = lazy(() => import('./views/LedgerView'))
 const Ingestion = lazy(() => import('./views/Ingestion'))
+const TransferReview = lazy(() => import('./views/TransferReview'))
 const Settings = lazy(() => import('./views/Settings'))
 
 function DataRoute({ index, title, sub, children }: { index: string; title: string; sub?: string; children: ReactNode }) {
@@ -137,7 +139,9 @@ function AppFrame({
             <Route path="/accounts" element={<LazyDataRoute index="02 — Accounts" title="Accounts" sub="Balances, activity & connections"><Accounts /></LazyDataRoute>} />
             <Route path="/income" element={<LazyDataRoute index="03 — Income" title="Income" sub="Inflow analysis & patterns"><Income /></LazyDataRoute>} />
             <Route path="/expenses" element={<LazyDataRoute index="04 — Expenses" title="Expenses" sub="Outflow analysis, pacing & recurring costs"><Expenses /></LazyDataRoute>} />
-            <Route path="/ingestion" element={<LazyDataRoute index="05 — Ingestion" title="Ingestion" sub="Import statements, categorise, reconcile"><Ingestion /></LazyDataRoute>} />
+            <Route path="/ledger" element={<LazyDataRoute index="05 — Ledger" title="Ledger" sub="Inspect, review and correct every transaction"><LedgerView /></LazyDataRoute>} />
+            <Route path="/ingestion" element={<LazyDataRoute index="06 — Ingestion" title="Ingestion" sub="Import statements, categorise, reconcile balances"><Ingestion /></LazyDataRoute>} />
+            <Route path="/transfers" element={<LazyDataRoute index="07 — Reconciliation" title="Transfer review" sub="Resolve movements between accounts"><TransferReview /></LazyDataRoute>} />
             <Route path="/settings" element={<LazyDataRoute index="⚙ — Configuration" title="Settings" sub="Interface, identity & preferences"><Settings /></LazyDataRoute>} />
           </Route>
 

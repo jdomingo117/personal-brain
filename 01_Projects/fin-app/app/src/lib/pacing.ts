@@ -8,6 +8,7 @@
 import type { Txn } from '../data'
 import { TODAY, dateToIdx, iso, monthStart } from './period'
 import { cv, mean, stdev, sum, volBand } from './stats'
+import { isGrossExpense } from './classification'
 
 const DAY = 86400000
 
@@ -71,7 +72,7 @@ const parse = (s: string) => new Date(`${s}T00:00:00`)
 function bucket(from: string, to: string, transactions: Txn[]) {
   const out = new Map<string, Map<string, number>>()
   transactions.forEach((t) => {
-    if (t.amount >= 0) return
+    if (!isGrossExpense(t) || t.isTransfer) return
     const d = t.date
     if (d < from || d > to) return
     const subs = out.get(t.cat) ?? new Map<string, number>()

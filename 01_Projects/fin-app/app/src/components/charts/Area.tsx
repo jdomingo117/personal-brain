@@ -1,11 +1,17 @@
 import anime from 'animejs'
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useChartReveal, CHART_EASE } from '../../hooks/useChartReveal'
+import { useResponsiveChartSize } from '../../hooks/useResponsiveChartSize'
+import { chartYTickCount, visibleTickIndices } from '../../lib/chartDensity'
+import { chartIndexFromPointer } from '../../lib/chartInteraction'
+import SharedChartTooltip from './SharedChartTooltip'
 
 export interface Series {
   data: number[]
   color: string // CSS color
   fill?: boolean
+  /** Shown in grouped tooltips when this chart has more than one series. */
+  label?: string
 }
 
 // Series data is in CENTS, like every other amount in the app (see the
@@ -40,14 +46,20 @@ export default function Area({
   onClickDataPoint?: (idx: number) => void
   ariaLabel?: string
 }) {
-  const W = 640
-  const H = height
+  const { ref: containerRef, width: W, height: H, ready } = useResponsiveChartSize({
+    // Preserve each existing call site's intended desktop proportion while
+    // allowing the shared foundation to reduce height on compact cards.
+    aspectRatio: 640 / height,
+    maxHeight: height,
+  })
   const padL = 40
   const padR = 16
   const padT = 16
   const padB = 22
   const innerW = W - padL - padR
   const innerH = H - padT - padB
+  const yTickCount = chartYTickCount(innerH)
+  const xTickIndices = visibleTickIndices(labels.length, innerW)
   const all = series.flatMap((s) => s.data)
   const max = Math.max(...all) * 1.15
   const min = Math.min(0, Math.min(...all)) * 0.95
@@ -103,13 +115,30 @@ export default function Area({
     },
   )
 
+  // Anime leaves the travelling end-dot as a transform after its entrance
+  // animation. Reposition it when a completed chart receives a new measured
+  // width, otherwise the line resizes while its endpoint marker stays behind.
+  const renderedWidth = useRef<number | null>(null)
+  useEffect(() => {
+    if (renderedWidth.current !== null && renderedWidth.current !== W) {
+      ref.current?.querySelectorAll<SVGGElement>('.area-dot-travel').forEach((g, i) => {
+        anime.set(g, { translateX: geo[i].last[0], translateY: geo[i].last[1] })
+      })
+    }
+    renderedWidth.current = W
+  }, [W, geo, ref])
+
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
-    const mouseX = ((e.clientX - rect.left) / rect.width) * W
-    const pct = (mouseX - padL) / innerW
-    let idx = Math.round(pct * (n - 1))
-    idx = Math.max(0, Math.min(n - 1, idx))
-    setHoveredIdx(idx)
+    setHoveredIdx(chartIndexFromPointer({
+      clientX: e.clientX,
+      rectLeft: rect.left,
+      renderedWidth: rect.width,
+      viewBoxWidth: W,
+      plotLeft: padL,
+      plotWidth: innerW,
+      pointCount: n,
+    }))
   }
 
   const handlePointerLeave = () => {
@@ -117,24 +146,25 @@ export default function Area({
   }
 
   return (
-    <svg
-      ref={ref}
-      viewBox={`0 0 ${W} ${H}`}
-      width="100%"
-      preserveAspectRatio="none"
-      style={{ height, display: 'block', touchAction: 'none', cursor: onClickDataPoint ? 'pointer' : 'default' }}
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
-      onClick={() => {
-        if (hoveredIdx !== null) onClickDataPoint?.(hoveredIdx)
-      }}
-      role="img"
-      aria-label={ariaLabel}
-    >
+    <div ref={containerRef} style={{ minHeight: ready ? H : Math.min(height, 180) }}>
+      {ready && <svg
+        ref={ref}
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        height={H}
+        style={{ display: 'block', touchAction: 'none', cursor: onClickDataPoint ? 'pointer' : 'default' }}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
+        onClick={() => {
+          if (hoveredIdx !== null) onClickDataPoint?.(hoveredIdx)
+        }}
+        role="img"
+        aria-label={ariaLabel}
+      >
       {/* gridlines + $ ticks */}
-      {Array.from({ length: 5 }).map((_, g) => {
-        const y = padT + (g / 4) * innerH
-        const val = max - (g / 4) * span
+      {Array.from({ length: yTickCount }).map((_, g) => {
+        const y = padT + (g / (yTickCount - 1)) * innerH
+        const val = max - (g / (yTickCount - 1)) * span
         return (
           <g key={g}>
             <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="var(--hair-soft)" strokeWidth={1} />
@@ -152,14 +182,12 @@ export default function Area({
           </g>
         )
       })}
-      {/* x labels — capped to ~12 regardless of point count */}
-      {labels.map((lab, i) =>
-        i % Math.max(1, Math.ceil(labels.length / 12)) ? null : (
-          <text key={i} x={xOf(i)} y={H - 5} fill="var(--color-muted)" fontSize={9} textAnchor="middle">
-            {lab}
-          </text>
-        ),
-      )}
+      {/* X-axis labels are constrained by usable chart width, not data count. */}
+      {xTickIndices.map((i) => (
+        <text key={i} x={xOf(i)} y={H - 5} fill="var(--color-muted)" fontSize={9} textAnchor="middle">
+          {labels[i]}
+        </text>
+      ))}
       {/* series */}
       {geo.map((s, si) => {
         const gid = `area-${uid}-${si}`
@@ -246,49 +274,28 @@ export default function Area({
             const x = xOf(hoveredIdx)
             const y = yOf(val)
 
-            // Dynamic tooltip positioning (above or below depending on top margin)
-            const cardW = 105
-            const cardH = 24
-            let tooltipY = y - cardH - 8
-            if (tooltipY < padT) {
-              tooltipY = y + 12 // flip below
-            }
-            const cardX = Math.max(padL + 4, Math.min(W - padR - cardW - 4, x - cardW / 2))
-
             return (
               <g key={si}>
                 {/* Active point hover ring */}
                 <circle cx={x} cy={y} r={6} fill="var(--color-surface)" stroke={s.color} strokeWidth={2.5} />
                 <circle cx={x} cy={y} r={12} fill={s.color} opacity={0.15} />
-
-                {/* Floating Tooltip Card */}
-                <g transform={`translate(${cardX}, ${tooltipY})`}>
-                  <rect
-                    width={cardW}
-                    height={cardH}
-                    rx={5}
-                    fill="var(--toast-bg)"
-                    stroke="var(--hair)"
-                    strokeWidth={1}
-                    style={{ filter: 'drop-shadow(0 4px 10px rgba(0, 0, 0, 0.12))' }}
-                  />
-                  <text
-                    x={cardW / 2}
-                    y={15}
-                    fill="var(--color-ink)"
-                    fontSize={10}
-                    fontWeight={600}
-                    textAnchor="middle"
-                    className="tabular-nums"
-                  >
-                    {labels[hoveredIdx]} · {formatChartVal(val)}
-                  </text>
-                </g>
               </g>
             )
           })}
+          <SharedChartTooltip
+            label={labels[hoveredIdx] ?? ''}
+            items={series.map((s, index) => ({
+              color: s.color,
+              label: s.label ?? (series.length === 1 ? 'Value' : `Series ${index + 1}`),
+              value: formatChartVal(s.data[hoveredIdx]),
+            }))}
+            anchorX={xOf(hoveredIdx)}
+            pointYs={series.map((s) => yOf(s.data[hoveredIdx]))}
+            bounds={{ left: padL, right: W - padR, top: padT, bottom: padT + innerH }}
+          />
         </g>
       )}
-    </svg>
+      </svg>}
+    </div>
   )
 }

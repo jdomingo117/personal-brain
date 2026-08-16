@@ -18,7 +18,9 @@ const VIEW_SHIFT: Record<View, number> = {
   accounts: -22,
   income: -10,
   expenses: 24,
+  ledger: 4,
   ingestion: -8,
+  transfers: 8,
   settings: 12,
   login: 0,
   onboarding: 5,
@@ -86,7 +88,9 @@ export default function SceneBackground({
     window.addEventListener('resize', resize)
 
     let t = 0
-    let motion = motionOn
+    let userMotion = motionOn
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    let motion = userMotion && !reducedMotion.matches
     let isDark = dark
     let raf = 0
     let parX = 0, parTargetX = 0
@@ -94,6 +98,11 @@ export default function SceneBackground({
     // occasional pulse that sweeps the diamonds
     let pulse: { pos: number; dir: 1 | -1 } | null = null
     let nextPulse = 4
+
+    const onReducedMotionChange = () => {
+      motion = userMotion && !reducedMotion.matches
+    }
+    reducedMotion.addEventListener('change', onReducedMotionChange)
 
     const linkD = 130
     const linkD2 = linkD * linkD
@@ -213,7 +222,8 @@ export default function SceneBackground({
         phaseTarget = (VIEW_SHIFT[v] ?? 0) * 0.04
       },
       setMotion: (on) => {
-        motion = on
+        userMotion = on
+        motion = userMotion && !reducedMotion.matches
       },
       setDark: (d) => {
         isDark = d
@@ -224,6 +234,7 @@ export default function SceneBackground({
       cancelAnimationFrame(raf)
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('resize', resize)
+      reducedMotion.removeEventListener('change', onReducedMotionChange)
       api.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -241,8 +252,13 @@ export default function SceneBackground({
 
   return (
     <>
-      <div className="scene-wash" aria-hidden />
-      <canvas ref={canvasRef} className="fixed inset-0" style={{ width: '100vw', height: '100vh', zIndex: 0 }} />
+      <div className={`scene-wash ${view === 'ingestion' || view === 'transfers' ? 'scene-wash--quiet' : ''}`} aria-hidden />
+      <canvas
+        ref={canvasRef}
+        aria-hidden
+        className={`fixed inset-0 transition-opacity ${view === 'ingestion' || view === 'transfers' ? 'opacity-25' : 'opacity-100'}`}
+        style={{ width: '100vw', height: '100vh', zIndex: 0 }}
+      />
     </>
   )
 }

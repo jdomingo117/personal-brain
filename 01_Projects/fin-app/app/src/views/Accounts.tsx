@@ -15,6 +15,7 @@ import AddAccountModal from '../components/AddAccountModal'
 import InvestmentAccountActivity from '../components/InvestmentAccountActivity'
 import EditAccountModal from '../components/EditAccountModal'
 import ConnectBankModal from '../components/ConnectBankModal'
+import { earnedIncomeCents, expenseEffectCents, isEarnedIncome, isGrossExpense } from '../lib/classification'
 
 /* Resolves a "Quick Timeframe Selector" label to a concrete ISO date range.
    `null` means unbounded ('All Time'). Mirrors the semantics already
@@ -95,8 +96,8 @@ export default function Accounts() {
   const periodTxns = range ? txns.filter(t => t.date >= range.from && t.date <= range.to) : txns
 
   // Dynamic details
-  const income = periodTxns.filter(t => t.amount > 0 && !t.isTransfer && !t.pending).reduce((sum, t) => sum + t.amount, 0)
-  const expenses = periodTxns.filter(t => t.amount < 0 && !t.isTransfer && !t.pending).reduce((sum, t) => sum + Math.abs(t.amount), 0)
+  const income = periodTxns.filter(t => !t.isTransfer).reduce((sum, t) => sum + earnedIncomeCents(t), 0)
+  const expenses = periodTxns.filter(t => !t.isTransfer).reduce((sum, t) => sum + expenseEffectCents(t), 0)
   const netCashFlow = income - expenses
 
   // Trend (calculated dynamically from transactions)
@@ -119,7 +120,7 @@ export default function Accounts() {
 
   // Expense Categories (calculate dynamic distribution)
   const catMap: Record<string, number> = {}
-  periodTxns.filter(t => t.amount < 0 && !t.isTransfer && !t.pending).forEach(t => {
+  periodTxns.filter(t => !t.isTransfer && isGrossExpense(t)).forEach(t => {
     catMap[t.cat || 'Uncategorized'] = (catMap[t.cat || 'Uncategorized'] || 0) + Math.abs(t.amount)
   })
   
@@ -142,8 +143,8 @@ export default function Accounts() {
     if (filterCat !== 'All' && t.cat !== filterCat) return false
     
     // 2. Flow Filter
-    if (filterFlow === 'Income' && (t.amount < 0 || t.isTransfer)) return false
-    if (filterFlow === 'Expense' && (t.amount >= 0 || t.isTransfer)) return false
+    if (filterFlow === 'Income' && (!isEarnedIncome(t) || t.isTransfer)) return false
+    if (filterFlow === 'Expense' && (!isGrossExpense(t) || t.isTransfer)) return false
     
     // 3. Search Filter
     if (searchQuery.trim()) {

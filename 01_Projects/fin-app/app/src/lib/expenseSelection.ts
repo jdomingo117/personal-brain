@@ -11,7 +11,7 @@
  *
  * Every mutation goes through the toggles here so the invariant
  * `subcats ⊆ union(CATEGORY_TAXONOMY[categories])` holds by construction — an
- * impossible pair like `{categories:['Food'], subcats:['Apparel']}` matches zero
+ * impossible pair like `{categories:['Food & drink'], subcats:['Clothing']}` matches zero
  * rows and offers the user no explanation for the empty list. */
 import { CATEGORY_TAXONOMY, type Txn } from '../data'
 
@@ -38,6 +38,9 @@ export const matchesSelection = (t: Txn, s: CatSelection) => {
 export const catInScope = (cat: string, s: CatSelection) => {
   if (s.categories.length && !s.categories.includes(cat)) return false
   if (s.subcats.length) {
+    // Subcategory interactions always co-set their parent. This also permits
+    // tenant-owned subcategories that deliberately are not in the static AI vocabulary.
+    if (s.categories.includes(cat)) return true
     const owned = CATEGORY_TAXONOMY[cat] ?? []
     if (!s.subcats.some((sub) => owned.includes(sub))) return false
   }
@@ -53,9 +56,10 @@ export const subInScope = (cat: string, sub: string, s: CatSelection) => {
 /** Drop sub-categories no longer reachable from `categories`. Only prunes when a
  *  category constraint exists — with no categories selected, every sub-category
  *  in the taxonomy is still reachable (the popover's all-cats mode). */
-export const pruneSubcats = (categories: string[], subcats: string[]) => {
+export const pruneSubcats = (categories: string[], subcats: string[], rows: Txn[] = []) => {
   if (!categories.length) return subcats
   const allowed = new Set(categories.flatMap((c) => CATEGORY_TAXONOMY[c] ?? []))
+  rows.forEach((row) => { if (categories.includes(row.cat) && row.subcat) allowed.add(row.subcat) })
   return subcats.filter((s) => allowed.has(s))
 }
 
@@ -74,7 +78,7 @@ export const toggleSubcat = (s: CatSelection, cat: string, sub: string): CatSele
     ? EMPTY_SELECTION
     : { categories: [cat], subcats: [sub] }
 
-/** Human label for the current focus — "Retail" / "Retail · Apparel". */
+/** Human label for the current focus — "Shopping" / "Shopping · Clothing". */
 export const selectionLabel = (s: CatSelection): string => {
   if (!isActive(s)) return ''
   const cats = s.categories.length > 1 ? `${s.categories.length} categories` : s.categories[0]

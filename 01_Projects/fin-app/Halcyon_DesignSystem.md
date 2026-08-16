@@ -84,15 +84,15 @@ inside `.dark` (see §3).
 --color-surface: #eceef1;   /* the one tone everything sits on */
 --color-ink:     #15181c;   /* primary text */
 --color-ink2:    #3b424a;   /* secondary text */
---color-muted:   #868d95;   /* labels, captions */
---color-faint:   #c0c5cb;   /* inactive numerals, hints */
+--color-muted:   #5f6872;   /* AA labels, captions — 4.87:1 on surface */
+--color-faint:   #646d77;   /* AA inactive numerals, hints — 4.52:1 */
 
 --color-accent:     #11b596;  /* mint — used sparingly */
---color-accent-ink: #0a7d67;  /* mint that meets contrast on light */
+--color-accent-ink: #08735f;  /* mint text — 4.98:1 on light */
 
---color-pos:  #149a66;   /* income, gains, healthy */
---color-warn: #cf8a2b;   /* approaching limit */
---color-neg:  #d44a44;   /* over budget, loss */
+--color-pos:  #08734c;   /* income, gains, healthy — 5.06:1 */
+--color-warn: #87570d;   /* user-actionable risk — 5.31:1 */
+--color-neg:  #a83430;   /* blocked/error/loss — 5.65:1 */
 
 --color-blue: #3b6fd4;   /* chart series */
 --color-gold: #c2a24e;   /* chart series */
@@ -112,6 +112,7 @@ inside `.dark` (see §3).
 --toast-bg:   rgba(255,255,255,0.92);
 --input-bg:   rgba(255,255,255,0.6);
 --switch-off: rgba(20,24,28,0.15);
+--workflow-control-border: #747c85; /* 3:1+ native-control boundary */
 
 /* categorical hues — one fixed hue per expense category, assigned by taxonomy
    index. IDENTITY ONLY, never state (see §8.15). --cat-unknown is the
@@ -119,20 +120,22 @@ inside `.dark` (see §3).
    Investing, Uncategorized) and must never read as a real category. */
 --cat-1: #2a78d6;  --cat-2: #1baf7a;  --cat-3: #eda100;  --cat-4: #008300;
 --cat-5: #4a3aa7;  --cat-6: #e34948;  --cat-7: #e87ba4;  --cat-8: #8a5a2b;
+--cat-9: #007f95;  --cat-10: #5b5bd6; --cat-11: #b85c00; --cat-12: #a83f8f;
+--cat-13: #5f6b32;
 --cat-unknown: #8a94a1;
 ```
 
 **Adding a category.** The mapping is positional (`catColor` in
 `app/src/lib/categoryColor.ts` indexes `EXPENSE_CATEGORIES`), so **appending** a
-category is safe but **reordering** silently reassigns every existing hue. A 9th
-category needs a new `--cat-9` in both themes; without one it would wrap onto
-`--cat-1` and become indistinguishable from Food. Hues 1–7 were CVD-validated as
-a set (worst adjacent ΔE 24.2 light); `--cat-8` was chosen for maximum distance
-from that set but has not been through the same sweep — re-run it before a 9th.
+category is safe but **reordering** deliberately reassigns existing hues. The
+Phase 3 taxonomy has 13 distinct tokens in both themes and `catColor` no longer
+wraps missing tokens with modulo arithmetic: a future category must add its own
+token or it will resolve to an undeclared CSS variable. Re-run the palette's CVD
+and contrast checks whenever the taxonomy or order changes.
 
 **Hue vs. state — the rule.** A colour in a tile means *either* "which thing this is" (`--cat-*`)
 *or* "how this thing is doing" (`pos`/`warn`/`neg`/`accent`) — **never both in one tile**. A hue
-that means "Retail" competes with a hue that means "overspent", and only one of those deserves an
+that means "Shopping" competes with a hue that means "overspent", and only one of those deserves an
 alarm. `ExpenseFlowCard` is an identity tile (hues, no judgement); `ExpensePacingCard` is a state
 tile (no hues, judgement only). Pick one per tile and hold the line.
 
@@ -159,7 +162,7 @@ glass, and a **brighter, glowing** lattice + colour wash for a Halo-HUD luminosi
 .dark {
   --color-surface: #181c22;   /* warm charcoal workspace */
   --color-ink: #eef1f4;  --color-ink2: #b2bac4;
-  --color-muted: #7c8690; --color-faint: #4a525c;
+  --color-muted: #a5aeb8; --color-faint: #98a2ad;
   --color-bar: #0b0e12;       /* darker than the workspace → frame still reads */
   --color-accent: #16c7a4;    /* luminous mint */  --color-accent-ink: #3ad9bd;
   --color-pos: #36cf93;  --color-warn: #d9a23f;  --color-neg: #e0635c;
@@ -169,6 +172,7 @@ glass, and a **brighter, glowing** lattice + colour wash for a Halo-HUD luminosi
   --accent-wash: rgba(22,199,164,0.16);
   --track: rgba(255,255,255,0.09);    --toast-bg: rgba(28,33,40,0.92);
   --input-bg: rgba(255,255,255,0.06); --switch-off: rgba(255,255,255,0.16);
+  --workflow-control-border: #818b96;
   --shadow-glass: inset 0 1px 0 rgba(255,255,255,0.06), 0 14px 36px rgba(0,0,0,0.45);
 }
 ```
@@ -315,12 +319,59 @@ Grid rows: date (`muted`, tabular) · merchant (500, truncates) · category (mic
 amount (600, tabular; `pos` for inflow). Header row is a micro-label over a `hair` underline;
 rows divided by `hair-soft`.
 
+The compact shared ledger remains a read-only preview inside Dashboard, Accounts, Income and
+Expenses. The first-class `/ledger` route is the corrective work surface: review/source and
+recurring/subscription/reimbursable/tax-related chips, search, account/category/kind filters and
+50-row pagination sit above selectable rows showing date, merchant/description, account,
+first-class kind, category/subcategory, provenance and amount. Its rail badge counts explicit
+review rows plus `Uncategorized` rows.
+
+Selecting a row opens `TransactionCategoryDrawer` at the document root (a portal is required so
+the route's animated/scroll-masked container cannot clip a fixed drawer on mobile). At desktop it is
+a right-hand 520px panel; at narrow viewports it occupies the full 390px-class canvas. It shows
+source/confidence/review/history, uses dependent native selects, and presents two explicit radio
+scopes: safe-default “Only this transaction” or “All matching past and future”. Merchant scope shows
+the exact existing/change count before confirmation and explains that future matches use the rule.
+A distinct “Accounting & attributes” section edits transaction-only kind, spending nature,
+recurring, subscription, reimbursable and tax-related state, shows kind provenance/history, and
+offers guarded undo without implying a merchant-wide rule. Reconciliation anchors render as locked
+system adjustments; category and attribute undo remain available only while no newer classification
+conflicts.
+
+Phase 5 extends this drawer with two patterns. “+ Add custom subcategory” reveals one compact inline
+name field beneath the dependent subcategory select; creation remains category-scoped and the new
+value becomes selected after refresh. “Split transaction” expands an exact-allocation editor made of
+repeated bordered groups. Every group exposes signed amount, kind, category, dependent subcategory
+and optional note. A live status block says `Allocated X of Y · Exact` or the signed remainder;
+primary save stays disabled until 2–50 non-zero allocations reconcile exactly. Pending transactions
+and system adjustments show one explanatory locked state. Saved splits collapse to a concise amount
+and purpose summary, retain a guarded undo, and add a small `Split N` badge to the ledger parent.
+The original parent amount remains the statement truth; category analytics render allocation rows.
+
+The ledger header’s secondary `Rules & review policy` action opens a centered, scrollable dialog.
+Its first card contains a native confidence select (60% automation, 75% balanced, 90% review) and a
+Switch for AI rows missing subcategories. Its second section lists only user-authored merchant rules
+with purpose, hit count and a 44px delete action; an empty state points back to the drawer’s explicit
+past/future scope. Deletion changes future learning and never implies historic reversal. Both the
+dialog and split editor use existing surface/input/hair/accent tokens, native keyboard controls,
+`role="dialog"`/labelled headings, Escape dismissal, inline `role="alert"` errors and no horizontal
+scroll at the 390px-class canvas.
+
+Each ledger row also has an independent 44px selection target. “Select page” and individual
+checkboxes expose `BulkCategoryDialog`, whose impact copy says selected rows change now and future
+rows do not. The grouped mutation can be undone as one operation. Compact shell header/footer content
+collapses below `sm`, and the rail/content grid uses `minmax(0,1fr)` so the dialog and ledger retain a
+390px canvas without horizontal overflow.
+
 ### 8.5 Account / stream row (`AccountRow.tsx`)
 Accent bar (3px) + name (600) + type (micro) + balance (tabular; `neg` if negative).
 
 ### 8.6 Allocation donut + legend (`AllocationDonut.tsx`, `charts/Donut.tsx`)
 SVG donut (stroke 13, rounded caps, `var(--track)` rail, animated dash over ~1s) with a tabular
 centre value; legend rows of `dot · label · value`.
+The fixed 165px visual and legend sit side-by-side on wide cards. At 420px or less of the donut
+component's own available width, a container query stacks the centred visual above a full-width
+legend, so the legend retains readable labels and values even when the surrounding page is wide.
 
 ### 8.7 Objective ring (`ObjectiveRing.tsx`)
 SVG progress ring (rounded cap, animated dashoffset over ~1.2s) with a tabular percentage
@@ -331,9 +382,44 @@ Hand-built SVG. **Area/line:** animated stroke draw-on, subtle gradient fill, ha
 gridlines, tabular ticks. **Bar:** animated vertical bars with dynamic height/y interpolation on sweep. **Donut:** as above. Palette keys map to tokens
 (`accent / pos / warn / neg / blue / gold`). No glow.
 
+**Responsive geometry foundation:** Chart SVGs must draw in their own measured CSS-pixel coordinate
+space, obtained through `hooks/useResponsiveChartSize.ts`; their `viewBox` must match the returned
+width and height. Do not stretch a fixed viewBox using `preserveAspectRatio="none"`: it distorts
+chart typography, circles, tooltip cards and apparent trend slopes as grid cards reflow. The shared
+sizing rule starts at the established 640×240 desktop proportion and clamps rendered height to
+180–300px; chart-specific migrations can override those bounds where justified by data density.
+`Area.tsx`, `Bar.tsx`, `ProjectionChart.tsx` and Income's `Sparkline` are all migrated to this
+contract.
+
+**Container-aware density:** Axis labels follow `lib/chartDensity.ts`, not a fixed label count.
+It distributes labels evenly, always retaining the first and last period; compact cards show three
+x labels and three horizontal reference guides, while desktop cards can earn up to eight x labels
+and five guides. Projection keeps its target/today guide lines on narrow cards but hides their text
+annotations until the usable plot width can accommodate them.
+
+**Responsive regression matrix:** `lib/responsiveVisualRegression.test.ts` protects the compact,
+tablet, laptop and wide-desktop modes at 390px, 768px, 1024px and 1440px. It asserts bounded
+height, undistorted measured viewBox geometry, first-to-last tick coverage, chart-specific density,
+the compact donut stack, and pointer-to-data-index behavior. Interactive charts share
+`lib/chartInteraction.ts` for the CSS-pixel pointer conversion so tooltip and click selection stay
+aligned when the SVG resizes.
+
+**Income cash-flow pacing:** The Income analyzer charts the exact active date interval, including
+zero-activity time buckets, rather than snapping Week or custom ranges to a whole calendar month.
+It uses daily buckets through 45 days, weekly buckets through 183 days, then monthly buckets for
+longer ranges. The chart's cumulative tag and the adjacent average/peak KPI language name the
+active cadence; totals, coverage and the savings-rate sparkline all derive from that same series.
+
+**Multi-series hover:** Area and Bar charts show one grouped, date-headed tooltip per hovered
+x-position—not one card per series. It lists colour-keyed values inside a single card, then places
+that card above the highest point or below the lowest when top clearance is unavailable, clamping
+it to the plot bounds. `lib/chartTooltip.ts` owns this shared placement rule.
+
 ### 8.9 Forms (`Controls.tsx`)
-Shared chrome: `var(--input-bg)` fill, `hair` border, rounded `10px`, focus → `accent` border +
-`accent-wash` ring. Min tap target 44px. The family:
+Shared chrome: `var(--input-bg)` fill, `hair` border, rounded `10px`, plus a global 2px
+`accent-ink` focus-visible outline that does not depend on a colour-only border change. Workflow
+surfaces strengthen native control boundaries with `--workflow-control-border`. Min tap target 44px.
+The family:
 - **Input** — raw `<input>` with the chrome above (e.g. Ingestion amount / merchant).
 - **`Chip`** — single-select pill (active = mint wash + accent border); also the **Quick range**
   preset toggles inside the `DateRangePicker` popover.
@@ -590,8 +676,8 @@ variant tree** — every `Tile` in the `Grid` stays at `opacity: 0`, with no con
   information-theoretic limit, not a bug. It stays in the tables; it needs ~2 years of history.
   Quarterly is the longest honestly-detectable cadence today.
 - **Weekly/Biweekly ship unexercised.** The realistic candidates fail on principle: a weekly grocery
-  shop is regular but isn't an *obligation*, and a fortnightly loan repayment has no home in the
-  taxonomy — an 8th category would break the 7-hue `--cat-*` cycle.
+  shop is regular but isn't an *obligation*. The cadence remains supported but requires an honest
+  recurring-obligation fixture before it can be presented as exercised.
 - **Smart Insights Bulletins** (SRD §6.D) are Phase 2 — they need the AI insights engine.
 
 ---
@@ -710,13 +796,19 @@ The `H` monogram is the brand mark. No emoji, no filled/novelty icons.
 
 ## 13. Accessibility
 
-- **Contrast:** ink on surface is high-contrast in both themes; mint *text* uses `accent-ink`.
-  Body text never relies on the raw `accent` for contrast.
-- **Reduced motion:** `@media (prefers-reduced-motion: reduce)` collapses durations; an in-app
-  motion toggle additionally gates the scene and decorative motion.
-- **Targets:** interactive controls meet a 44px minimum on touch.
+- **Contrast:** muted, faint, accent-ink and semantic text tokens all clear 4.5:1 against their
+  theme surface; a unit guard reads the shipping CSS and enforces this. Light muted is 4.87:1
+  (formerly 2.89:1). Body text never relies on raw `accent` for contrast.
+- **Reduced motion:** `@media (prefers-reduced-motion: reduce)` collapses durations; the canvas
+  also listens to the OS preference directly, while the in-app motion toggle remains an additional
+  gate. Dense Ingestion/Transfers workflows reduce the wash/canvas to 38%/25% opacity and use a
+  more opaque `workflow-surface` so decoration cannot compete with tables or decisions.
+- **Targets and focus:** workflow controls, table checkbox hit areas and buttons meet a 44px
+  minimum. All interactive elements receive a 2px `accent-ink` focus-visible outline with offset.
 - **Semantics:** nav items use `aria-current="page"`; switches are real buttons with
-  `aria-checked`; the toast mount is an `aria-live` region.
+  `aria-checked`; the toast mount is an `aria-live` region. Workflow tables have captions, filter
+  toggles use `aria-pressed`, disclosures publish `aria-expanded`, and async/error copy uses
+  status/alert regions.
 - **Responsive:** below `md` the rail collapses to a 52px icon gutter (labels hidden) and the
   hero card hides on the landing; grids reflow to fewer columns.
 

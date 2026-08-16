@@ -12,17 +12,17 @@
   --color-surface: #eceef1;
   --color-ink: #15181c;
   --color-ink2: #3b424a;
-  --color-muted: #868d95;
-  --color-faint: #c0c5cb;
+  --color-muted: #5f6872;
+  --color-faint: #646d77;
 
   /* accent (mint) */
   --color-accent: #11b596;
-  --color-accent-ink: #0a7d67;
+  --color-accent-ink: #08735f;
 
   /* semantic */
-  --color-pos: #149a66;
-  --color-warn: #cf8a2b;
-  --color-neg: #d44a44;
+  --color-pos: #08734c;
+  --color-warn: #87570d;
+  --color-neg: #a83430;
 
   /* chart palette */
   --color-blue: #3b6fd4;
@@ -46,18 +46,15 @@
   --toast-bg: rgba(255, 255, 255, 0.92);
   --input-bg: rgba(255, 255, 255, 0.6);
   --switch-off: rgba(20, 24, 28, 0.15);
+  --workflow-control-border: #747c85;
 
-  /* categorical palette for the expense-flow Sankey — 8 fixed hues, one per
-     expense category (taxonomy order). 1–7 validated CVD-safe (worst adjacent
-     ΔE 24.2 light); low-contrast slots are relieved by direct node labels.
-     --cat-8 (Other) was added later and chosen for maximum distance from the
-     existing set: it is the only dark warm-neutral, and its lightness (L*≈43)
-     separates it from --cat-3 amber (L*≈70), the nearest hue. It has NOT been
-     through the same formal ΔE sweep as 1–7 — re-run that before adding a 9th.
-     --cat-unknown is deliberately NOT a category hue: it is the fallback for a
-     name absent from the taxonomy, and must never be mistaken for a real one. */
+  /* Taxonomy-v2 palette — 13 fixed hues in canonical reporting order.
+     Stable slugs are the data identity; these tokens are a rendering contract.
+     Direct labels remain mandatory because colour is never the sole signal. */
   --cat-1: #2a78d6; --cat-2: #1baf7a; --cat-3: #eda100; --cat-4: #008300;
   --cat-5: #4a3aa7; --cat-6: #e34948; --cat-7: #e87ba4; --cat-8: #8a5a2b;
+  --cat-9: #007f95; --cat-10: #5b5bd6; --cat-11: #b85c00; --cat-12: #a83f8f;
+  --cat-13: #5f6b32;
   --cat-unknown: #8a94a1;
 }
 
@@ -70,8 +67,8 @@
   --color-surface: #181c22;   /* warm charcoal workspace */
   --color-ink: #eef1f4;
   --color-ink2: #b2bac4;
-  --color-muted: #7c8690;
-  --color-faint: #4a525c;
+  --color-muted: #a5aeb8;
+  --color-faint: #98a2ad;
   --color-bar: #0b0e12;       /* darker than the workspace → frame still reads */
   --color-accent: #16c7a4;    /* luminous mint */
   --color-accent-ink: #3ad9bd;
@@ -88,13 +85,14 @@
   --toast-bg: rgba(28, 33, 40, 0.92);
   --input-bg: rgba(255, 255, 255, 0.06);
   --switch-off: rgba(255, 255, 255, 0.16);
+  --workflow-control-border: #818b96;
   --shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 14px 36px rgba(0, 0, 0, 0.45);
 
-  /* dark steps of the categorical palette (same hues, stepped for the dark
-     surface; all ≥ 3:1 contrast, validated as a set). --cat-8 is lightened
-     well past its light-mode value: #8a5a2b is too dark to clear 3:1 here. */
+  /* Dark-surface steps of the same taxonomy-v2 hues. */
   --cat-1: #3987e5; --cat-2: #199e70; --cat-3: #c98500; --cat-4: #008300;
   --cat-5: #9085e9; --cat-6: #e66767; --cat-7: #d55181; --cat-8: #b58150;
+  --cat-9: #24a9be; --cat-10: #8b8bf0; --cat-11: #dd7c2d; --cat-12: #d36abb;
+  --cat-13: #91a44d;
   --cat-unknown: #7c8797;
 }
 
@@ -106,6 +104,14 @@ body {
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+}
+
+/* Keyboard focus must remain visible independently of colour and component
+   implementation. This covers native controls and custom button-like upload
+   affordances with one consistent, high-contrast indicator. */
+:where(button, a, input, select, textarea, [role="button"]):focus-visible {
+  outline: 2px solid var(--color-accent-ink);
+  outline-offset: 2px;
 }
 
 /* minimal, auto-hiding scrollbar — hidden until scrolling, mint on hover.
@@ -142,6 +148,41 @@ body {
     letter-spacing: 0.14em;
     text-transform: uppercase;
   }
+  .workflow-surface {
+    background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+    border-color: color-mix(in srgb, var(--color-ink) 22%, transparent);
+    -webkit-backdrop-filter: blur(28px) saturate(1.05);
+    backdrop-filter: blur(28px) saturate(1.05);
+  }
+  .workflow-surface :is(select, input:not([type="checkbox"]):not([type="file"])) {
+    min-height: 44px;
+    border-color: var(--workflow-control-border);
+  }
+  .workflow-surface input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    accent-color: var(--color-accent-ink);
+  }
+}
+
+.dark .workflow-surface {
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+}
+
+/* The same donut appears in cards of very different spans. Query its own
+   usable width, rather than the viewport, so its fixed 165px visual never
+   starves the legend on a compact card. */
+.allocation-donut { container-type: inline-size; }
+
+@container (max-width: 420px) {
+  .allocation-donut__layout {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .allocation-donut__visual { align-self: center; }
+  .allocation-donut__legend { flex: none; width: 100%; }
 }
 
 /* ambient colour wash behind the lattice canvas */
@@ -160,6 +201,9 @@ body {
     radial-gradient(44vw 44vw at 10% 4%, rgba(22, 199, 164, 0.26), transparent 60%),
     radial-gradient(50vw 50vw at 92% 98%, rgba(59, 111, 212, 0.22), transparent 62%),
     radial-gradient(38vw 38vw at 72% 10%, rgba(196, 162, 78, 0.10), transparent 60%);
+}
+.scene-wash--quiet {
+  opacity: 0.38;
 }
 
 /* native date pickers follow the app theme (calendar popup + picker glyph) */

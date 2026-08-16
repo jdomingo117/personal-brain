@@ -1,10 +1,16 @@
 import { useId, useState } from 'react'
 import anime from 'animejs'
 import { useChartReveal, CHART_EASE } from '../../hooks/useChartReveal'
+import { useResponsiveChartSize } from '../../hooks/useResponsiveChartSize'
+import { chartYTickCount, visibleTickIndices } from '../../lib/chartDensity'
+import { chartIndexFromPointer } from '../../lib/chartInteraction'
+import SharedChartTooltip from './SharedChartTooltip'
 
 export interface BarSeries {
   data: number[]
   color: string // CSS color
+  /** Shown in grouped tooltips when this chart has more than one series. */
+  label?: string
 }
 
 // Series data is in CENTS, like every other amount in the app (see the
@@ -37,14 +43,19 @@ export default function Bar({
   selectedIndex?: number | null
   onClickDataPoint?: (idx: number) => void
 }) {
-  const W = 640
-  const H = height
+  const { ref: containerRef, width: W, height: H, ready } = useResponsiveChartSize({
+    // Preserve each existing call site's intended desktop proportion while
+    // allowing the shared foundation to reduce height on compact cards.
+    aspectRatio: 640 / height,
+    maxHeight: height,
+  })
   const padL = 40
   const padR = 16
   const padT = 16
   const padB = 22
   const innerW = W - padL - padR
   const innerH = H - padT - padB
+  const yTickCount = chartYTickCount(innerH)
   const uid = useId().replace(/:/g, '')
 
   const all = series.flatMap((s) => s.data)
@@ -60,8 +71,7 @@ export default function Bar({
   // Bar is ~55% of the spacing; for dense charts (many days) drop the 8px floor
   // so bars stay within their slot instead of overlapping.
   const barW = spacing >= 14 ? Math.max(8, spacing * 0.55) : Math.max(1.5, spacing * 0.7)
-  // cap visible x-labels to ~12 regardless of bar count
-  const labelStride = Math.max(1, Math.ceil(labels.length / 12))
+  const xTickIndices = visibleTickIndices(labels.length, innerW)
 
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
@@ -100,10 +110,16 @@ export default function Bar({
 
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
-    const mouseX = ((e.clientX - rect.left) / rect.width) * W
-    let idx = Math.floor((mouseX - padL) / spacing)
-    idx = Math.max(0, Math.min(n - 1, idx))
-    setHoveredIdx(idx)
+    setHoveredIdx(chartIndexFromPointer({
+      clientX: e.clientX,
+      rectLeft: rect.left,
+      renderedWidth: rect.width,
+      viewBoxWidth: W,
+      plotLeft: padL,
+      plotWidth: innerW,
+      pointCount: n,
+      mode: 'slot',
+    }))
   }
 
   const handlePointerLeave = () => {
@@ -111,20 +127,21 @@ export default function Bar({
   }
 
   return (
-    <svg
-      ref={ref}
-      viewBox={`0 0 ${W} ${H}`}
-      width="100%"
-      preserveAspectRatio="none"
-      style={{ height, display: 'block', touchAction: 'none', cursor: onClickDataPoint ? 'pointer' : 'default' }}
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
-      onClick={() => {
-        if (hoveredIdx !== null) onClickDataPoint?.(hoveredIdx)
-      }}
-      role="img"
-      aria-label="Outflow per-period bar chart"
-    >
+    <div ref={containerRef} style={{ minHeight: ready ? H : Math.min(height, 180) }}>
+      {ready && <svg
+        ref={ref}
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        height={H}
+        style={{ display: 'block', touchAction: 'none', cursor: onClickDataPoint ? 'pointer' : 'default' }}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
+        onClick={() => {
+          if (hoveredIdx !== null) onClickDataPoint?.(hoveredIdx)
+        }}
+        role="img"
+        aria-label="Outflow per-period bar chart"
+      >
       {/* Gradients definitions */}
       <defs>
         {series.map((s, si) => (
@@ -136,9 +153,9 @@ export default function Bar({
       </defs>
 
       {/* Gridlines + Y Ticks */}
-      {Array.from({ length: 5 }).map((_, g) => {
-        const y = padT + (g / 4) * innerH
-        const val = max - (g / 4) * span
+      {Array.from({ length: yTickCount }).map((_, g) => {
+        const y = padT + (g / (yTickCount - 1)) * innerH
+        const val = max - (g / (yTickCount - 1)) * span
         return (
           <g key={g}>
             <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="var(--hair-soft)" strokeWidth={1} />
@@ -157,14 +174,12 @@ export default function Bar({
         )
       })}
 
-      {/* X Labels */}
-      {labels.map((lab, i) =>
-        i % labelStride ? null : (
-          <text key={i} x={padL + i * spacing + spacing / 2} y={H - 5} fill="var(--color-muted)" fontSize={9} textAnchor="middle">
-            {lab}
-          </text>
-        ),
-      )}
+      {/* X-axis labels are constrained by usable chart width, not data count. */}
+      {xTickIndices.map((i) => (
+        <text key={i} x={padL + i * spacing + spacing / 2} y={H - 5} fill="var(--color-muted)" fontSize={9} textAnchor="middle">
+          {labels[i]}
+        </text>
+      ))}
 
       {/* Bars */}
       {series.map((s, si) => (
@@ -217,50 +232,20 @@ export default function Bar({
       {/* Tooltip elements */}
       {hoveredIdx !== null && (
         <g pointerEvents="none">
-          {series.map((s, si) => {
-            const val = s.data[hoveredIdx]
-            const x = padL + hoveredIdx * spacing + spacing / 2
-            const y = yOf(val)
-
-            // Dynamic tooltip positioning
-            const cardW = 105
-            const cardH = 24
-            let tooltipY = y - cardH - 8
-            if (tooltipY < padT) {
-              tooltipY = y + 12 // flip below
-            }
-            const cardX = Math.max(padL + 4, Math.min(W - padR - cardW - 4, x - cardW / 2))
-
-            return (
-              <g key={si}>
-                {/* Floating Tooltip Card */}
-                <g transform={`translate(${cardX}, ${tooltipY})`}>
-                  <rect
-                    width={cardW}
-                    height={cardH}
-                    rx={5}
-                    fill="var(--toast-bg)"
-                    stroke="var(--hair)"
-                    strokeWidth={1}
-                    style={{ filter: 'drop-shadow(0 4px 10px rgba(0, 0, 0, 0.12))' }}
-                  />
-                  <text
-                    x={cardW / 2}
-                    y={15}
-                    fill="var(--color-ink)"
-                    fontSize={10}
-                    fontWeight={600}
-                    textAnchor="middle"
-                    className="tabular-nums"
-                  >
-                    {labels[hoveredIdx]} · {formatChartVal(val)}
-                  </text>
-                </g>
-              </g>
-            )
-          })}
+          <SharedChartTooltip
+            label={labels[hoveredIdx] ?? ''}
+            items={series.map((s, index) => ({
+              color: s.color,
+              label: s.label ?? (series.length === 1 ? 'Value' : `Series ${index + 1}`),
+              value: formatChartVal(s.data[hoveredIdx]),
+            }))}
+            anchorX={padL + hoveredIdx * spacing + spacing / 2}
+            pointYs={series.map((s) => yOf(s.data[hoveredIdx]))}
+            bounds={{ left: padL, right: W - padR, top: padT, bottom: padT + innerH }}
+          />
         </g>
       )}
-    </svg>
+      </svg>}
+    </div>
   )
 }

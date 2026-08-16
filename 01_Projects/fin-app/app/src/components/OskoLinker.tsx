@@ -5,6 +5,11 @@ import { useData } from '../contexts/DataContext'
 import { Button } from './Controls'
 import { fmtCents } from '../data'
 import { normalizeMerchant } from '../lib/csv/normalizeMerchant'
+import {
+  suggestedReviewSelection,
+  summariseOverflow,
+  untrackedTransferLabel,
+} from '../lib/transfers/reviewPresentation'
 import InvestmentCashLinker from './InvestmentCashLinker'
 
 interface LinkedTxn {
@@ -106,6 +111,7 @@ export default function OskoLinker() {
   const [deciding, setDeciding] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [showAuto, setShowAuto] = useState(false)
+  const [showOverflow, setShowOverflow] = useState(false)
   const [showUnmatched, setShowUnmatched] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   // A link is selected-by-default (opt-out, not opt-in) unless ambiguous —
@@ -295,11 +301,12 @@ export default function OskoLinker() {
       return next
     })
 
-  if (loading) return <p className="text-[13px] text-muted">Loading transfer suggestions…</p>
+  if (loading) return <p role="status" aria-live="polite" className="text-[13px] text-ink2">Loading transfer suggestions…</p>
 
   const suggested = links.filter((l) => l.state === 'suggested')
   const auto = links.filter((l) => l.state === 'auto')
   const { groups: suggestedGroups, groupless } = groupSuggested(suggested)
+  const overflowSummary = summariseOverflow(overflow)
 
   if (links.length === 0 && unmatchedTotal === 0 && overflow.length === 0) {
     return (
@@ -320,7 +327,7 @@ export default function OskoLinker() {
     <div className="grid gap-5">
       <InvestmentCashLinker refreshKey={investmentRefreshKey} />
       {error && (
-        <div className="rounded-[10px] border border-[var(--color-neg)] bg-[var(--color-neg)]/5 px-3 py-2 text-[12.5px] text-[var(--color-neg)]">
+        <div role="alert" className="rounded-[10px] border border-[var(--color-neg)] bg-[var(--color-neg)]/5 px-3 py-2 text-[13px] text-[var(--color-neg)]">
           {error}
         </div>
       )}
@@ -341,25 +348,47 @@ export default function OskoLinker() {
 
       {overflow.length > 0 && (
         <div className="rounded-[10px] border border-[var(--color-warn)] bg-[var(--color-warn)]/5 px-3 py-2.5 text-[12.5px] text-ink2">
-          {overflow.map((o) => (
-            <div key={o.amount_cents}>
-              <strong className="text-ink">{fmtCents(o.amount_cents)}</strong> had {o.leg_count} matching
-              transactions — too many to auto-pair safely. Review these manually below.
-            </div>
-          ))}
+          <strong className="text-ink">{overflowSummary.bucketCount}</strong> repetitive amount
+          {overflowSummary.bucketCount === 1 ? ' group was' : ' groups were'} skipped rather than paired unsafely
+          {' '}(<strong className="text-ink">{overflowSummary.legCount}</strong> transactions).{' '}
+          <button
+            onClick={() => setShowOverflow((shown) => !shown)}
+            aria-expanded={showOverflow}
+            className="inline-flex min-h-11 items-center px-1 font-semibold text-ink underline decoration-dotted"
+          >
+            {showOverflow ? 'Hide amounts' : `Review ${overflowSummary.bucketCount} amount ${overflowSummary.bucketCount === 1 ? 'group' : 'groups'}`}
+          </button>
+          <AnimatePresence>
+            {showOverflow && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-2 grid gap-1 overflow-hidden border-t border-[var(--hair)] pt-2"
+              >
+                {overflow.map((bucket) => (
+                  <div key={bucket.amount_cents}>
+                    <strong className="text-ink">{fmtCents(bucket.amount_cents)}</strong>
+                    {' · '}{bucket.leg_count} possible legs; the matcher left them unpaired and they may appear in Possible transfers below.
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
       {unmatchedTotal > 0 && (
         <div className="rounded-[10px] border border-[var(--color-warn)] bg-[var(--color-warn)]/5 px-3 py-2.5 text-[12.5px] text-ink2">
           <strong className="text-ink">{unmatchedTotal}</strong> transaction{unmatchedTotal === 1 ? '' : 's'} look{unmatchedTotal === 1 ? 's' : ''} like a transfer but no matching pair was found.
-          They're counted as spending until you say otherwise.
+          They're counted as regular income or spending until you say otherwise.
           {unmatchedTotal > unmatched.length && (
             <> Showing the most recent {unmatched.length}.</>
           )}{' '}
           <button
             onClick={() => setShowUnmatched((s) => !s)}
-            className="font-semibold text-ink underline decoration-dotted"
+            aria-expanded={showUnmatched}
+            className="inline-flex min-h-11 items-center px-1 font-semibold text-ink underline decoration-dotted"
           >
             {showUnmatched ? 'Hide' : 'Review them'}
           </button>
@@ -402,7 +431,8 @@ export default function OskoLinker() {
         <div className="grid gap-2">
           <button
             onClick={() => setShowAuto((s) => !s)}
-            className="flex items-center gap-2 text-left text-[12.5px] font-medium text-muted transition hover:text-ink"
+            aria-expanded={showAuto}
+            className="flex min-h-11 items-center gap-2 text-left text-[13px] font-medium text-muted transition hover:text-ink"
           >
             <span className={`transition-transform ${showAuto ? 'rotate-90' : ''}`}>›</span>
             Linked automatically ({auto.length})
@@ -428,7 +458,7 @@ export default function OskoLinker() {
                     <button
                       onClick={() => decide(link.id, 'rejected')}
                       disabled={deciding === link.id}
-                      className="flex-shrink-0 text-[12px] font-medium text-muted underline decoration-dotted transition hover:text-ink disabled:opacity-50"
+                      className="min-h-11 flex-shrink-0 px-2 text-[13px] font-medium text-muted underline decoration-dotted transition hover:text-ink disabled:opacity-50"
                     >
                       Undo
                     </button>
@@ -489,17 +519,18 @@ function SuggestedGroupPanel({
   deselected: Set<string>
   onToggleSelect: (id: string) => void
   busy: boolean
-  onBulkDecide: (linkIds: string[], verdict: 'confirmed' | 'rejected' | 'external') => void
+  onBulkDecide: (linkIds: string[], verdict: 'confirmed' | 'rejected') => void
 }) {
   const nonAmbiguous = group.links.filter((l) => !l.ambiguous)
   const ambiguous = group.links.filter((l) => l.ambiguous)
-  const selectedIds = nonAmbiguous.filter((l) => !deselected.has(l.id)).map((l) => l.id)
+  const selection = suggestedReviewSelection(group.links, deselected)
+  const selectedIds = selection.selectedIds
   const total = group.links.reduce((sum, l) => sum + Math.abs(l.from_txn?.amount ?? 0), 0)
 
   return (
     <div className="rounded-[12px] border border-[var(--hair)] overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <button onClick={onToggleExpand} className="flex min-w-0 items-center gap-2 text-left">
+        <button onClick={onToggleExpand} aria-expanded={expanded} className="flex min-h-11 min-w-0 items-center gap-2 text-left">
           <span className={`flex-shrink-0 text-muted transition-transform ${expanded ? 'rotate-90' : ''}`}>›</span>
           <span className="min-w-0 truncate">
             <span className="font-semibold text-ink">
@@ -511,21 +542,24 @@ function SuggestedGroupPanel({
           </span>
         </button>
         <div className="flex flex-shrink-0 flex-wrap gap-2">
-          <Button onClick={() => onBulkDecide(selectedIds, 'confirmed')} disabled={busy || selectedIds.length === 0}>
-            Confirm {selectedIds.length}
-          </Button>
-          <Button variant="ghost" onClick={() => onBulkDecide(selectedIds, 'rejected')} disabled={busy || selectedIds.length === 0}>
-            Not a transfer
-          </Button>
-          <Button variant="ghost" onClick={() => onBulkDecide(selectedIds, 'external')} disabled={busy || selectedIds.length === 0}>
-            This is my own account
-          </Button>
+          {selectedIds.length > 0 ? <>
+            <Button onClick={() => onBulkDecide(selectedIds, 'confirmed')} disabled={busy}>
+              Confirm {selectedIds.length} internal transfer{selectedIds.length === 1 ? '' : 's'}
+            </Button>
+            <Button variant="ghost" onClick={() => onBulkDecide(selectedIds, 'rejected')} disabled={busy}>
+              Count {selectedIds.length} as regular activity
+            </Button>
+          </> : (
+            <Button variant="ghost" onClick={onToggleExpand} disabled={busy}>
+              {selection.reviewLabel}
+            </Button>
+          )}
         </div>
       </div>
 
       {ambiguous.length > 0 && (
         <div className="px-4 pb-2 text-[12px] text-muted">
-          +{ambiguous.length} ambiguous — review individually below
+          {ambiguous.length} ambiguous match{ambiguous.length === 1 ? '' : 'es'} excluded from bulk actions — review individually.
         </div>
       )}
 
@@ -579,7 +613,7 @@ function GroupItemRow({
 }) {
   const from = link.from_txn
   return (
-    <label className="flex cursor-pointer items-center gap-3 rounded-[10px] border border-[var(--hair)] px-3 py-2 text-[12.5px] transition hover:bg-black/[0.02]">
+    <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-[10px] border border-[var(--hair)] px-3 py-2 text-[13px] transition hover:bg-black/[0.02]">
       <input
         type="checkbox"
         checked={selected}
@@ -597,7 +631,7 @@ function GroupItemRow({
       </span>
       <span className="flex flex-shrink-0 gap-1">
         {link.reasons.slice(0, 2).map((r) => (
-          <span key={r} className="rounded-[6px] bg-black/[0.04] px-1.5 py-0.5 text-[10px] font-medium text-muted">
+          <span key={r} className="rounded-[6px] bg-black/[0.04] px-1.5 py-0.5 text-[11.5px] font-medium text-muted">
             {r}
           </span>
         ))}
@@ -657,16 +691,16 @@ function UnmatchedGroupPanel({
           <button
             onClick={() => onSingleDecide(u.id, 'external')}
             disabled={singleBusy === u.id}
-            className="micro rounded-lg border border-[var(--hair)] px-3 py-1.5 text-[12px] font-semibold text-ink transition hover:bg-black/[0.03] disabled:opacity-50"
+            className="micro min-h-11 rounded-lg border border-[var(--hair)] px-3 py-2 text-[12px] font-semibold text-ink transition hover:bg-black/[0.03] disabled:opacity-50"
           >
-            This is my own account
+            {untrackedTransferLabel(u.amount)}
           </button>
           <button
             onClick={() => onSingleDecide(u.id, 'rejected')}
             disabled={singleBusy === u.id}
-            className="micro rounded-lg border border-[var(--hair)] px-3 py-1.5 text-[12px] font-semibold text-muted transition hover:bg-black/[0.03] disabled:opacity-50"
+            className="micro min-h-11 rounded-lg border border-[var(--hair)] px-3 py-2 text-[12px] font-semibold text-muted transition hover:bg-black/[0.03] disabled:opacity-50"
           >
-            Not a transfer
+            Count as regular activity
           </button>
         </div>
       </div>
@@ -676,7 +710,7 @@ function UnmatchedGroupPanel({
   return (
     <div className="rounded-[12px] border border-[var(--hair)] overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <button onClick={onToggleExpand} className="flex min-w-0 items-center gap-2 text-left">
+        <button onClick={onToggleExpand} aria-expanded={expanded} className="flex min-h-11 min-w-0 items-center gap-2 text-left">
           <span className={`flex-shrink-0 text-muted transition-transform ${expanded ? 'rotate-90' : ''}`}>›</span>
           <span className="min-w-0 truncate">
             <span className="font-semibold text-ink">{group.label}</span>
@@ -685,14 +719,16 @@ function UnmatchedGroupPanel({
             </span>
           </span>
         </button>
-        <div className="flex flex-shrink-0 flex-wrap gap-2">
-          <Button variant="ghost" onClick={() => onBulkDecide(selectedIds, 'external')} disabled={busy || selectedIds.length === 0}>
-            This is my own account ({selectedIds.length})
-          </Button>
-          <Button variant="ghost" onClick={() => onBulkDecide(selectedIds, 'rejected')} disabled={busy || selectedIds.length === 0}>
-            Not a transfer ({selectedIds.length})
-          </Button>
-        </div>
+        {selectedIds.length > 0 && (
+          <div className="flex flex-shrink-0 flex-wrap gap-2">
+            <Button variant="ghost" onClick={() => onBulkDecide(selectedIds, 'external')} disabled={busy}>
+              Transfer to/from an untracked account ({selectedIds.length})
+            </Button>
+            <Button variant="ghost" onClick={() => onBulkDecide(selectedIds, 'rejected')} disabled={busy}>
+              Count as regular activity ({selectedIds.length})
+            </Button>
+          </div>
+        )}
       </div>
 
       <AnimatePresence>
@@ -707,7 +743,7 @@ function UnmatchedGroupPanel({
               {group.rows.map((u) => (
                 <label
                   key={u.id}
-                  className="flex cursor-pointer items-center gap-3 rounded-[10px] border border-[var(--hair)] px-3 py-2 text-[12.5px] transition hover:bg-black/[0.02]"
+                  className="flex min-h-11 cursor-pointer items-center gap-3 rounded-[10px] border border-[var(--hair)] px-3 py-2 text-[13px] transition hover:bg-black/[0.02]"
                 >
                   <input
                     type="checkbox"
@@ -745,13 +781,13 @@ function LinkCard({
   link: TransferLinkRow
   accountName: (id: string) => string
   busy: boolean
-  onDecide: (verdict: 'confirmed' | 'rejected' | 'external') => void
+  onDecide: (verdict: 'confirmed' | 'rejected') => void
 }) {
   const { from_txn: from, to_txn: to } = link
   return (
     <div className="rounded-[12px] border border-[var(--hair)] p-4">
       {link.ambiguous && (
-        <div className="mb-3 inline-flex items-center gap-1.5 rounded-[8px] bg-[var(--color-warn)]/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.04em] text-[var(--color-warn)]">
+        <div className="mb-3 inline-flex items-center gap-1.5 rounded-[8px] bg-[var(--color-warn)]/10 px-2.5 py-1 text-[12px] font-semibold uppercase tracking-[0.04em] text-[var(--color-warn)]">
           Multiple similar transfers found — check carefully
         </div>
       )}
@@ -764,7 +800,7 @@ function LinkCard({
           {link.reasons.map((r) => (
             <span
               key={r}
-              className="rounded-[6px] bg-black/[0.04] px-2 py-0.5 text-[11px] font-medium text-muted"
+              className="rounded-[6px] bg-black/[0.04] px-2 py-0.5 text-[11.5px] font-medium text-muted"
             >
               {r}
             </span>
@@ -772,9 +808,8 @@ function LinkCard({
         </div>
       )}
       <div className="mt-3.5 flex flex-wrap gap-2">
-        <Button onClick={() => onDecide('confirmed')} disabled={busy}>Confirm</Button>
-        <Button variant="ghost" onClick={() => onDecide('rejected')} disabled={busy}>Not a transfer</Button>
-        <Button variant="ghost" onClick={() => onDecide('external')} disabled={busy}>This is my own account</Button>
+        <Button onClick={() => onDecide('confirmed')} disabled={busy}>Confirm internal transfer</Button>
+        <Button variant="ghost" onClick={() => onDecide('rejected')} disabled={busy}>Count as regular activity</Button>
       </div>
     </div>
   )

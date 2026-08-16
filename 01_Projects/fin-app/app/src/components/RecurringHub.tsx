@@ -97,7 +97,7 @@ function FundingAccountsCard({
 }
 
 export default function RecurringHub() {
-  const { transactions, accounts, recurrenceHints } = useData()
+  const { reportingTransactions: transactions, accounts, recurrenceHints } = useData()
   const r = useMemo(
     () => buildRecurring(transactions, accounts, undefined, recurrenceHints),
     [transactions, accounts, recurrenceHints],

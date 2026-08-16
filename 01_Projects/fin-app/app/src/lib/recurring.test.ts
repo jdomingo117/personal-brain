@@ -8,7 +8,8 @@ function txn(partial: Partial<Txn> & Pick<Txn, 'date' | 'amount'>): Txn {
   return {
     id: `txn-${seq}`,
     merchant: 'Netflix',
-    cat: 'Subscriptions',
+    kind: 'expense',
+    cat: 'Lifestyle',
     subcat: 'Streaming',
     account: 'Everyday Account',
     account_id: 'acct-1',

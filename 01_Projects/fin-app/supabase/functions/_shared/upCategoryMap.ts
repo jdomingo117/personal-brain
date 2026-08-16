@@ -27,41 +27,41 @@ export interface TaxonomyAssignment {
 /** Up leaf category id (as returned in relationships.category.data.id) -> Halcyon category+subcategory, or null to defer to AI. */
 const LEAF_MAP: Record<string, TaxonomyAssignment | null> = {
   // ── good-life ──
-  'restaurants-and-cafes': { category: 'Food', subcategory: 'Dining' },
-  takeaway: { category: 'Food', subcategory: 'Dining' },
-  'pubs-and-bars': null, // still no honest home — defer to AI, same reasoning as bankCategoryMap's "Entertainment & Recreation"
-  'alcohol-and-tobacco': null,
-  hobbies: null,
-  'games-and-software': { category: 'Subscriptions', subcategory: 'Software' },
-  'holidays-and-travel': { category: 'Transport', subcategory: 'Travel' },
-  'events-and-gigs': null,
+  'restaurants-and-cafes': { category: 'Food & drink', subcategory: 'Dining & takeaway' },
+  takeaway: { category: 'Food & drink', subcategory: 'Dining & takeaway' },
+  'pubs-and-bars': { category: 'Food & drink', subcategory: 'Alcohol & pubs' },
+  'alcohol-and-tobacco': { category: 'Food & drink', subcategory: 'Alcohol & pubs' },
+  hobbies: { category: 'Lifestyle', subcategory: 'Hobbies' },
+  'games-and-software': { category: 'Lifestyle', subcategory: 'Software & digital services' },
+  'holidays-and-travel': { category: 'Travel', subcategory: 'General travel' },
+  'events-and-gigs': { category: 'Lifestyle', subcategory: 'Events' },
 
   // ── home ──
-  groceries: { category: 'Food', subcategory: 'Groceries' },
-  'homeware-and-appliances': { category: 'Retail', subcategory: 'Home' },
-  'home-maintenance-and-improvements': { category: 'Housing', subcategory: 'Maintenance' },
-  'rent-and-mortgage': { category: 'Housing', subcategory: 'Rent' },
+  groceries: { category: 'Food & drink', subcategory: 'Groceries' },
+  'homeware-and-appliances': { category: 'Shopping', subcategory: 'Household' },
+  'home-maintenance-and-improvements': { category: 'Home', subcategory: 'Maintenance' },
+  'rent-and-mortgage': { category: 'Home', subcategory: 'Rent' },
   utilities: null, // Up's own "utilities" spans power/water/internet with no sub-signal to split on — same "financial" ambiguity Macquarie's map defers on
-  internet: { category: 'Utilities', subcategory: 'Internet' },
+  internet: { category: 'Bills & utilities', subcategory: 'Internet' },
 
   // ── personal ──
-  'clothing-and-accessories': { category: 'Retail', subcategory: 'Apparel' },
-  tech: { category: 'Retail', subcategory: 'Electronics' },
-  'health-and-medical': { category: 'Health', subcategory: 'Medical' },
-  'fitness-and-wellbeing': { category: 'Health', subcategory: 'Fitness' },
-  'education-and-student-loans': null,
-  'gifts-and-charity': { category: 'Retail', subcategory: 'Gifts' },
+  'clothing-and-accessories': { category: 'Shopping', subcategory: 'Clothing' },
+  tech: { category: 'Shopping', subcategory: 'Electronics' },
+  'health-and-medical': { category: 'Health & wellbeing', subcategory: 'Medical' },
+  'fitness-and-wellbeing': { category: 'Health & wellbeing', subcategory: 'Fitness' },
+  'education-and-student-loans': { category: 'Education', subcategory: null },
+  'gifts-and-charity': null, // cannot distinguish Shopping > Gifts from Giving > Charity
   'lottery-and-gambling': null,
-  'life-admin': null,
-  family: null,
-  'personal-care': { category: 'Health', subcategory: 'Personal care' },
+  'life-admin': { category: 'Financial & admin', subcategory: null },
+  family: { category: 'Family & pets', subcategory: null },
+  'personal-care': { category: 'Health & wellbeing', subcategory: 'Personal care' },
 
   // ── transport ──
   fuel: { category: 'Transport', subcategory: 'Fuel' },
-  'public-transport': { category: 'Transport', subcategory: 'Transit' },
+  'public-transport': { category: 'Transport', subcategory: 'Public transport' },
   'taxis-and-share-cars': { category: 'Transport', subcategory: 'Rideshare' },
-  parking: { category: 'Transport', subcategory: 'Parking' },
-  tolls: { category: 'Transport', subcategory: 'Parking' },
+  parking: { category: 'Transport', subcategory: 'Parking & tolls' },
+  tolls: { category: 'Transport', subcategory: 'Parking & tolls' },
   'car-insurance-and-maintenance': null,
   'car-repayments': null,
 

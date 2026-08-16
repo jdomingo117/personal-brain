@@ -16,7 +16,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import Papa from 'papaparse'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { stageRows, applyAssignments, toTransactionPayload, buildAnchor, type ColumnMapping } from './pipeline'
+import { stageRows, applyAssignments, toTransactionPayload, type ColumnMapping } from './pipeline'
 import { EXPENSE_CATEGORIES, INCOME_CATEGORY, TRANSFER_CATEGORY, UNCATEGORIZED } from '../../data'
 
 const URL_ = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321'
@@ -89,13 +89,14 @@ async function importFile(ctx: Ctx, file: string, balanceCents: number) {
 
   const batchId = crypto.randomUUID()
   const payload = toTransactionPayload(finalRows, ctx.accountId, batchId)
-  const anchor = buildAnchor(finalRows, ctx.accountId, balanceCents, batchId)
-  const all = anchor ? [...payload, anchor.row] : payload
 
-  const ins = await invoke('upsert-transactions', ctx.token, all)
+  const ins = await invoke('upsert-transactions', ctx.token, {
+    transactions: payload,
+    target_balance: balanceCents,
+  })
   expect(ins.status, `upsert for ${file}`).toBe(200)
 
-  return { mapping, staged, finalRows, result: ins.json, catStats, payloadSize: all.length }
+  return { mapping, staged, finalRows, result: ins.json, catStats, payloadSize: payload.length }
 }
 
 beforeAll(async () => { live = await stackUp() })
@@ -162,6 +163,95 @@ describe.skipIf(!process.env.SUPABASE_ANON_KEY)('end-to-end ingestion (live stac
     expect(second.catStats.geminiCalls, 'no Gemini calls on re-import').toBe(0)
     expect(first.catStats.geminiCalls, 'first run did use AI').toBeGreaterThanOrEqual(0)
   }, 180_000)
+
+  it('reconciles consecutive and partially-overlapping imports against the complete ledger', async () => {
+    if (!live) return
+    const ctx = await newUser('atomic')
+    const batch = () => crypto.randomUUID()
+    const txn = (date: string, description: string, amount: number, uploadBatchId: string) => ({
+      account_id: ctx.accountId,
+      date,
+      original_description: description,
+      merchant: description,
+      category: amount >= 0 ? 'Income' : 'Other',
+      subcategory: amount >= 0 ? 'Other' : 'Miscellaneous',
+      amount,
+      upload_batch_id: uploadBatchId,
+      category_source: 'user' as const,
+      needs_review: false,
+    })
+
+    const firstBatch = batch()
+    const firstRows = [
+      txn('2026-06-01', 'Opening deposit', 10_000, firstBatch),
+      txn('2026-06-02', 'First purchase', -2_000, firstBatch),
+    ]
+    const first = await invoke('upsert-transactions', ctx.token, {
+      transactions: firstRows,
+      target_balance: 50_000,
+    })
+    expect(first.status).toBe(200)
+    expect(first.json.inserted).toBe(2)
+
+    const secondBatch = batch()
+    const second = await invoke('upsert-transactions', ctx.token, {
+      // One overlapping row plus one genuinely new row. The existing row has
+      // a new batch id but the same content identity and must be skipped.
+      transactions: [
+        txn('2026-06-02', 'First purchase', -2_000, secondBatch),
+        txn('2026-07-01', 'Second purchase', -3_000, secondBatch),
+      ],
+      target_balance: 47_000,
+    })
+    expect(second.status).toBe(200)
+    expect(second.json.inserted).toBe(1)
+    expect(second.json.skipped).toBe(1)
+
+    const { data: written } = await ctx.client
+      .from('transactions')
+      .select('amount, category, subcategory, date')
+      .eq('account_id', ctx.accountId)
+    expect(written!.reduce((sum, row) => sum + row.amount, 0)).toBe(47_000)
+    const anchors = written!.filter((row) => row.category === 'Transfer' && row.subcategory === 'Reconciliation')
+    expect(anchors).toHaveLength(1)
+    const earliestRealDate = written!
+      .filter((row) => row.subcategory !== 'Reconciliation')
+      .map((row) => row.date)
+      .sort()[0]
+    expect(anchors[0].date).toBe('2026-05-31')
+    expect(anchors[0].date < earliestRealDate).toBe(true)
+
+    const { data: account } = await ctx.client
+      .from('accounts').select('balance').eq('id', ctx.accountId).single()
+    expect(account!.balance).toBe(47_000)
+  }, 60_000)
+
+  it('rolls back inserted rows if reconciliation cannot complete', async () => {
+    if (!live) return
+    const ctx = await newUser('atomic-rollback')
+    const failed = await invoke('upsert-transactions', ctx.token, {
+      transactions: [{
+        account_id: ctx.accountId,
+        date: '2026-06-01',
+        original_description: 'Overflow sentinel',
+        merchant: 'Overflow sentinel',
+        category: 'Other',
+        subcategory: 'Miscellaneous',
+        amount: -2_147_483_648,
+        upload_batch_id: crypto.randomUUID(),
+        category_source: 'user',
+      }],
+      target_balance: 2_147_483_647,
+    })
+    expect(failed.status).toBe(400)
+
+    const { data: written } = await ctx.client
+      .from('transactions').select('id').eq('account_id', ctx.accountId)
+    expect(written).toHaveLength(0)
+    const { data: account } = await ctx.client
+      .from('accounts').select('balance').eq('id', ctx.accountId).single()
+    expect(account!.balance).toBe(0)
+  }, 60_000)
 
   it('a second, different file reuses the cache for merchants it has seen', async () => {
     if (!live) return

@@ -49,28 +49,28 @@ describe('classifyTransferLeg', () => {
 })
 
 describe('isTransferCandidateText', () => {
-  it('flags an explicit Transfer category', () => {
-    expect(isTransferCandidateText('Coffee at Bunnings', 'Transfer')).toBe(true)
+  it('flags an explicit transfer kind', () => {
+    expect(isTransferCandidateText('Coffee at Bunnings', 'transfer')).toBe(true)
   })
 
   it('flags a lexical description regardless of category', () => {
-    expect(isTransferCandidateText('Internal Transfer to Xx3692', 'Uncategorized')).toBe(true)
+    expect(isTransferCandidateText('Internal Transfer to Xx3692', 'expense')).toBe(true)
   })
 
   it('flags a leading To/From as a generous, over-inclusive candidate', () => {
-    expect(isTransferCandidateText('To P Ortiz - Receipt number: OPP000', 'Uncategorized')).toBe(true)
+    expect(isTransferCandidateText('To P Ortiz - Receipt number: OPP000', 'expense')).toBe(true)
   })
 
   it('does not flag an ordinary merchant purchase', () => {
-    expect(isTransferCandidateText('Woolworths Metro Sydney', 'Food')).toBe(false)
+    expect(isTransferCandidateText('Woolworths Metro Sydney', 'expense')).toBe(false)
   })
 
-  it('excludes Round Up even though it carries category=Transfer — structurally one-sided, never a real candidate', () => {
-    expect(isTransferCandidateText('Round Up', 'Transfer')).toBe(false)
+  it('excludes Round Up even though it carries transfer kind — structurally one-sided, never a real candidate', () => {
+    expect(isTransferCandidateText('Round Up', 'transfer')).toBe(false)
   })
 
   it('the Round Up exclusion is case-insensitive and whitespace-tolerant', () => {
-    expect(isTransferCandidateText('  round up  ', 'Transfer')).toBe(false)
-    expect(isTransferCandidateText('ROUND UP', 'Uncategorized')).toBe(false)
+    expect(isTransferCandidateText('  round up  ', 'transfer')).toBe(false)
+    expect(isTransferCandidateText('ROUND UP', 'expense')).toBe(false)
   })
 })

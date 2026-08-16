@@ -15,7 +15,7 @@ const activity = (overrides: Partial<InvestmentCashActivity> = {}): InvestmentCa
 })
 const transaction = (overrides: Partial<InvestmentCashTransaction> = {}): InvestmentCashTransaction => ({
   id: 'txn-1', accountId: 'cash-1', date: '2025-10-13', amountCents: -3_000_000,
-  description: "To Vanguard Cash Account - Funds Transfer", category: 'Transfer',
+  description: "To Vanguard Cash Account - Funds Transfer", kind: 'transfer', category: 'Transfer',
   dedupeHash: 'b'.repeat(64), occurrence: 0, ...overrides,
 })
 

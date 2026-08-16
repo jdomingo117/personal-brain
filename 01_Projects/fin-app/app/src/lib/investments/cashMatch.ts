@@ -13,6 +13,7 @@ export interface InvestmentCashTransaction {
   date: string
   amountCents: number
   description?: string | null
+  kind?: string | null
   category?: string | null
   dedupeHash: string
   occurrence: number
@@ -108,9 +109,9 @@ function scorePair(transaction: InvestmentCashTransaction, activity: InvestmentC
     score += 0.3
     reasons.push('platform-match')
   }
-  if (transaction.category === 'Transfer' || transaction.category === 'Investing') {
+  if (transaction.kind === 'transfer' || transaction.kind === 'investment') {
     score += 0.1
-    reasons.push(`category:${transaction.category.toLowerCase()}`)
+    reasons.push(`kind:${transaction.kind}`)
   }
   if (/\b(invest(?:ment|ing|ments)?|managed fund|funds? transfer)\b/i.test(description)) {
     score += 0.1

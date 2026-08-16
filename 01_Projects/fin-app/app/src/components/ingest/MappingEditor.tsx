@@ -32,7 +32,7 @@ function Field({
         {allowNone && <option value="">— none —</option>}
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
-      {hint && <span className="text-[11.5px] text-muted">{hint}</span>}
+      {hint && <span className="text-[13px] text-ink2">{hint}</span>}
     </label>
   )
 }
@@ -45,6 +45,7 @@ export default function MappingEditor({
   rememberProfile,
   onRememberChange,
   profileExisted,
+  profileName,
 }: {
   headers: string[]
   mapping: ColumnMapping
@@ -53,6 +54,7 @@ export default function MappingEditor({
   rememberProfile: boolean
   onRememberChange: (v: boolean) => void
   profileExisted: boolean
+  profileName?: string
 }) {
   const set = (patch: Partial<ColumnMapping>) => onChange({ ...mapping, ...patch })
   const usesSplit = Boolean(mapping.debitCol || mapping.creditCol)
@@ -61,7 +63,8 @@ export default function MappingEditor({
     <div className="grid gap-4">
       {profileExisted && (
         <p className="rounded-[8px] border border-[var(--hair)] bg-black/[0.02] px-3 py-2 text-[12.5px] text-muted">
-          Layout recognised from a saved profile — no AI call was needed for this file.
+          Layout recognised{profileName ? <> from <strong>{profileName}</strong></> : ' from a saved profile'}
+          {' '}— no AI call was needed for this file.
         </p>
       )}
 
@@ -81,7 +84,7 @@ export default function MappingEditor({
             {DATE_FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
           </select>
           {!dateFormatConfident && (
-            <span className="text-[11.5px] text-[var(--color-warn)]">
+            <span className="text-[13px] font-medium text-[var(--color-warn)]">
               Every date in this file is ambiguous (no day above 12). Assuming
               day-first — check this is right.
             </span>
@@ -107,23 +110,25 @@ export default function MappingEditor({
       </div>
 
       {!usesSplit && (
-        <label className="flex items-center gap-2 text-[13px]">
+        <label className="flex min-h-11 items-center gap-2 text-[13px]">
           <input
             type="checkbox"
             checked={Boolean(mapping.invertAmount)}
             onChange={(e) => set({ invertAmount: e.target.checked })}
           />
           Expenses are positive numbers in this file
-          <span className="text-[11.5px] text-muted">(common on credit-card exports)</span>
+          <span className="text-[13px] text-ink2">(common on credit-card exports)</span>
         </label>
       )}
 
-      <label className="flex items-center gap-2 text-[13px]">
+      <label className="flex min-h-11 items-center gap-2 text-[13px]">
         <input type="checkbox" checked={rememberProfile}
           onChange={(e) => onRememberChange(e.target.checked)} />
-        Remember this layout
-        <span className="text-[11.5px] text-muted">
-          — future uploads from this bank skip the AI mapping entirely
+        {profileExisted ? 'Keep this saved layout updated' : 'Remember this layout'}
+        <span className="text-[13px] text-ink2">
+          {profileExisted
+            ? '— any column changes above replace the saved version'
+            : '— future uploads from this bank skip the AI mapping entirely'}
         </span>
       </label>
     </div>

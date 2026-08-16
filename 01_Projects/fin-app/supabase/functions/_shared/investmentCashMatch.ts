@@ -9,7 +9,7 @@ const MAX_BUCKET = 64
 export type CashFlowActivityType = 'purchase' | 'redemption'
 export interface InvestmentCashTransaction {
   id: string; accountId: string; date: string; amountCents: number; description?: string | null
-  category?: string | null; dedupeHash: string; occurrence: number
+  kind?: string | null; category?: string | null; dedupeHash: string; occurrence: number
 }
 export interface InvestmentCashActivity {
   id: string; accountId: string; tradeDate: string; activityType: CashFlowActivityType
@@ -58,7 +58,7 @@ function scorePair(transaction: InvestmentCashTransaction, activity: InvestmentC
   if (diff >= 3 && crossesWeekend(transaction.date, activity.tradeDate)) { score += 0.2; reasons.push('weekend-settlement') }
   const description = (transaction.description ?? '').toLowerCase()
   if (platformTokens(activity).some((token) => description.includes(token))) { score += 0.3; reasons.push('platform-match') }
-  if (transaction.category === 'Transfer' || transaction.category === 'Investing') { score += 0.1; reasons.push(`category:${transaction.category.toLowerCase()}`) }
+  if (transaction.kind === 'transfer' || transaction.kind === 'investment') { score += 0.1; reasons.push(`kind:${transaction.kind}`) }
   if (/\b(invest(?:ment|ing|ments)?|managed fund|funds? transfer)\b/i.test(description)) { score += 0.1; reasons.push('investment-language') }
   return { score: Math.round(Math.min(1, score) * 10_000) / 10_000, reasons }
 }

@@ -38,6 +38,7 @@ export interface StagedRow {
   category: string
   subcategory: string | null
   categorySource: 'user' | 'bank' | 'ai' | 'seed' | null
+  categoryConfidence: number | null
   needsReview: boolean
   issues: RowIssue[]
   /** False when an issue blocks it, or the user excluded it. */
@@ -48,11 +49,14 @@ export interface StagedRow {
 
 export interface StageResult {
   rows: StagedRow[]
-  /** Distinct merchants needing categorisation, for the AI batch. */
+  /** Distinct merchants sent through the precedence resolver. Bank answers
+   * are included so a durable user rule can override them. */
   pendingMerchants: {
     key: string; display: string
     direction: 'inflow' | 'outflow'
     sampleDescriptions: string[]
+    bankCategory?: string
+    bankSubcategory?: string | null
   }[]
   stats: {
     total: number
@@ -112,6 +116,7 @@ export async function stageRows(
       category: bank?.category ?? UNCATEGORIZED,
       subcategory: bank?.subcategory ?? null,
       categorySource: bank ? ('bank' as const) : null,
+      categoryConfidence: bank ? 1 : null,
       needsReview: false,
       issues,
       include: issues.length === 0,
@@ -136,14 +141,19 @@ export async function stageRows(
     r.occurrence = assigned[i].occurrence
   })
 
-  // Merchants still needing a category after the bank tier.
+  // Every included merchant goes through the resolver. It will retain the
+  // bank answer unless a higher-precedence user rule exists.
   const pending = new Map<string, StageResult['pendingMerchants'][number]>()
   for (const r of interim) {
-    if (!r.include || r.categorySource === 'bank') continue
+    if (!r.include) continue
     const existing = pending.get(r.merchantKey)
     if (existing) {
       if (existing.sampleDescriptions.length < 3) {
         existing.sampleDescriptions.push(r.originalDescription)
+      }
+      if (r.categorySource === 'bank' && !existing.bankCategory) {
+        existing.bankCategory = r.category
+        existing.bankSubcategory = r.subcategory
       }
       continue
     }
@@ -152,6 +162,8 @@ export async function stageRows(
       display: r.merchantDisplay,
       direction: (r.amountCents ?? 0) >= 0 ? 'inflow' : 'outflow',
       sampleDescriptions: [r.originalDescription],
+      bankCategory: r.categorySource === 'bank' ? r.category : undefined,
+      bankSubcategory: r.categorySource === 'bank' ? r.subcategory : undefined,
     })
   }
 
@@ -181,20 +193,21 @@ export function applyAssignments(
   rows: StagedRow[],
   assignments: {
     key: string; category: string; subcategory: string | null
-    source: 'user' | 'bank' | 'ai' | 'seed'; needsReview?: boolean
+    source: 'user' | 'bank' | 'ai' | 'seed'; confidence?: number | null; needsReview?: boolean
   }[],
 ): StagedRow[] {
   const byKey = new Map(assignments.map((a) => [a.key, a]))
   return rows.map((r) => {
-    // A bank-supplied category already won tier 1; do not overwrite it.
-    if (r.categorySource === 'bank') return r
     const a = byKey.get(r.merchantKey)
     if (!a) return r
+    // Bank remains above AI/seed cache. Only a user rule may replace it.
+    if (r.categorySource === 'bank' && a.source !== 'user') return r
     return {
       ...r,
       category: a.category,
       subcategory: a.subcategory,
       categorySource: a.source,
+      categoryConfidence: a.confidence ?? null,
       needsReview: a.needsReview ?? a.category === UNCATEGORIZED,
     }
   })
@@ -218,50 +231,7 @@ export function toTransactionPayload(
       amount: r.amountCents!,
       upload_batch_id: uploadBatchId,
       category_source: r.categorySource,
+      category_confidence: r.categoryConfidence,
       needs_review: r.needsReview,
     }))
-}
-
-/**
- * Balance reconciliation anchor.
- *
- * The account balance is user-declared and authoritative; this synthetic row
- * absorbs the difference so the ledger sums to it. Returned rather than
- * injected so the UI can SHOW it to the user — the old importer added it
- * invisibly, which is how a doubled ledger could still display the right
- * balance.
- */
-export function buildAnchor(
-  rows: StagedRow[],
-  accountId: string,
-  targetBalanceCents: number,
-  uploadBatchId: string,
-): { row: ReturnType<typeof toTransactionPayload>[number]; offsetCents: number } | null {
-  const included = rows.filter((r) => r.include && r.date !== null && r.amountCents !== null)
-  if (included.length === 0) return null
-
-  const netDelta = included.reduce((sum, r) => sum + (r.amountCents ?? 0), 0)
-  const offsetCents = targetBalanceCents - netDelta
-  if (offsetCents === 0) return null
-
-  const earliest = included.reduce((min, r) => (r.date! < min ? r.date! : min), included[0].date!)
-  const anchorDate = new Date(`${earliest}T00:00:00`)
-  anchorDate.setDate(anchorDate.getDate() - 1)
-  const iso = anchorDate.toISOString().slice(0, 10)
-
-  return {
-    offsetCents,
-    row: {
-      account_id: accountId,
-      date: iso,
-      original_description: 'Opening Balance Offset (Reconciliation)',
-      merchant: 'Opening Balance',
-      category: 'Transfer',
-      subcategory: 'Reconciliation',
-      amount: offsetCents,
-      upload_batch_id: uploadBatchId,
-      category_source: 'seed' as const,
-      needs_review: false,
-    },
-  }
 }

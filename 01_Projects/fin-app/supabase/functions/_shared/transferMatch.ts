@@ -289,14 +289,14 @@ export function classifyTransferLeg(description: string | null | undefined): Tra
   }
 }
 
-export function isTransferCandidateText(description: string | null | undefined, category: string): boolean {
+export function isTransferCandidateText(description: string | null | undefined, kind: string): boolean {
   // Up's round-up sweep is always exactly this string and structurally
   // one-sided — it will never have a counterpart, so it must never enter
-  // the candidate pool. Checked before the category==='Transfer' rule
+  // the candidate pool. Checked before the kind==='transfer' rule
   // below, which would otherwise catch it (Up sets transferAccountId on
   // it) and leave it stuck "unmatched" forever.
   if (String(description ?? '').trim().toLowerCase() === 'round up') return false
-  if (category === 'Transfer') return true
+  if (kind === 'transfer') return true
   const tokens = classifyTransferLeg(description)
   if (tokens.isLexical) return true
   return /^\s*(to|from)\s/i.test(String(description ?? ''))

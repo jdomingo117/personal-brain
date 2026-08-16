@@ -9,8 +9,10 @@ import SegmentedTabs from '../components/SegmentedTabs'
 import HeroMetric from '../components/HeroMetric'
 import AnalyzerFilters from '../components/AnalyzerFilters'
 import { usePeriodRange } from '../hooks/usePeriodRange'
-import { MONTHS, dateToIdx } from '../lib/period'
-import { CADENCE_PER_MONTH } from '../lib/cadence'
+import { useResponsiveChartSize } from '../hooks/useResponsiveChartSize'
+import { dayLabel } from '../lib/period'
+import { buildCashFlowSeries } from '../lib/cashFlowSeries'
+import { isEarnedIncome } from '../lib/classification'
 import { fmt } from '../data'
 import { useData } from '../contexts/DataContext'
 import StrategicProjections from '../components/StrategicProjections'
@@ -24,7 +26,7 @@ export default function Income() {
   const [view, setView] = useState('analyzer')
   const { preset, from, to, applyPreset, changeFrom, changeTo } = usePeriodRange()
   
-  const { accounts: dbAccounts, transactions } = useData()
+  const { accounts: dbAccounts, reportingTransactions: transactions } = useData()
 
   const INFLOW_ACCOUNTS = useMemo(() => {
     if (!dbAccounts || dbAccounts.length === 0) return []
@@ -100,39 +102,13 @@ export default function Income() {
 
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0)
 
-const INCOME_SHARES = [
-  { label: 'Primary Salary', glow: 'cyan' as const, share: 0.8 },
-  { label: 'Freelance', glow: 'green' as const, share: 0.15 },
-  { label: 'Dividends', glow: 'blue' as const, share: 0.05 }
-]
-
 function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string; to: string; accounts: string[]; dbAccountsLength: number }) {
-  const { transactions } = useData()
+  const { reportingTransactions: transactions } = useData()
   const m = useMemo(() => {
-    const fromIdx = dateToIdx(from)
-    const toIdx = dateToIdx(to)
     const share = accounts.length > 0 ? accounts.length / (dbAccountsLength || 1) : 0
-    
-    // Group transactions by month to build dynamic inc/exp arrays
-    const monthlyInc = Array(12).fill(0)
-    const monthlyExp = Array(12).fill(0)
-    
-    transactions.forEach(t => {
-      // Only include transactions for selected accounts
-      if (!t.account_id || !accounts.includes(t.account_id) || t.isTransfer || t.pending) return
-
-      const monthIdx = dateToIdx(t.date)
-      if (monthIdx >= 0 && monthIdx < 12) {
-        if (t.amount > 0) {
-          monthlyInc[monthIdx] += t.amount
-        } else {
-          monthlyExp[monthIdx] += Math.abs(t.amount)
-        }
-      }
-    })
-
-    const inc = monthlyInc.slice(fromIdx, toIdx + 1)
-    const exp = monthlyExp.slice(fromIdx, toIdx + 1)
+    const flow = buildCashFlowSeries({ from, to, accountIds: accounts, transactions })
+    const inc = flow.inflow
+    const exp = flow.outflow
     
     const net = inc.map((v, i) => v - exp[i])
     const n = inc.length || 1
@@ -142,7 +118,7 @@ function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string
     const coverage = totalOutflow ? totalInflow / totalOutflow : 0
     const surplus = totalInflow - totalOutflow
     const peakVal = Math.max(...inc)
-    const peakMonth = peakVal > 0 ? MONTHS[fromIdx + inc.indexOf(peakVal)] : '—'
+    const peakPeriod = peakVal > 0 ? flow.labels[inc.indexOf(peakVal)] : '—'
 
     // running totals for the pacing chart
     const cum = (xs: number[]) => {
@@ -151,13 +127,13 @@ function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string
     }
     const cumInflow = cum(inc)
     const cumNet = cum(net)
-    const monthlyRates = inc.map((v, i) => (v > 0 ? (v - exp[i]) / v : 0))
+    const periodRates = inc.map((v, i) => (v > 0 ? (v - exp[i]) / v : 0))
     const savingsRate = totalInflow > 0 ? surplus / totalInflow : 0
 
     // income composition over the period (compute real slices from categorized transactions)
     const sourceMap: Record<string, number> = {}
     transactions.forEach(t => {
-      if (t.amount > 0 && !t.isTransfer && !t.pending && t.account_id && accounts.includes(t.account_id) && t.date >= from && t.date <= to) {
+      if (isEarnedIncome(t) && !t.isTransfer && t.account_id && accounts.includes(t.account_id) && t.date >= from && t.date <= to) {
         sourceMap[t.cat || 'Other'] = (sourceMap[t.cat || 'Other'] || 0) + t.amount
       }
     })
@@ -175,14 +151,14 @@ function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string
     const deposits =
       share > 0
         ? transactions
-            .filter((t) => t.amount > 0 && !t.isTransfer && t.account_id && accounts.includes(t.account_id) && t.date >= from && t.date <= to)
+            .filter((t) => isEarnedIncome(t) && !t.isTransfer && t.account_id && accounts.includes(t.account_id) && t.date >= from && t.date <= to)
             .sort((a, b) => b.date.localeCompare(a.date))
             .slice(0, 6)
         : []
 
     return {
-      fromIdx, toIdx, share, inc, totalInflow, totalOutflow, prorated, coverage, surplus, n, peakVal, peakMonth,
-      cumInflow, cumNet, monthlyRates, savingsRate, sourceSlices, deposits,
+      share, inc, totalInflow, totalOutflow, prorated, coverage, surplus, n, peakVal, peakPeriod,
+      cumInflow, cumNet, periodRates, savingsRate, sourceSlices, deposits, flow,
     }
   }, [from, to, accounts, transactions, dbAccountsLength])
 
@@ -195,6 +171,8 @@ function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string
           ? '1 account'
           : `${accounts.length} accounts`
   const covPositive = m.coverage >= 1
+  const periodUnit = m.flow.granularity === 'day' ? 'day' : m.flow.granularity === 'week' ? 'week' : 'month'
+  const periodCadenceLabel = m.flow.granularity === 'day' ? 'daily' : m.flow.granularity === 'week' ? 'weekly' : 'monthly'
 
   return (
     <Grid>
@@ -203,17 +181,17 @@ function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string
         <HeroMetric
           label="Total period inflow"
           value={fmt(m.totalInflow)}
-          sub={`${acctLabel} · ${MONTHS[m.fromIdx]}–${MONTHS[m.toIdx]}`}
+          sub={`${acctLabel} · ${dayLabel(from)}–${dayLabel(to)}`}
         />
         <HeroMetric
-          label="Prorated monthly average"
+          label={`Average inflow per ${periodUnit}`}
           value={fmt(m.prorated)}
-          sub={`per month · ${m.n} mo span`}
+          sub={`${m.n} ${periodUnit}${m.n === 1 ? '' : 's'} in selected range`}
         />
         <HeroMetric
-          label="Peak deposit item"
+          label="Peak inflow period"
           value={fmt(m.peakVal)}
-          sub={`${m.peakMonth} · highest single month`}
+          sub={`${m.peakPeriod} · highest ${periodUnit}`}
         />
         <HeroMetric
           label="Inflow / outflow coverage"
@@ -225,7 +203,7 @@ function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string
       </div>
 
       {/* Row 2 — cumulative pacing + savings rate */}
-      <Tile title="Cash flow pacing" tag="cumulative" span={2}>
+      <Tile title="Cash flow pacing" tag={`cumulative · ${periodCadenceLabel}`} span={2}>
         <div className="mb-2 mt-0.5 flex items-center gap-4">
           <LegendDot color="var(--color-pos)" label="Cumulative inflow" />
           <LegendDot color="var(--color-blue)" label="Cumulative net" />
@@ -233,14 +211,14 @@ function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string
         <Area
           key={`pace-${from}-${to}-${accounts.join(',')}`}
           series={[
-            { data: m.cumInflow, color: 'var(--color-pos)' },
-            { data: m.cumNet, color: 'var(--color-blue)' },
+            { data: m.cumInflow, color: 'var(--color-pos)', label: 'Inflow' },
+            { data: m.cumNet, color: 'var(--color-blue)', label: 'Net' },
           ]}
-          labels={MONTHS.slice(m.fromIdx, m.toIdx + 1)}
+          labels={m.flow.labels}
           height={230}
         />
       </Tile>
-      <SavingsTile rate={m.savingsRate} saved={m.surplus} monthlyRates={m.monthlyRates} target={0.2} />
+      <SavingsTile rate={m.savingsRate} saved={m.surplus} monthlyRates={m.periodRates} target={0.2} />
 
       {/* Row 3 — income sources + recent deposits */}
       <Tile title="Income sources" tag="share of inflow" span={2}>
@@ -275,27 +253,33 @@ function LegendDot({ color, label }: { color: string; label: string }) {
 }
 
 function Sparkline({ values, color, height = 30 }: { values: number[]; color: string; height?: number }) {
+  const { ref: containerRef, width: w, height: h, ready } = useResponsiveChartSize({
+    aspectRatio: 120 / height,
+    minHeight: height,
+    maxHeight: height,
+  })
   if (values.length === 0) return null
-  const w = 120
   const min = Math.min(...values)
   const max = Math.max(...values)
   const span = max - min || 1
   const denom = values.length - 1 || 1
   const pts = values
-    .map((v, i) => `${(i / denom) * w},${height - ((v - min) / span) * (height - 4) - 2}`)
+    .map((v, i) => `${(i / denom) * w},${h - ((v - min) / span) * (h - 4) - 2}`)
     .join(' ')
   return (
-    <svg viewBox={`0 0 ${w} ${height}`} width="100%" height={height} preserveAspectRatio="none">
-      <polyline
-        points={pts}
-        fill="none"
-        stroke={color}
-        strokeWidth={1.6}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        vectorEffect="non-scaling-stroke"
-      />
-    </svg>
+    <div ref={containerRef} style={{ minHeight: height }}>
+      {ready && <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} className="block">
+        <polyline
+          points={pts}
+          fill="none"
+          stroke={color}
+          strokeWidth={1.6}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>}
+    </div>
   )
 }
 

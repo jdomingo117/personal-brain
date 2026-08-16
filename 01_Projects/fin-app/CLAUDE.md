@@ -57,43 +57,22 @@ hand to find the transfer-linker gap.
 
 ## Recent changes
 
-- 2026-08-08 — Shipped order-independent bank-to-investment reconciliation: exact-value purchase/redemption links, durable review decisions, cash-flow analytics integration, transfer-review UI, activity-ledger provenance, and real-corpus/RLS regression coverage.
+- 2026-08-15 — Added six repeatable Playwright Ledger regressions covering mixed/impact semantics, cross-page and 500-row selection, safe attributes/protection, grouped undo and modal focus restoration.
 
-- 2026-08-08 — Fixed priced investment re-imports zeroing the cached account value: duplicate imports are now monetary no-ops, while genuine new activities revalue only their account from stored NAVs.
+- 2026-08-15 — Added reusable focus trapping and opener/fallback restoration across all Ledger dialogs, including animated drawer exit and completed bulk-selection flows.
 
-- 2026-08-08 — Shipped scalable managed-fund accounts: deterministic Vanguard activity import, official daily NAV history/sync, contribution-neutral valuation and mixed net-worth history, investment account UI, and Australian FY/AMMA record awareness.
+- 2026-08-15 — Added safe Ledger bulk kind/attribute editing with per-field mixed/tri-state semantics, exact reporting previews, atomic grouped undo, 500-row enforcement and live browser/RLS validation.
 
-- 2026-08-08 — Routed signed-in loading/error UX through `ViewDataBoundary`, retaining visible data for background refresh failures; Dashboard now directs a transaction-empty user to statement import. Accounts, Income, Expenses, Ingestion, and Settings are route-lazy-loaded while Landing/Dashboard remain eager to preserve the shared hero morph.
+- 2026-08-15 — Added capped Ledger “select all matching,” enforced a visible 500-row UI/API boundary, fixed oversized visibility-query URLs, and validated exact 500 update/undo plus 501 rejection.
 
-- 2026-08-08 — Reliability/write-boundary hardening: `DataContext` now differentiates required-load failure from an empty ledger and supplies a retry state instead of routing failed reads to onboarding; all remaining application-table writes for callsigns, account identifiers, session registry revocation, and deletion recovery now use Zod-validated, audited Edge Functions.
+- 2026-08-15 — Made Ledger cross-page selection observable and self-clearing after completed bulk work, with scoped counts/actions, stale-ID pruning, retained undo, and a 57-row browser regression.
 
-- 2026-08-06 — Fixed a real-money bug found while testing against a live Up account: the
-  reconciliation anchor was computed *before* backfill ran, which double-counts once `cutover_date`
-  isn't pinned to today (enabled by the History-to-import picker above). Anchor computation moved
-  into `sync-provider`, now runs once right after backfill actually finishes; `accounts.balance`
-  also refreshes every sync instead of only at connect. New `extend-provider-history` + an "Extend
-  history" control in `EditAccountModal` let an already-connected account pull further back later.
-- 2026-08-07 — Fixed Income/Expenses showing $0 for all real data: `period.ts`'s `txnIso()`
-  mangled real ISO dates (deleted; callers use `t.date` directly), and the account-scope filter
-  compared account ids against account names (now compares `t.account_id`). Removed the "Drop csv"
-  uploader from the Accounts page (Ingestion is the sole upload surface); Accounts' Quick Timeframe
-  Selectors now actually filter its KPIs/donut/ledger instead of only the ledger.
-- 2026-08-07 — Transfer-matcher improvements: `suggested` pairs now excluded from analytics (were
-  counted as income/expense until manually reviewed), a new `transfer_match_overflow` table +
-  OskoLinker banner surface amount buckets the matcher skipped entirely (previously silent), a
-  pending-review badge on the Ingestion nav item, recurring-account-pair cadence detection
-  (`pairCadence.ts`) that auto-links a later instance of an established sweep, and
-  `provider_posted_at` (already captured for Up rows, previously unused) wired in as an ambiguity
-  tie-breaker between same-day/same-amount candidates.
-- 2026-08-07 — Batch-confirm for the transfer review queue: `OskoLinker.tsx`'s `suggested` list
-  groups by account pair with a group-level Confirm/Reject/External acting on the current checkbox
-  selection (non-ambiguous links selected by default, ambiguous ones excluded and left to individual
-  review). New `decide_transfers_batch()` RPC + a `link_ids` batch shape on `decide-transfer` do it
-  in one round-trip/one rate-limit hit instead of looping the single-link path per item.
-- 2026-08-07 — Fixed a full transfer rescan silently truncating its candidate pool at 1,000 rows
-  (PostgREST's default `max_rows`, no `ORDER BY` on `transfer_candidates()` to make the truncation
-  predictable) — `_shared/runLinkTransfers.ts` now paginates via `.range()`. Confirmed on the real
-  account: `created: 0` → `created: 377` on a full rescan with no other change. Also added the
-  missing "Transfer to Spending"/"Transfer from Savings" phrasing (Up's own generic Saver-sweep
-  wording) to `LEXICON_RE`, which had been scoring a real pair 0.45 — just under
-  `SUGGESTED_THRESHOLD` — because only compound phrases like "internal transfer" were recognised.
+- 2026-08-15 — Added exact Ledger bulk impact previews for current mixes, label/provenance counts, clearing, derived classification and reporting deltas, with explicit-change gating and browser validation.
+
+- 2026-08-14 — Made Ledger bulk correction field-safe with shared/Mixed states, explicit partial updates, mandatory category-pair choices, heterogeneous undo, and full live/browser validation.
+
+- 2026-08-14 — Repaired expense metric integrity: equal-day prior windows, correct daily denominators, rejected-transfer reporting precedence, strict TypeScript health, and database/browser reconciliation.
+
+- 2026-08-14 — Shipped Phase 5 classification refinement: exact-cent split reporting/undo, tenant custom subcategories, merchant-rule management, persisted confidence policy, and full RLS/browser validation.
+
+- 2026-08-14 — Shipped Phase 4 transaction classification: first-class kind and focused attributes, correct contra-expense semantics, ledger edit/filter/undo UX, kind-based matching/analytics, and live RLS/browser validation.

@@ -60,6 +60,15 @@ its vocabulary.
 duplicate matches, no same-account pairing, etc.), not pinned score values — a scoring/weight
 change shouldn't need touching them.
 
+`npm run test:browser` is the Playwright boundary for rendered Ledger workflows. Install Chromium
+once with `npm run test:browser:install`; keep the local Supabase stack available. The wrapper reads
+local test credentials from `supabase status`, while Playwright starts/reuses Vite. Browser fixtures
+may use `service_role` only to create and destroy isolated test state; the behavior being verified
+must authenticate and mutate through the real UI/Edge Functions. Keep these cases serial because the
+500-row boundary fixture is intentionally shared, and restore data through UI undo before the next
+case. `npm run test:browser:typecheck` covers the separate e2e TypeScript config. Vitest explicitly
+excludes `e2e/` so Playwright fixture declarations never enter the unit runner.
+
 `app/scripts/*.mjs` are integration harnesses against a live local stack (not run by `npm test`).
 Need the stack up, `SUPABASE_ANON_KEY` set, and
 `npx supabase functions serve --no-verify-jwt --env-file supabase/.env.local` in a separate shell.

@@ -7,6 +7,7 @@ import { providerDedupeHashHex, toByteaLiteral } from '../_shared/dedupe.ts'
 import { normalizeMerchant } from '../_shared/normalizeMerchant.ts'
 import { mapUpCategory } from '../_shared/upCategoryMap.ts'
 import { isTransferCandidateText } from '../_shared/transferMatch.ts'
+import { defaultTransactionKind } from '../_shared/classification.ts'
 import { runLinkTransfers } from '../_shared/runLinkTransfers.ts'
 import { runInvestmentCashLinks } from '../_shared/runInvestmentCashLinks.ts'
 import {
@@ -175,15 +176,43 @@ Deno.serve(
             const externalIds = rows.map((r) => r.external_id)
             const { data: existingRows } = await ctx.db
               .from('transactions')
-              .select('external_id, category, subcategory, category_source')
+              .select('external_id, category, subcategory, category_source, category_confidence, needs_review')
               .eq('account_id', acctConn.account_id)
               .in('external_id', externalIds)
             const existingByExternalId = new Map((existingRows ?? []).map((r) => [r.external_id, r]))
 
+            // A durable user rule outranks the provider's category. Resolve it
+            // in the synchronous ingestion path so a correction survives the
+            // very next sync; AI remains asynchronous in categorize-pending.
+            const merchantKeys = [...new Set(rows.map((row) => row.merchant_key))]
+            const userRules = new Map<string, { category: string; subcategory: string | null }>()
+            for (let i = 0; i < merchantKeys.length; i += 100) {
+              const { data: rules, error: rulesError } = await ctx.db
+                .from('merchant_rules')
+                .select('merchant_key, category, subcategory')
+                .eq('source', 'user')
+                .in('merchant_key', merchantKeys.slice(i, i + 100))
+              if (rulesError) throw rulesError
+              for (const rule of rules ?? []) userRules.set(rule.merchant_key, rule)
+            }
+
             const payload = rows.map((r) => {
               const existing = existingByExternalId.get(r.external_id)
               if (existing?.category_source === 'user') {
-                return { ...r, category: existing.category, subcategory: existing.subcategory, category_source: 'user' as const }
+                return {
+                  ...r, category: existing.category, subcategory: existing.subcategory,
+                  category_source: 'user' as const,
+                  category_confidence: existing.category_confidence,
+                  needs_review: existing.needs_review,
+                }
+              }
+              const rule = userRules.get(r.merchant_key)
+              if (rule) {
+                return {
+                  ...r, category: rule.category, subcategory: rule.subcategory,
+                  category_source: 'user' as const, category_confidence: 1,
+                  needs_review: false,
+                }
               }
               return r
             })
@@ -433,6 +462,7 @@ async function toRow(
     date,
     original_description: originalDescription,
     merchant: merchant.display,
+    merchant_key: merchant.key,
     category,
     subcategory,
     category_source: mapped ? ('bank' as const) : null,
@@ -445,7 +475,10 @@ async function toRow(
     pending: t.status === 'HELD',
     provider_posted_at: postedAt,
     provider_transfer_account_id: t.transferAccountId,
-    transfer_candidate: isTransferCandidateText(originalDescription, category),
+    transfer_candidate: isTransferCandidateText(
+      originalDescription,
+      defaultTransactionKind(category, subcategory, t.amount.valueInBaseUnits),
+    ),
     dedupe_hash: toByteaLiteral(hashHex),
     occurrence: 0,
   }

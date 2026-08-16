@@ -4,6 +4,7 @@ import { NAV, useView, type View } from '../router'
 import { useScramble } from '../hooks/useScramble'
 import { supabase } from '../lib/supabaseClient'
 import { useData } from '../contexts/DataContext'
+import { reviewCount } from '../lib/ledger'
 
 const barSpring = { type: 'spring', stiffness: 120, damping: 20 } as const
 
@@ -21,7 +22,7 @@ function Icon({ d, onClick, label }: { d: string; onClick?: () => void; label: s
   )
 }
 
-function RailItem({ item, badge }: { item: (typeof NAV)[number]; badge?: number }) {
+function RailItem({ item, badge, badgeLabel }: { item: (typeof NAV)[number]; badge?: number; badgeLabel?: string }) {
   const { view, go } = useView()
   const [hover, setHover] = useState(false)
   const active = view === item.id
@@ -33,7 +34,7 @@ function RailItem({ item, badge }: { item: (typeof NAV)[number]; badge?: number 
       onMouseLeave={() => setHover(false)}
       onClick={() => go(item.id)}
       aria-current={active ? 'page' : undefined}
-      aria-label={badge ? `${item.label} · ${badge} transactions need transfer review` : item.label}
+      aria-label={badge ? `${item.label} · ${badgeLabel ?? `${badge} items need attention`}` : item.label}
       className="group relative flex cursor-pointer items-center text-left"
     >
       {!!badge && (
@@ -79,6 +80,7 @@ export default function Shell({ children }: { children: ReactNode }) {
   const pendingTransferReview = transactions.filter(
     (t) => t.transferState === 'suggested' || t.transferState === 'unmatched',
   ).length
+  const pendingCategoryReview = reviewCount(transactions)
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut()
@@ -101,14 +103,14 @@ export default function Shell({ children }: { children: ReactNode }) {
         initial={{ y: -70 }}
         animate={{ y: 0 }}
         transition={barSpring}
-        className="relative z-10 flex items-center justify-between bg-bar px-8 py-3"
+        className="relative z-10 flex min-w-0 items-center justify-between bg-bar px-3 py-3 sm:px-8"
       >
-        <button className="flex items-center gap-3" onClick={() => go('landing')}>
+        <button className="flex min-w-0 items-center gap-2 sm:gap-3" onClick={() => go('landing')}>
           <span className="grid h-[34px] w-[34px] place-items-center rounded-[9px] border border-white/25 font-display text-[17px] font-black text-white">
             H
           </span>
           <span className="font-display text-[17px] font-extrabold tracking-wide text-white">HALCYON</span>
-          <span className="border-l border-white/15 pl-3 text-[12px] text-white/45">Private Wealth</span>
+          <span className="hidden border-l border-white/15 pl-3 text-[12px] text-white/45 sm:inline">Private Wealth</span>
         </button>
         <div className="flex items-center gap-2">
           <Icon
@@ -125,17 +127,26 @@ export default function Shell({ children }: { children: ReactNode }) {
       </motion.header>
 
       {/* body: rail + screen */}
-      <div className="grid min-h-0 grid-cols-[52px_1fr] gap-2 px-4 py-4 md:grid-cols-[188px_1fr] md:px-8">
+      <div className="grid min-h-0 min-w-0 grid-cols-[52px_minmax(0,1fr)] gap-2 px-4 py-4 md:grid-cols-[188px_minmax(0,1fr)] md:px-8">
         <motion.nav
           className="flex flex-col justify-center gap-5"
           animate={{ y: view === 'landing' ? -26 : 0 }}
           transition={{ type: 'spring', stiffness: 160, damping: 24 }}
         >
           {NAV.map((item) => (
-            <RailItem key={item.id} item={item} badge={item.id === 'ingestion' ? pendingTransferReview : undefined} />
+            <RailItem
+              key={item.id}
+              item={item}
+              badge={item.id === 'transfers' ? pendingTransferReview : item.id === 'ledger' ? pendingCategoryReview : undefined}
+              badgeLabel={item.id === 'transfers'
+                ? `${pendingTransferReview} transactions need transfer review`
+                : item.id === 'ledger'
+                  ? `${pendingCategoryReview} transactions need category review`
+                  : undefined}
+            />
           ))}
         </motion.nav>
-        <main className="relative min-h-0">{children}</main>
+        <main className="relative min-h-0 min-w-0">{children}</main>
       </div>
 
       {/* bottom status strip */}
@@ -143,14 +154,14 @@ export default function Shell({ children }: { children: ReactNode }) {
         initial={{ y: 40 }}
         animate={{ y: 0 }}
         transition={barSpring}
-        className="relative z-10 flex items-center justify-between bg-bar px-8 py-2.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-white/35"
+        className="relative z-10 flex min-w-0 items-center justify-between bg-bar px-3 py-2.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-white/35 sm:px-8"
       >
-        <span className="flex items-center gap-2.5">
+        <span className="hidden items-center gap-2.5 sm:flex">
           <span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px_var(--color-accent)]" />
           System nominal · all accounts synced
         </span>
         <span className="capitalize text-white/40">{view === 'landing' ? 'Session secured' : view}</span>
-        <span>
+        <span className="hidden sm:inline">
           Last sync <b className="font-semibold text-white/70">2m ago</b>
         </span>
         <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />

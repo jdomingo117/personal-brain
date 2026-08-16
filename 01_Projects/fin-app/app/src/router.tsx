@@ -8,7 +8,9 @@ export type View =
   | 'accounts'
   | 'income'
   | 'expenses'
+  | 'ledger'
   | 'ingestion'
+  | 'transfers'
   | 'settings'
 
 export const NAV: { id: View; n: string; label: string }[] = [
@@ -17,7 +19,9 @@ export const NAV: { id: View; n: string; label: string }[] = [
   { id: 'accounts', n: '02', label: 'Accounts' },
   { id: 'income', n: '03', label: 'Income' },
   { id: 'expenses', n: '04', label: 'Expenses' },
-  { id: 'ingestion', n: '05', label: 'Ingestion' },
+  { id: 'ledger', n: '05', label: 'Ledger' },
+  { id: 'ingestion', n: '06', label: 'Ingestion' },
+  { id: 'transfers', n: '07', label: 'Transfers' },
 ]
 
 /**
@@ -33,7 +37,9 @@ export const VIEW_PATHS: Record<View, string> = {
   accounts: '/accounts',
   income: '/income',
   expenses: '/expenses',
+  ledger: '/ledger',
   ingestion: '/ingestion',
+  transfers: '/transfers',
   settings: '/settings',
 }
 

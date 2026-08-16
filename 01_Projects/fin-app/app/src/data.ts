@@ -1,6 +1,7 @@
 /* Halcyon — typed mock dataset (ported from the vanilla data.js). */
 
 import type { Cadence } from './lib/cadence'
+import type { SpendingNature, TransactionKind } from './lib/classification'
 
 export type Glow = 'green' | 'cyan' | 'blue' | 'amber' | 'red'
 export type Status = 'healthy' | 'warning' | 'critical'
@@ -14,8 +15,13 @@ export type Account = {
   glow: Glow
   balanceSource?: 'manual' | 'bank_provider' | 'investment_valuation'
   balanceAsOf?: string
+  /** Display-only institution and masked identifier used to disambiguate import targets. */
+  institution?: string
+  identifier?: string
   /** Set when a provider (e.g. Up Bank) owns this account's balance and forward ledger from its cutover date. */
   connectionId?: string
+  /** CSV imports may add history before this date; the provider owns this date and everything after it. */
+  cutoverDate?: string
 }
 export interface AllocationSlice {
   label: string
@@ -44,8 +50,25 @@ export interface Txn {
   id: string
   date: string
   merchant: string
+  /** Stable normalised identity used by reusable merchant rules. */
+  merchantKey?: string
+  originalDescription?: string
   cat: string
+  categoryId?: string
   subcat?: string
+  subcategoryId?: string
+  kind: TransactionKind
+  kindSource?: 'derived' | 'user' | 'system'
+  isRecurring?: boolean
+  recurringSource?: 'derived' | 'user'
+  isSubscription?: boolean
+  subscriptionSource?: 'derived' | 'user'
+  spendingNature?: SpendingNature
+  isReimbursable?: boolean
+  isTaxRelated?: boolean
+  categorySource?: 'user' | 'bank' | 'ai' | 'seed' | null
+  categoryConfidence?: number | null
+  needsReview?: boolean
   amount: number
   account?: string
   account_id: string
@@ -55,7 +78,22 @@ export interface Txn {
   transferState?: 'auto' | 'suggested' | 'confirmed' | 'rejected' | 'external' | 'unmatched' | 'none'
   /** HELD at the provider — amount may still change on settlement. Shown in the ledger but excluded from analytics (already reflected, provisionally, in the account's balance). */
   pending?: boolean
+  /** Split-reporting rows keep the bank transaction immutable and replace it only in analytics. */
+  parentTransactionId?: string
+  isAllocation?: boolean
+  allocationNote?: string
+  allocations?: TransactionAllocation[]
 }
+export interface TransactionAllocation {
+  id: string
+  position: number
+  amount: number
+  kind: TransactionKind
+  category: string
+  subcategory?: string
+  note?: string
+}
+export interface CustomSubcategory { id: string; categoryId: string; category: string; displayName: string }
 export interface Achievement {
   id: string
   title: string
@@ -80,23 +118,28 @@ export const data = {
    Expenses transaction filters and the `subcat` values on outflow transactions.
    `Income` is an inflow bucket and is intentionally excluded. */
 export const CATEGORY_TAXONOMY: Record<string, string[]> = {
-  Food: ['Groceries', 'Dining', 'Coffee'],
-  Housing: ['Rent', 'Maintenance', 'Insurance'],
-  Transport: ['Fuel', 'Rideshare', 'Transit', 'Parking', 'Travel'],
-  Utilities: ['Power', 'Water', 'Internet', 'Mobile'],
-  Subscriptions: ['Streaming', 'Software', 'Memberships'],
-  Retail: ['Apparel', 'Electronics', 'Home', 'Gifts'],
-  Health: ['Medical', 'Pharmacy', 'Fitness', 'Personal care'],
-  Other: ['Cash', 'Fees', 'Misc'],
+  'Food & drink': ['Groceries', 'Dining & takeaway', 'Coffee', 'Alcohol & pubs'],
+  Home: ['Rent', 'Rates', 'Maintenance', 'Home insurance', 'Furnishings'],
+  Transport: ['Fuel', 'Public transport', 'Rideshare', 'Parking & tolls', 'Registration', 'Servicing', 'Car insurance'],
+  'Bills & utilities': ['Electricity & gas', 'Water', 'Internet', 'Mobile'],
+  Shopping: ['Clothing', 'Electronics', 'Household', 'Gifts', 'General retail'],
+  'Health & wellbeing': ['Medical', 'Dental', 'Pharmacy', 'Allied health', 'Fitness', 'Personal care'],
+  Lifestyle: ['Streaming', 'Software & digital services', 'Memberships', 'Events', 'Hobbies', 'Gaming', 'Recreation'],
+  Travel: ['Flights', 'Accommodation', 'Local transport', 'Activities', 'General travel'],
+  'Family & pets': ['Childcare', 'School', 'Children', 'Pet care', 'Veterinary'],
+  Education: ['Courses', 'Books', 'Student costs'],
+  'Financial & admin': ['Bank fees', 'Government charges', 'Tax', 'Accounting', 'Legal'],
+  Giving: ['Charity', 'Donations'],
+  Other: ['Cash withdrawal', 'Miscellaneous'],
 }
 export const EXPENSE_CATEGORIES = Object.keys(CATEGORY_TAXONOMY)
 
-/* KEY ORDER IS LOAD-BEARING. `--cat-N` is assigned by array index, not by
-   name (see catColor in lib/categoryColor.ts), so reordering these keys
-   silently reassigns every chart colour. Append, don't insert.
+/* Stable database slugs are the durable taxonomy identity. This display-name
+   copy retains the canonical reporting order used by `catColor()` and the
+   `--cat-1..13` rendering tokens; reorder only as a deliberate design change.
 
    `Other` vs `Uncategorized` is a real distinction, not redundancy:
-   `Other > Misc` means "reviewed, genuinely miscellaneous" and counts as
+   `Other > Miscellaneous` means "reviewed, genuinely miscellaneous" and counts as
    ordinary spending with its own hue; `Uncategorized` means "nothing could
    determine this" and stays in the review queue. Collapsing them would make
    the review queue unfinishable — there'd be no way to say "yes, this one
@@ -114,14 +157,14 @@ export const EXPENSE_CATEGORIES = Object.keys(CATEGORY_TAXONOMY)
                  analytics: counting it would double-count every transfer as
                  both an expense and income.
    `Investing` — buying shares moves money between your own asset classes, it
-                 is not consumption. Sat in the expense cycle until the 8-category
-                 change and distorted spending totals accordingly. Caveat: if a
+                 is not consumption. It remains outside the reporting expense
+                 taxonomy. Caveat: if a
                  brokerage account is NOT tracked as a Halcyon account, outflows
                  to it now leave spending analytics without arriving anywhere
                  visible. */
-export const INCOME_SUBCATEGORIES = ['Salary', 'Transfer In', 'Refund', 'Interest', 'Other'] as const
-export const TRANSFER_SUBCATEGORIES = ['Internal', 'Reconciliation'] as const
-export const INVESTING_SUBCATEGORIES = ['Auto-invest', 'Brokerage'] as const
+export const INCOME_SUBCATEGORIES = ['Salary', 'Interest', 'Dividends & distributions', 'Benefits', 'Rental & business income', 'Refund', 'Reimbursement', 'Transfer In', 'Other'] as const
+export const TRANSFER_SUBCATEGORIES = ['Internal', 'Managed fund funding', 'Reconciliation'] as const
+export const INVESTING_SUBCATEGORIES = ['Auto-invest', 'Brokerage', 'Managed fund purchase', 'Managed fund funding', 'Distribution'] as const
 
 export const INCOME_CATEGORY = 'Income'
 export const TRANSFER_CATEGORY = 'Transfer'

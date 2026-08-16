@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import type { Account, Txn, Achievement } from '../data'
+import type { Account, Txn, Achievement, CustomSubcategory, TransactionAllocation } from '../data'
 import type { RecurrenceHint } from '../lib/recurring'
 import { useAuth } from './AuthContext'
+import { expandTransactionAllocations } from '../lib/allocations'
 
 export type ProfileData = {
   callsign: string
@@ -25,6 +26,8 @@ interface DataCtx {
   isAdmin: boolean
   accounts: Account[]
   transactions: Txn[]
+  reportingTransactions: Txn[]
+  customSubcategories: CustomSubcategory[]
   achievements: Achievement[]
   budgets: Budget[]
   recurrenceHints: Map<string, RecurrenceHint>
@@ -51,6 +54,8 @@ export const DataContext = createContext<DataCtx>({
   isAdmin: false,
   accounts: [],
   transactions: [],
+  reportingTransactions: [],
+  customSubcategories: [],
   achievements: [],
   budgets: [],
   recurrenceHints: new Map(),
@@ -69,6 +74,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<ProfileData>(defaultProfile)
   const [accounts, setAccounts] = useState<Account[]>([])
   const [transactions, setTransactions] = useState<Txn[]>([])
+  const [reportingTransactions, setReportingTransactions] = useState<Txn[]>([])
+  const [customSubcategories, setCustomSubcategories] = useState<CustomSubcategory[]>([])
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [budgets, setBudgets] = useState<Budget[]>([])
   const [recurrenceHints, setRecurrenceHints] = useState<Map<string, RecurrenceHint>>(new Map())
@@ -87,6 +94,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setProfile(defaultProfile)
       setAccounts([])
       setTransactions([])
+      setReportingTransactions([])
+      setCustomSubcategories([])
       setAchievements([])
       setBudgets([])
       setRecurrenceHints(new Map())
@@ -116,22 +125,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
       // The getUser() round-trip that used to guard this block is also gone;
       // RequireAuth already gates every route that mounts this provider, and
       // an invalid token now fails the queries themselves.
-      const [profileRes, accountsRes, txnsRes, achievementsRes, userAchievementsRes, budgetsRes, accountConnectionsRes, recurrenceHintsRes, netWorthHistoryRes] = await Promise.all([
+      const [profileRes, accountsRes, txnsRes, achievementsRes, userAchievementsRes, budgetsRes, accountConnectionsRes, accountIdentifiersRes, recurrenceHintsRes, netWorthHistoryRes, allocationsRes, customSubcategoriesRes, taxonomyCategoriesRes] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle(),
         supabase.from('accounts').select('*'),
         supabase.from('transactions_analytic').select('*').order('date', { ascending: false }),
         supabase.from('achievements').select('*'),
         supabase.from('user_achievements').select('*').eq('user_id', session.user.id),
         supabase.from('budgets').select('*'),
-        supabase.from('account_connections').select('id, account_id, connection_id, balance_as_of, provider_connections(status)'),
+        supabase.from('account_connections').select('id, account_id, connection_id, provider, cutover_date, balance_as_of, provider_connections(status)'),
+        supabase.from('account_identifiers').select('account_id, kind, value, source, confidence'),
         supabase.from('merchant_recurrence_hints').select('merchant_key, is_recurring, suggested_cadence, confidence'),
         supabase.from('net_worth_monthly').select('month, value_cents').order('month', { ascending: true }),
+        supabase.from('transaction_allocations').select('id,transaction_id,position,amount,kind,category,subcategory,note').order('position'),
+        supabase.from('tenant_subcategories').select('id,category_id,display_name').eq('active', true).order('display_name'),
+        supabase.from('taxonomy_categories').select('id,display_name'),
       ])
 
       const requiredError = [profileRes, accountsRes, txnsRes].find((result) => result.error)?.error
       if (requiredError) throw requiredError
 
-      const optionalResults = [achievementsRes, userAchievementsRes, budgetsRes, accountConnectionsRes, recurrenceHintsRes, netWorthHistoryRes]
+      const optionalResults = [achievementsRes, userAchievementsRes, budgetsRes, accountConnectionsRes, accountIdentifiersRes, recurrenceHintsRes, netWorthHistoryRes, allocationsRes, customSubcategoriesRes, taxonomyCategoriesRes]
       for (const result of optionalResults) {
         if (result.error) console.warn('Optional data enrichment failed:', result.error.message)
       }
@@ -140,7 +153,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const fetchedTxns = txnsRes.data ?? []
       const fetchedProfile = profileRes.data
       const fetchedConnections = accountConnectionsRes.data || []
-      const connectionByAccountId = new Map(fetchedConnections.map(c => [c.account_id, c.id]))
+      const connectionByAccountId = new Map(fetchedConnections.map(c => [c.account_id, c]))
+      const identifiersByAccountId = new Map<string, typeof accountIdentifiersRes.data>()
+      for (const identifier of accountIdentifiersRes.data ?? []) {
+        const current = identifiersByAccountId.get(identifier.account_id) ?? []
+        current.push(identifier)
+        identifiersByAccountId.set(identifier.account_id, current)
+      }
 
       // Fire-and-forget: a stale connection gets synced in the background,
       // not blocking this render. sync-provider's own concurrency lock and
@@ -165,16 +184,38 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       const netWorth = fetchedAccounts.reduce((sum, acc) => sum + acc.balance, 0)
       // Map DB accounts to UI Accounts
-      const mappedAccounts: Account[] = fetchedAccounts.map(a => ({
-        id: a.id,
-        name: a.name,
-        type: a.type,
-        balance: a.balance,
-        glow: a.balance < 0 ? 'red' : 'cyan',
-        balanceSource: a.balance_source,
-        balanceAsOf: a.balance_as_of,
-        connectionId: connectionByAccountId.get(a.id),
-      }))
+      const mappedAccounts: Account[] = fetchedAccounts.map((a) => {
+        const connection = connectionByAccountId.get(a.id)
+        const identifiers = [...(identifiersByAccountId.get(a.id) ?? [])]
+          .sort((left, right) => {
+            const sourceRank = (source: string) => source === 'user' ? 0 : source === 'provider' ? 1 : 2
+            return sourceRank(left.source) - sourceRank(right.source)
+              || (right.confidence ?? 0) - (left.confidence ?? 0)
+          })
+        const accountIdentifier = identifiers.find((item) => item.kind === 'mask' || item.kind === 'account_number')
+        const institutionIdentifier = identifiers.find((item) => item.kind === 'institution')
+        const providerName = connection?.provider === 'up' ? 'Up Bank' : undefined
+        const institution = providerName ?? (institutionIdentifier?.value
+          ? institutionIdentifier.value.replace(/\b\w/g, (character: string) => character.toUpperCase())
+          : undefined)
+        const identifier = accountIdentifier?.value
+          ? `•••• ${accountIdentifier.value.slice(-4)}`
+          : undefined
+
+        return {
+          id: a.id,
+          name: a.name,
+          type: a.type,
+          balance: a.balance,
+          glow: a.balance < 0 ? 'red' : 'cyan',
+          balanceSource: a.balance_source,
+          balanceAsOf: a.balance_as_of,
+          institution,
+          identifier,
+          connectionId: connection?.id,
+          cutoverDate: connection?.cutover_date,
+        }
+      })
 
       // Managed-fund NAV is end-of-day rather than intraday. Refresh an
       // investment account at most once per session when its verified price
@@ -196,8 +237,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
         id: t.id,
         date: t.date,
         merchant: t.merchant || t.original_description,
+        merchantKey: t.merchant_key,
+        originalDescription: t.original_description,
         cat: t.category,
+        categoryId: t.category_id,
         subcat: t.subcategory,
+        subcategoryId: t.subcategory_id,
+        kind: t.kind,
+        kindSource: t.kind_source,
+        isRecurring: t.is_recurring,
+        recurringSource: t.recurring_source,
+        isSubscription: t.is_subscription,
+        subscriptionSource: t.subscription_source,
+        spendingNature: t.spending_nature,
+        isReimbursable: t.is_reimbursable,
+        isTaxRelated: t.is_tax_related,
+        categorySource: t.category_source,
+        categoryConfidence: t.category_confidence,
+        needsReview: t.needs_review,
         amount: t.amount,
         account: accountNameById.get(t.account_id) || 'Unknown',
         account_id: t.account_id,
@@ -207,8 +264,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
         pending: t.pending,
       }))
 
+      const allocationsByTransaction = new Map<string, TransactionAllocation[]>()
+      for (const row of allocationsRes.data ?? []) {
+        const allocation: TransactionAllocation = {
+          id: row.id, position: row.position, amount: row.amount, kind: row.kind,
+          category: row.category, subcategory: row.subcategory ?? undefined, note: row.note ?? undefined,
+        }
+        const items = allocationsByTransaction.get(row.transaction_id) ?? []
+        items.push(allocation); allocationsByTransaction.set(row.transaction_id, items)
+      }
+      const withAllocations = mappedTxns.map((transaction) => ({ ...transaction, allocations: allocationsByTransaction.get(transaction.id) ?? [] }))
+      const expanded = expandTransactionAllocations(withAllocations)
+      const categoryNameById = new Map((taxonomyCategoriesRes.data ?? []).map((row) => [row.id, row.display_name]))
+
       setAccounts(mappedAccounts)
-      setTransactions(mappedTxns)
+      setTransactions(withAllocations)
+      setReportingTransactions(expanded)
+      setCustomSubcategories((customSubcategoriesRes.data ?? []).map((row) => ({
+        id: row.id, categoryId: row.category_id, category: categoryNameById.get(row.category_id) ?? row.category_id, displayName: row.display_name,
+      })))
       
       const allAchievements = achievementsRes.data || []
       const userUnlockIds = new Set((userAchievementsRes.data || []).map(ua => ua.achievement_id))
@@ -280,7 +354,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [session?.user?.id])
 
   return (
-    <DataContext.Provider value={{ loadState, loadError, isRefreshing, refreshError, profile, isAdmin, accounts, transactions, achievements, budgets, recurrenceHints, netWorthHistory, refreshData }}>
+    <DataContext.Provider value={{ loadState, loadError, isRefreshing, refreshError, profile, isAdmin, accounts, transactions, reportingTransactions, customSubcategories, achievements, budgets, recurrenceHints, netWorthHistory, refreshData }}>
       {children}
     </DataContext.Provider>
   )

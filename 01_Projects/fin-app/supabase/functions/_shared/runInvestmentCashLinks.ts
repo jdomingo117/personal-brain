@@ -54,12 +54,12 @@ export async function runInvestmentCashLinks(
 
   const [transactionRows, activityRows, decisionRows, confirmedRows] = await Promise.all([
     paginate((rangeFrom, rangeTo) => db.from('transactions')
-      .select('id, account_id, date, amount, original_description, category, dedupe_hash, occurrence, accounts!inner(type)')
+      .select('id, account_id, date, amount, original_description, kind, dedupe_hash, occurrence, accounts!inner(type)')
       .eq('tenant_id', tenantId)
       .gte('date', paddedFrom).lte('date', paddedTo)
       .neq('amount', 0).eq('pending', false)
       .in('accounts.type', ['Liquid', 'Savings', 'Credit Card'])
-      .or('transfer_candidate.eq.true,category.eq.Investing')
+      .or('transfer_candidate.eq.true,kind.eq.investment')
       .range(rangeFrom, rangeTo)),
     paginate((rangeFrom, rangeTo) => db.from('investment_activities')
       .select('id, account_id, trade_date, activity_type, value_cents, brokerage_cents, source_hash, occurrence, investment_holdings!inner(platform), investment_instruments!inner(name)')
@@ -81,7 +81,7 @@ export async function runInvestmentCashLinks(
     return [{
       id: row.id as string, accountId: row.account_id as string, date: row.date as string,
       amountCents: Number(row.amount), description: row.original_description as string | null,
-      category: row.category as string | null, dedupeHash: hash, occurrence: Number(row.occurrence),
+      kind: row.kind as string | null, dedupeHash: hash, occurrence: Number(row.occurrence),
     }]
   })
   const activities: InvestmentCashActivity[] = activityRows.map((row) => ({

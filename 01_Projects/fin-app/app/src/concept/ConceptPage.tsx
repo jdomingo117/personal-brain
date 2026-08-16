@@ -122,18 +122,18 @@ interface ConceptCommitment {
 }
 
 const CONCEPT_COMMITMENTS: ConceptCommitment[] = [
-  { id: '1', label: 'Rent Transfer', cat: 'Housing', subcat: 'Rent', amount: 2100, cadence: 'Monthly', accountA: 'Operations Checking', accountB: 'Operations Checking', charges: ['07.01', '06.01', '05.01'] },
+  { id: '1', label: 'Rent Transfer', cat: 'Home', subcat: 'Rent', amount: 2100, cadence: 'Monthly', accountA: 'Operations Checking', accountB: 'Operations Checking', charges: ['07.01', '06.01', '05.01'] },
   { id: '2', label: 'Auto-Invest', cat: 'Investing', subcat: 'Auto-invest', amount: 1000, cadence: 'Monthly', accountA: 'Operations Checking', accountB: 'Operations Checking', charges: ['07.08', '06.08', '05.08'] },
   { id: '3', label: 'Vanguard Brokerage', cat: 'Investing', subcat: 'Brokerage', amount: 600, cadence: 'Monthly', accountA: 'Operations Checking', accountB: 'Operations Checking', charges: ['07.09', '06.09', '05.09'] },
-  { id: '4', label: 'Helios Energy', cat: 'Utilities', subcat: 'Power', amount: 138.20, cadence: 'Monthly', accountA: 'Operations Checking', accountB: 'Operations Checking', charges: ['07.03', '06.03', '05.03'] },
-  { id: '5', label: 'Aqua Utility', cat: 'Utilities', subcat: 'Water', amount: 55.10, cadence: 'Monthly', accountA: 'Operations Checking', accountB: 'Operations Checking', charges: ['07.04', '06.04', '05.04'] },
-  { id: '6', label: 'CityRail Monthly Pass', cat: 'Transport', subcat: 'Transit', amount: 32, cadence: 'Monthly', accountA: 'Operations Checking', accountB: 'Auto Loan // Vehicle', charges: ['07.05', '06.05', '05.05'] },
-  { id: '7', label: 'Beacon Broadband', cat: 'Utilities', subcat: 'Internet', amount: 79, cadence: 'Monthly', accountA: 'Sapphire Credit Line', accountB: 'Sapphire Credit Line', charges: ['07.11', '06.11', '05.11'] },
-  { id: '8', label: 'Nexus Mobile', cat: 'Utilities', subcat: 'Mobile', amount: 45, cadence: 'Monthly', accountA: 'Sapphire Credit Line', accountB: 'Sapphire Credit Line', charges: ['07.12', '06.12', '05.12'] },
-  { id: '9', label: 'Nova Stream', cat: 'Subscriptions', subcat: 'Streaming', amount: 15.99, cadence: 'Monthly', accountA: 'Sapphire Credit Line', accountB: 'Sapphire Credit Line', charges: ['07.11', '06.11', '05.11'] },
-  { id: '10', label: 'Nimbus Cloud', cat: 'Subscriptions', subcat: 'Software', amount: 29, cadence: 'Monthly', accountA: 'Sapphire Credit Line', accountB: 'Sapphire Credit Line', charges: ['07.02', '06.02', '05.02'] },
-  { id: '11', label: 'Vertex Gym', cat: 'Subscriptions', subcat: 'Memberships', amount: 49, cadence: 'Monthly', accountA: 'Sapphire Credit Line', accountB: 'Sapphire Credit Line', charges: ['06.22', '05.22', '04.22'] },
-  { id: '12', label: 'Habitat Insurance', cat: 'Housing', subcat: 'Insurance', amount: 32, cadence: 'Monthly', accountA: 'Sapphire Credit Line', accountB: 'Sapphire Credit Line', charges: ['07.10', '04.10', '01.10'] },
+  { id: '4', label: 'Helios Energy', cat: 'Bills & utilities', subcat: 'Electricity & gas', amount: 138.20, cadence: 'Monthly', accountA: 'Operations Checking', accountB: 'Operations Checking', charges: ['07.03', '06.03', '05.03'] },
+  { id: '5', label: 'Aqua Utility', cat: 'Bills & utilities', subcat: 'Water', amount: 55.10, cadence: 'Monthly', accountA: 'Operations Checking', accountB: 'Operations Checking', charges: ['07.04', '06.04', '05.04'] },
+  { id: '6', label: 'CityRail Monthly Pass', cat: 'Transport', subcat: 'Public transport', amount: 32, cadence: 'Monthly', accountA: 'Operations Checking', accountB: 'Auto Loan // Vehicle', charges: ['07.05', '06.05', '05.05'] },
+  { id: '7', label: 'Beacon Broadband', cat: 'Bills & utilities', subcat: 'Internet', amount: 79, cadence: 'Monthly', accountA: 'Sapphire Credit Line', accountB: 'Sapphire Credit Line', charges: ['07.11', '06.11', '05.11'] },
+  { id: '8', label: 'Nexus Mobile', cat: 'Bills & utilities', subcat: 'Mobile', amount: 45, cadence: 'Monthly', accountA: 'Sapphire Credit Line', accountB: 'Sapphire Credit Line', charges: ['07.12', '06.12', '05.12'] },
+  { id: '9', label: 'Nova Stream', cat: 'Lifestyle', subcat: 'Streaming', amount: 15.99, cadence: 'Monthly', accountA: 'Sapphire Credit Line', accountB: 'Sapphire Credit Line', charges: ['07.11', '06.11', '05.11'] },
+  { id: '10', label: 'Nimbus Cloud', cat: 'Lifestyle', subcat: 'Software & digital services', amount: 29, cadence: 'Monthly', accountA: 'Sapphire Credit Line', accountB: 'Sapphire Credit Line', charges: ['07.02', '06.02', '05.02'] },
+  { id: '11', label: 'Vertex Gym', cat: 'Lifestyle', subcat: 'Memberships', amount: 49, cadence: 'Monthly', accountA: 'Sapphire Credit Line', accountB: 'Sapphire Credit Line', charges: ['06.22', '05.22', '04.22'] },
+  { id: '12', label: 'Habitat Insurance', cat: 'Home', subcat: 'Home insurance', amount: 32, cadence: 'Monthly', accountA: 'Sapphire Credit Line', accountB: 'Sapphire Credit Line', charges: ['07.10', '04.10', '01.10'] },
   { id: '13', label: 'Auto Loan Payment', cat: 'Transport', subcat: 'Loan', amount: 380, cadence: 'Monthly', accountA: 'Auto Loan // Vehicle', accountB: '', charges: ['07.15', '06.15', '05.15'] },
 ]
 

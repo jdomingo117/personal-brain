@@ -29,10 +29,10 @@ async function main() {
   section('Seeding thin merchants (1-2 charges — below the deterministic threshold)')
   const rows = [
     // Two charges, obviously a subscription by name.
-    { account_id: u.accountId, date: '2026-07-01', original_description: 'NETFLIX.COM', merchant: 'Netflix', category: 'Subscriptions', subcategory: 'Streaming', amount: -1599 },
-    { account_id: u.accountId, date: '2026-08-01', original_description: 'NETFLIX.COM', merchant: 'Netflix', category: 'Subscriptions', subcategory: 'Streaming', amount: -1599 },
+    { account_id: u.accountId, date: '2026-07-01', original_description: 'NETFLIX.COM', merchant: 'Netflix', category: 'Lifestyle', subcategory: 'Streaming', amount: -1599 },
+    { account_id: u.accountId, date: '2026-08-01', original_description: 'NETFLIX.COM', merchant: 'Netflix', category: 'Lifestyle', subcategory: 'Streaming', amount: -1599 },
     // One charge, an ad-hoc retail purchase — should not be hinted recurring.
-    { account_id: u.accountId, date: '2026-08-03', original_description: 'BUNNINGS WAREHOUSE  SYDNEY', merchant: 'Bunnings Warehouse', category: 'Retail', subcategory: 'Home', amount: -4500 },
+    { account_id: u.accountId, date: '2026-08-03', original_description: 'BUNNINGS WAREHOUSE  SYDNEY', merchant: 'Bunnings Warehouse', category: 'Shopping', subcategory: 'Household', amount: -4500 },
   ]
   const seeded = await invoke('upsert-transactions', u.token, rows.map((r) => ({ ...r, upload_batch_id: BATCH() })))
   check('seed rows inserted', seeded.json?.inserted === rows.length, JSON.stringify(seeded.json))

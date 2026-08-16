@@ -17,7 +17,7 @@ export function Button({
   className?: string
 }) {
   const base =
-    'micro rounded-lg px-5 py-3 transition will-change-transform'
+    'micro min-h-11 rounded-lg px-5 py-3 transition will-change-transform'
   const styles =
     variant === 'primary'
       ? 'bg-ink text-surface hover:-translate-y-px hover:shadow-lg'

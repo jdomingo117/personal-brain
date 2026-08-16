@@ -44,8 +44,9 @@ Deno.serve(
     // charge is not a candidate commitment.
     let query = ctx.db
       .from('transactions')
-      .select('id, original_description, merchant, category, subcategory, amount, date, transfer_candidate, pending')
+      .select('id, original_description, merchant, category, subcategory, amount, date, transfer_candidate, pending, kind')
       .eq('pending', false)
+      .eq('kind', 'expense')
       .lt('amount', 0)
       .gte('date', boundsFromIso)
     if (afterId) query = query.gt('id', afterId)
@@ -130,6 +131,18 @@ Deno.serve(
     }))
 
     const { resolved, stats } = await resolveRecurrenceHints(ctx.db, ctx.tenantId, merchants)
+
+    // Materialise the cross-cutting attribute for ledger filtering without
+    // overwriting a user's explicit recurring/not-recurring correction.
+    const trueKeys = [...resolved.values()].filter((hint) => hint.isRecurring).map((hint) => hint.key)
+    const falseKeys = [...resolved.values()].filter((hint) => !hint.isRecurring).map((hint) => hint.key)
+    for (const [keys, value] of [[trueKeys, true], [falseKeys, false]] as const) {
+      if (keys.length === 0) continue
+      const { error: attributeError } = await ctx.admin().from('transactions')
+        .update({ is_recurring: value, recurring_source: 'derived' })
+        .eq('tenant_id', ctx.tenantId).eq('recurring_source', 'derived').in('merchant_key', keys)
+      if (attributeError) throw attributeError
+    }
 
     await ctx.audit('recurrence_hints.detected', {
       rows_seen: rows.length,

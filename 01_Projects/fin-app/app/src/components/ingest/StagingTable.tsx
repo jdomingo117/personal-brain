@@ -26,7 +26,7 @@ function Badge({ kind }: { kind: 'bad-date' | 'no-amount' | 'duplicate' | 'revie
     review: { label: 'review', cls: 'border-[var(--color-warn)] text-[var(--color-warn)]' },
   }[kind]
   return (
-    <span className={`rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${map.cls}`}>
+    <span className={`rounded border px-1.5 py-0.5 text-[11.5px] font-semibold uppercase tracking-wide ${map.cls}`}>
       {map.label}
     </span>
   )
@@ -84,7 +84,8 @@ export default function StagingTable({
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`rounded-[8px] border px-2.5 py-1.5 text-[12px] font-medium transition ${
+              aria-pressed={filter === f}
+              className={`min-h-11 rounded-[8px] border px-3 py-2 text-[13px] font-medium transition ${
                 filter === f
                   ? 'border-accent bg-[var(--accent-wash)] text-accent-ink'
                   : 'border-[var(--hair)] text-muted hover:bg-black/[0.02]'
@@ -97,10 +98,10 @@ export default function StagingTable({
 
         {selected.size > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-[12px] text-muted">{selected.size} selected →</span>
+            <span className="text-[13px] text-ink2" aria-live="polite">{selected.size} selected →</span>
             <select
               onChange={(e) => { bulkCategory(e.target.value); e.currentTarget.selectedIndex = 0 }}
-              className="min-h-[34px] rounded-[8px] border border-[var(--hair)] bg-[var(--input-bg)] px-2 text-[12.5px]"
+              className="min-h-11 rounded-[8px] border border-[var(--hair)] bg-[var(--input-bg)] px-2 text-[13px]"
               aria-label="Set category for selected rows"
             >
               <option>Set category…</option>
@@ -110,19 +111,22 @@ export default function StagingTable({
         )}
       </div>
 
-      <div className="max-h-[420px] overflow-auto rounded-[10px] border border-[var(--hair)]">
+      <div className="max-h-[420px] overflow-auto rounded-[10px] border border-[var(--hair)] bg-[var(--color-surface)]">
         <table className="w-full border-collapse text-[12.5px]">
-          <thead className="sticky top-0 z-10 bg-[var(--surface)]">
+          <caption className="sr-only">Transactions staged for import and category review</caption>
+          <thead className="sticky top-0 z-10 bg-[var(--color-surface)]">
             <tr className="border-b border-[var(--hair)] text-left">
-              <th className="w-9 px-2 py-2">
-                <input
-                  type="checkbox"
-                  aria-label="Select all visible rows"
-                  checked={allVisibleSelected}
-                  onChange={() => setSelected(allVisibleSelected
-                    ? new Set()
-                    : new Set(visible.map((r) => r.id)))}
-                />
+              <th className="w-11 px-0 py-0">
+                <label className="grid min-h-11 min-w-11 cursor-pointer place-items-center">
+                  <span className="sr-only">Select all visible rows</span>
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    onChange={() => setSelected(allVisibleSelected
+                      ? new Set()
+                      : new Set(visible.map((r) => r.id)))}
+                  />
+                </label>
               </th>
               <th className="px-2 py-2 font-medium text-muted">Date</th>
               <th className="px-2 py-2 font-medium text-muted">Merchant</th>
@@ -137,16 +141,18 @@ export default function StagingTable({
                 <tr
                   key={r.id}
                   className={`border-b border-[var(--hair-soft)] last:border-0 ${
-                    blocked ? 'opacity-55' : ''
+                    blocked ? 'bg-[var(--color-neg)]/5' : ''
                   } ${selected.has(r.id) ? 'bg-[var(--accent-wash)]' : ''}`}
                 >
-                  <td className="px-2 py-1.5">
-                    <input
-                      type="checkbox"
-                      aria-label={`Select ${r.merchantDisplay}`}
-                      checked={selected.has(r.id)}
-                      onChange={() => toggle(r.id)}
-                    />
+                  <td className="px-0 py-0">
+                    <label className="grid min-h-11 min-w-11 cursor-pointer place-items-center">
+                      <span className="sr-only">Select {r.merchantDisplay}</span>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(r.id)}
+                        onChange={() => toggle(r.id)}
+                      />
+                    </label>
                   </td>
                   <td className="whitespace-nowrap px-2 py-1.5 tabular-nums">
                     {r.date ?? <span className="text-[var(--color-neg)]">unparseable</span>}
@@ -211,7 +217,7 @@ export default function StagingTable({
       </div>
 
       {counts.issues > 0 && (
-        <p className="text-[12px] text-muted">
+        <p className="text-[13px] text-ink2">
           {counts.issues} row{counts.issues === 1 ? '' : 's'} cannot be imported and will be
           skipped. Fix the source file and re-upload if you need them — they are excluded
           rather than guessed at.

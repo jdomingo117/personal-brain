@@ -16,7 +16,7 @@
  * land on its nearest real category, and `unmappedBankCategories()` keeps the
  * gap measurable rather than guessed at.
  */
-import { CATEGORY_TAXONOMY, INCOME_CATEGORY, TRANSFER_CATEGORY } from '../../data'
+import { CATEGORY_TAXONOMY, FULL_TAXONOMY, INCOME_CATEGORY, TRANSFER_CATEGORY } from '../../data'
 
 export interface TaxonomyAssignment {
   category: string
@@ -26,27 +26,27 @@ export interface TaxonomyAssignment {
 /** Bank category (lowercased) → Halcyon category. Null = defer to the AI. */
 const CATEGORY_MAP: Record<string, string | null> = {
   // ── St George / Westpac group ──
-  'food & beverage': 'Food',
+  'food & beverage': 'Food & drink',
   'transport & travel': 'Transport',
-  'bills & payments': 'Utilities',
-  'retail & personal': 'Retail',
-  'entertainment & recreation': null,  // no honest home in the 7 — see above
-  'fees & charges': null,              // ditto
+  'bills & payments': 'Bills & utilities',
+  'retail & personal': 'Shopping',
+  'entertainment & recreation': 'Lifestyle',
+  'fees & charges': 'Financial & admin',
   'deposits': INCOME_CATEGORY,
-  'cash withdrawal': null,
+  'cash withdrawal': 'Other',
   // ── Macquarie ──
   'financial': null,                   // covers both transfers and fees
   'income': INCOME_CATEGORY,
   'salary': INCOME_CATEGORY,
-  'groceries': 'Food',
-  'eating out': 'Food',
-  'utilities': 'Utilities',
+  'groceries': 'Food & drink',
+  'eating out': 'Food & drink',
+  'utilities': 'Bills & utilities',
   'transport': 'Transport',
-  'shopping': 'Retail',
-  'health & medical': null,
-  'home': 'Housing',
-  'housing': 'Housing',
-  'insurance': 'Housing',
+  'shopping': 'Shopping',
+  'health & medical': 'Health & wellbeing',
+  'home': 'Home',
+  'housing': 'Home',
+  'insurance': 'Home',
   'investments': 'Investing',
   'transfers': TRANSFER_CATEGORY,
   'internal transfer': TRANSFER_CATEGORY,
@@ -57,31 +57,31 @@ const CATEGORY_MAP: Record<string, string | null> = {
  * parent category mapped successfully and the value is in our vocabulary.
  */
 const SUBCATEGORY_MAP: Record<string, string> = {
-  'dining out': 'Dining',
-  'restaurants': 'Dining',
+  'dining out': 'Dining & takeaway',
+  'restaurants': 'Dining & takeaway',
   'cafes': 'Coffee',
   'coffee': 'Coffee',
-  'takeaway': 'Dining',
+  'takeaway': 'Dining & takeaway',
   'groceries': 'Groceries',
   'supermarkets': 'Groceries',
   'fuel': 'Fuel',
   'petrol': 'Fuel',
-  'parking & tolls': 'Parking',
-  'parking': 'Parking',
-  'public transport': 'Transit',
+  'parking & tolls': 'Parking & tolls',
+  'parking': 'Parking & tolls',
+  'public transport': 'Public transport',
   'taxi & rideshare': 'Rideshare',
   'rideshare': 'Rideshare',
-  'electricity': 'Power',
-  'gas & electricity': 'Power',
+  'electricity': 'Electricity & gas',
+  'gas & electricity': 'Electricity & gas',
   'water': 'Water',
   'internet': 'Internet',
   'mobile': 'Mobile',
   'phone': 'Mobile',
   'rent': 'Rent',
   'mortgage': 'Rent',
-  'insurance': 'Insurance',
-  'clothing': 'Apparel',
-  'apparel': 'Apparel',
+  'insurance': 'Home insurance',
+  'clothing': 'Clothing',
+  'apparel': 'Clothing',
   'electronics': 'Electronics',
   'salary': 'Salary',
   'interest': 'Interest',
@@ -109,9 +109,7 @@ export function mapBankCategory(
 
   // Only accept a subcategory that is valid for the mapped parent; a bank's
   // "Insurance" under Housing is fine, under Food it is nonsense.
-  const validSubs: readonly string[] =
-    CATEGORY_TAXONOMY[mapped] ??
-    (mapped === INCOME_CATEGORY ? ['Salary', 'Transfer In', 'Refund', 'Interest', 'Other'] : ['Internal', 'Reconciliation'])
+  const validSubs: readonly string[] = FULL_TAXONOMY[mapped] ?? CATEGORY_TAXONOMY[mapped] ?? []
 
   const subCandidate = SUBCATEGORY_MAP[norm(bankSubcategory)]
   const subcategory = subCandidate && validSubs.includes(subCandidate) ? subCandidate : null

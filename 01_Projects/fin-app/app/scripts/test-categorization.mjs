@@ -4,7 +4,7 @@
  *
  * The two claims that matter:
  *   1. The AI can only ever emit categories from the fixed taxonomy — an
- *      invented category would break the 7-hue chart palette and every budget
+ *      invented category would break the fixed chart palette and every budget
  *      join, so it must be impossible, not merely unlikely.
  *   2. The merchant cache makes repeat imports free. A second run over the
  *      same merchants must make ZERO Gemini calls.
@@ -15,7 +15,7 @@ import {
   check, section, exitWithSummary, newUserWithAccount, invoke,
 } from './lib/harness.mjs'
 
-const EXPENSE_CATEGORIES = ['Food', 'Housing', 'Transport', 'Utilities', 'Subscriptions', 'Retail', 'Health', 'Other']
+const EXPENSE_CATEGORIES = ['Food & drink', 'Home', 'Transport', 'Bills & utilities', 'Shopping', 'Health & wellbeing', 'Lifestyle', 'Travel', 'Family & pets', 'Education', 'Financial & admin', 'Giving', 'Other']
 const ALLOWED = [...EXPENSE_CATEGORIES, 'Income', 'Transfer', 'Investing', 'Uncategorized']
 
 const merchant = (key, display, direction = 'outflow', samples = []) => ({
@@ -52,13 +52,13 @@ async function main() {
 
   section('Categorisation quality')
   const by = Object.fromEntries(assignments.map((a) => [a.key, a]))
-  check('a supermarket is Food', by['woolworths']?.category === 'Food',
+  check('a supermarket is Food & drink', by['woolworths']?.category === 'Food & drink',
     `got ${by['woolworths']?.category}`)
   check('a petrol station is Transport', by['bp baulkham hills']?.category === 'Transport',
     `got ${by['bp baulkham hills']?.category}`)
   check('public transport is Transport', by['transport for nsw-opal']?.category === 'Transport',
     `got ${by['transport for nsw-opal']?.category}`)
-  check('a streaming service is Subscriptions', by['netflix']?.category === 'Subscriptions',
+  check('a streaming service is Lifestyle', by['netflix']?.category === 'Lifestyle',
     `got ${by['netflix']?.category}`)
   check('salary is Income, not an expense', by['salary from the university o']?.category === 'Income',
     `got ${by['salary from the university o']?.category}`)
@@ -97,13 +97,13 @@ async function main() {
   section('User corrections outrank the AI, permanently')
   const rule = await invoke('apply-merchant-rule', u.token, {
     merchantKey: 'woolworths', merchantDisplay: 'Woolworths',
-    category: 'Retail', subcategory: 'Home', applyToExisting: true,
+    category: 'Shopping', subcategory: 'Household', applyToExisting: true,
   })
   check('rule accepted', rule.status === 200, JSON.stringify(rule.json))
 
   const afterCorrection = await invoke('categorize-merchants', u.token, { merchants: [merchants[0]] })
   const a0 = afterCorrection.json?.assignments?.[0]
-  check('the correction is returned, not the AI answer', a0?.category === 'Retail',
+  check('the correction is returned, not the AI answer', a0?.category === 'Shopping',
     `got ${a0?.category}`)
   check('and it is marked as user-sourced', a0?.source === 'user', `source=${a0?.source}`)
   check('no AI call was needed', afterCorrection.json?.stats?.geminiCalls === 0)

@@ -50,6 +50,17 @@ export interface WithAuthOptions<TSchema extends z.ZodTypeAny> {
 
 const MAX_BODY_BYTES_DEFAULT = 1024 * 1024
 
+/** An intentional, caller-safe HTTP failure. Use only for messages that do
+ * not expose database or upstream details; unexpected errors stay generic. */
+export class SafeHttpError extends Error {
+  constructor(
+    public status: number,
+    public body: Record<string, unknown>,
+  ) {
+    super(typeof body.message === 'string' ? body.message : 'Request rejected')
+  }
+}
+
 function json(body: unknown, status: number, headers: Record<string, string>) {
   return new Response(JSON.stringify(body), {
     status,
@@ -244,6 +255,9 @@ export function withAuth<TSchema extends z.ZodTypeAny>(
 
       return json(result ?? { success: true }, 200, cors)
     } catch (err) {
+      if (err instanceof SafeHttpError) {
+        return json(err.body, err.status, cors)
+      }
       // Log the detail, return a generic message. The previous code returned
       // `err.message` straight to the client, which leaked Postgres error
       // text — including constraint and column names — to anyone who could

@@ -119,6 +119,24 @@ verify_jwt = true
 [functions.apply-merchant-rule]
 verify_jwt = true
 
+[functions.update-transaction-category]
+verify_jwt = true
+
+[functions.update-transaction-classification]
+verify_jwt = true
+
+[functions.manage-transaction-split]
+verify_jwt = true
+
+[functions.manage-taxonomy]
+verify_jwt = true
+
+[functions.manage-classification-policy]
+verify_jwt = true
+
+[functions.manage-merchant-rule]
+verify_jwt = true
+
 [functions.connect-provider]
 verify_jwt = true
 

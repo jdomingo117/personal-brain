@@ -93,7 +93,7 @@ async function main() {
   const rejectedRow = rejectedTxn
     ? await D.client.from('transactions_analytic').select('is_transfer, transfer_state').eq('id', rejectedTxn.id).single()
     : { data: null }
-  check('rejection outranks the bank Transfer category', rejectedRow.data?.is_transfer === false && rejectedRow.data?.transfer_state === 'rejected', JSON.stringify(rejectedRow.data))
+  check('rejection outranks the bank-derived transfer kind', rejectedRow.data?.is_transfer === false && rejectedRow.data?.transfer_state === 'rejected', JSON.stringify(rejectedRow.data))
 
   const deletedFunding = await invoke('delete-investment-upload-batch', D.token, { account_id: D.accountId, upload_batch_id: fundingBatch })
   check('investment source batch deletes for re-import test', deletedFunding.status === 200 && deletedFunding.json?.deleted === 9, JSON.stringify(deletedFunding.json))

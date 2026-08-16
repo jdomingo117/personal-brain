@@ -90,6 +90,18 @@ for the remainder, batched. The AI cannot invent a category — output is enum-c
 Gemini schema, then re-validated server-side; anything unrecognised becomes `Uncategorized` +
 `needs_review` rather than silently miscategorised.
 
+`_shared/classification.ts` mirrors `app/src/lib/classification.ts`. Kind controls operational and
+analytics behavior independently of taxonomy purpose: refunds/reimbursements are contra-expense,
+reconciliation anchors are system adjustments, and real movements are transfers. Preserve
+`kind_source`/recurring/subscription precedence: user-pinned values survive category changes while
+derived values recalculate. Do not reintroduce category-label checks into matching or reporting.
+
+Phase 5 adds two distinct taxonomy identities: global `subcategory_id` and tenant-owned
+`custom_subcategory_id`; never encode a custom UUID into the global text FK. Split allocations must
+sum exactly to the immutable parent in signed integer cents and replace that parent only in
+reporting, never in the account ledger. `classification_review_policies` governs persisted AI
+confidence after the normal precedence tiers; changing it must not affect user or bank assignments.
+
 ## Money and dedupe conventions
 
 `amount`/`balance` are integer cents everywhere in this schema — see root `CLAUDE.md`. Dedupe

@@ -12,7 +12,9 @@ import HeroMetric from '../components/HeroMetric'
 import AnalyzerFilters from '../components/AnalyzerFilters'
 import RecurringHub from '../components/RecurringHub'
 import { usePeriodRange } from '../hooks/usePeriodRange'
-import { iso } from '../lib/period'
+import { previousPeriodRange } from '../lib/period'
+import { expenseMetricValues } from '../lib/expenseMetrics'
+import { isGrossExpense } from '../lib/classification'
 import { shortMerchant } from '../lib/recurring'
 import {
   EMPTY_SELECTION,
@@ -38,7 +40,7 @@ const TABS = [
 export default function Expenses() {
   const [view, setView] = useState('analytics')
   const { preset, from, to, applyPreset, changeFrom, changeTo } = usePeriodRange()
-  const { accounts: dbAccounts, transactions } = useData()
+  const { accounts: dbAccounts, reportingTransactions: transactions } = useData()
 
   const OUTFLOW_ACCOUNTS = useMemo(() => {
     if (!dbAccounts || dbAccounts.length === 0) return []
@@ -147,24 +149,21 @@ function ExpenseAnalytics({ from, to, accounts }: { from: string; to: string; ac
 
   // The expensive pass: scans of `data.transactions`, keyed to the period and
   // account filters only — so clicking a category never re-runs them.
-  const { transactions } = useData()
+  const { reportingTransactions: transactions } = useData()
   const base = useMemo(() => {
     const gated = accounts.length > 0
 
     // Day-level outflows within a range.
     const outflowsIn = (a: string, b: string) =>
-      gated ? transactions.filter((t) => t.amount < 0 && !t.isTransfer && !t.pending && t.account_id && accounts.includes(t.account_id) && t.date >= a && t.date <= b) : []
+      gated ? transactions.filter((t) => isGrossExpense(t) && !t.isTransfer && t.account_id && accounts.includes(t.account_id) && t.date >= a && t.date <= b) : []
     const outflows = outflowsIn(from, to).sort((x, y) => y.date.localeCompare(x.date))
 
     // Previous window of equal length (in days) for the vs-prev indicators.
-    const DAY = 86400000
-    const fromD = new Date(`${from}T00:00:00`)
-    const toD = new Date(`${to}T00:00:00`)
-    const lenDays = Math.max(1, Math.round((toD.getTime() - fromD.getTime()) / DAY) + 1)
-    const prevOutflows = outflowsIn(iso(new Date(fromD.getTime() - lenDays * DAY)), iso(new Date(fromD.getTime() - DAY)))
+    const comparison = previousPeriodRange(from, to)
+    const prevOutflows = outflowsIn(comparison.from, comparison.to)
 
     // Unfiltered period total
-    return { gated, outflows, prevOutflows, lenDays, periodTotal: sumAbs(outflows) }
+    return { gated, outflows, prevOutflows, periodTotal: sumAbs(outflows) }
   }, [from, to, accounts, transactions])
 
   // The cheap pass: the focus applied. `prevOutflows` MUST go through the same
@@ -181,22 +180,17 @@ function ExpenseAnalytics({ from, to, accounts }: { from: string; to: string; ac
     const activeFrom = timeFocus ? timeFocus.from : from
     const activeTo = timeFocus ? timeFocus.to : to
 
-    const DAY = 86400000
-    const activeFromD = new Date(`${activeFrom}T00:00:00`)
-    const activeToD = new Date(`${activeTo}T00:00:00`)
-    const activeLenDays = Math.max(1, Math.round((activeToD.getTime() - activeToD.getTime()) / DAY) + 1)
-
-    const prevFrom = iso(new Date(activeFromD.getTime() - activeLenDays * DAY))
-    const prevTo = iso(new Date(activeFromD.getTime() - DAY))
+    const comparison = previousPeriodRange(activeFrom, activeTo)
 
     const gated = base.gated
     const prior = gated
-      ? transactions.filter((t) => t.amount < 0 && !t.isTransfer && !t.pending && t.account_id && accounts.includes(t.account_id) && t.date >= prevFrom && t.date <= prevTo)
+      ? transactions.filter((t) => isGrossExpense(t) && !t.isTransfer && t.account_id && accounts.includes(t.account_id) && t.date >= comparison.from && t.date <= comparison.to)
       : []
     const prevOutflows = focused ? prior.filter((t) => matchesSelection(t, sel)) : prior
 
     const total = sumAbs(outflows)
     const prevTotal = sumAbs(prevOutflows)
+    const metrics = expenseMetricValues(total, prevTotal, activeFrom, activeTo)
     const topCat = topBy(outflows, (t) => t.cat)
     const topMerch = topBy(outflows, (t) => t.merchant)
 
@@ -209,9 +203,9 @@ function ExpenseAnalytics({ from, to, accounts }: { from: string; to: string; ac
       catOutflows,
       total,
       prevTotal,
-      dailyAvg: total / activeLenDays,
-      deltaPct: prevTotal > 0 ? (total - prevTotal) / prevTotal : null,
-      lenDays: activeLenDays,
+      dailyAvg: metrics.dailyAverage,
+      deltaPct: metrics.deltaPct,
+      lenDays: metrics.lenDays,
       gated,
       topCat,
       topMerch,
@@ -227,7 +221,7 @@ function ExpenseAnalytics({ from, to, accounts }: { from: string; to: string; ac
   /* Every mutation routes through the helpers so `subcats ⊆ union(TAXONOMY[categories])`
      can't be violated — an impossible pair matches zero rows with no explanation. */
   const setCategories = (next: string[]) =>
-    setSel((s) => ({ categories: next, subcats: pruneSubcats(next, s.subcats) }))
+    setSel((s) => ({ categories: next, subcats: pruneSubcats(next, s.subcats, base.outflows) }))
   const setSubcats = (next: string[]) => setSel((s) => ({ ...s, subcats: next }))
   const onToggleCategory = (cat: string) => setSel((s) => toggleCategory(s, cat))
   const onToggleSubcat = (cat: string, sub: string) => setSel((s) => toggleSubcat(s, cat, sub))

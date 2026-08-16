@@ -8,7 +8,7 @@ import { catInScope, isActive, subInScope, type CatSelection } from '../lib/expe
 import { fmt } from '../data'
 
 /* Colour carries one meaning here and one only: how this row is tracking. No
-   category hues — a hue that means "Retail" competes with a hue that means
+   category hues — a hue that means "Shopping" competes with a hue that means
    "overspent", and only one of those is worth an alarm. Mirrors the
    healthy/warning/critical convention CapacityMeter already uses. */
 const STATE_COLOR: Record<PaceState, string> = {
@@ -220,7 +220,7 @@ export default function ExpensePacingCard({
   onToggleSubcat: (cat: string, sub: string) => void
 }) {
   const scrollRef = useScrollIdle<HTMLDivElement>()
-  const { transactions } = useData()
+  const { reportingTransactions: transactions } = useData()
   const { cats, elapsed, periods, months, period } = useMemo(() => buildPacing(from, to, gated, transactions), [from, to, gated, transactions])
   const hasHistory = periods > 0
   const focusOn = isActive(selection)

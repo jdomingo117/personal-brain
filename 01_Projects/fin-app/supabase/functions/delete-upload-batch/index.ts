@@ -10,58 +10,31 @@ Deno.serve(
   withAuth({ schema: DeleteBatchSchema, requireRole: 'member' }, async (ctx) => {
     const { upload_batch_id, account_id } = ctx.body
 
-    // Every statement below runs through the caller's RLS-scoped client, so
-    // the explicit .eq('user_id', ...) filters the previous version carried
-    // are redundant — tenant scoping is enforced by policy, not by remembering
-    // to add a filter.
-    const { data: deleted, error: deleteError } = await ctx.db
-      .from('transactions')
-      .delete()
-      .eq('upload_batch_id', upload_batch_id)
-      .eq('account_id', account_id)
-      .select('id')
-    if (deleteError) throw deleteError
+    // Deletion, SQL aggregation, manual-balance update and batch status are
+    // one PostgreSQL transaction. No PostgREST row cap can truncate SUM().
+    const { data, error } = await ctx.db.rpc('delete_upload_batch_atomic', {
+      p_tenant_id: ctx.tenantId,
+      p_upload_batch_id: upload_batch_id,
+      p_account_id: account_id,
+    })
+    if (error) throw error
 
-    // A connected account's ledger deliberately starts at its cutover date —
-    // the provider owns balance from there forward, so summing surviving rows
-    // is not the balance and would silently clobber Up's authoritative figure.
-    const { data: connection } = await ctx.db
-      .from('account_connections')
-      .select('id')
-      .eq('account_id', account_id)
-      .maybeSingle()
-
-    if (connection) {
-      await ctx.audit('upload_batch.reverted', {
-        upload_batch_id,
-        account_id,
-        removed: deleted?.length ?? 0,
-        balanceOwnedByProvider: true,
-      })
-      return { success: true, balanceOwnedByProvider: true }
+    const result = data as {
+      success: boolean
+      alreadyUndone: boolean
+      removed: number
+      newBalance: number | null
+      balanceOwnedByProvider: boolean
     }
-
-    // Recalculate the balance from what survives.
-    const { data: remaining, error: fetchError } = await ctx.db
-      .from('transactions')
-      .select('amount')
-      .eq('account_id', account_id)
-    if (fetchError) throw fetchError
-
-    const newBalanceCents = remaining.reduce((sum, tx) => sum + (tx.amount ?? 0), 0)
-
-    const { error: updateError } = await ctx.db
-      .from('accounts')
-      .update({ balance: newBalanceCents })
-      .eq('id', account_id)
-    if (updateError) throw updateError
 
     await ctx.audit('upload_batch.reverted', {
       upload_batch_id,
       account_id,
-      removed: deleted?.length ?? 0,
+      removed: result.removed,
+      already_undone: result.alreadyUndone,
+      balance_owned_by_provider: result.balanceOwnedByProvider,
     })
 
-    return { success: true, newBalance: newBalanceCents }
+    return result
   }),
 )

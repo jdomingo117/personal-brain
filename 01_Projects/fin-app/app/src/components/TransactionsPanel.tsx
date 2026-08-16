@@ -50,14 +50,20 @@ export default function TransactionsPanel({
     const activeCats = categories.length ? categories : EXPENSE_CATEGORIES
     const seen = new Set<string>()
     const out: { value: string; label: string }[] = []
-    activeCats.forEach((c) => (CATEGORY_TAXONOMY[c] ?? []).forEach((s) => {
+    const valuesByCategory = new Map<string, Set<string>>()
+    rows.forEach((row) => {
+      if (!row.subcat) return
+      const values = valuesByCategory.get(row.cat) ?? new Set<string>()
+      values.add(row.subcat); valuesByCategory.set(row.cat, values)
+    })
+    activeCats.forEach((c) => [...(CATEGORY_TAXONOMY[c] ?? []), ...(valuesByCategory.get(c) ?? [])].forEach((s) => {
       if (!seen.has(s)) {
         seen.add(s)
         out.push({ value: s, label: s })
       }
     }))
     return out
-  }, [categories])
+  }, [categories, rows])
 
   const filtered = useMemo(() => {
     const q = debouncedQuery.trim().toLowerCase()

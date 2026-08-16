@@ -10,6 +10,7 @@ import Area from '../components/charts/Area'
 import Bar from '../components/charts/Bar'
 import { fmt, fmtCents, glowColor, type Glow } from '../data'
 import { useData } from '../contexts/DataContext'
+import { earnedIncomeCents, expenseEffectCents, isGrossExpense } from '../lib/classification'
 import { useView } from '../router'
 import { MONTHS, TODAY, addDays, iso } from '../lib/period'
 
@@ -64,7 +65,7 @@ function getAccountIcon(type: string, name: string) {
 }
 
 export default function Dashboard() {
-  const { profile, accounts, transactions, budgets, netWorthHistory } = useData()
+  const { profile, accounts, reportingTransactions: transactions, budgets, netWorthHistory } = useData()
   const { go } = useView()
   
   // Calculate flow — a real trailing 30-CALENDAR-day window (today - 29
@@ -73,8 +74,8 @@ export default function Dashboard() {
   // transactions actually happened recently.
   const thirtyDaysAgoIso = iso(addDays(new Date(), -29))
   const recentTxns = transactions.filter(t => t.date >= thirtyDaysAgoIso && t.date <= TODAY && !t.isTransfer && !t.pending)
-  const inc = recentTxns.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
-  const spend = recentTxns.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0)
+  const inc = recentTxns.reduce((sum, t) => sum + earnedIncomeCents(t), 0)
+  const spend = recentTxns.reduce((sum, t) => sum + expenseEffectCents(t), 0)
   const savings = inc === 0 ? 0 : Math.round(((inc - spend) / inc) * 100)
   const percentOfInflow = inc === 0 ? 0 : Math.round((spend / inc) * 100)
 
@@ -83,8 +84,8 @@ export default function Dashboard() {
   // compare against, not a claim that nothing changed.
   const sixtyDaysAgoIso = iso(addDays(new Date(), -59))
   const priorTxns = transactions.filter(t => t.date >= sixtyDaysAgoIso && t.date < thirtyDaysAgoIso && !t.isTransfer && !t.pending)
-  const priorInc = priorTxns.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
-  const priorSpend = priorTxns.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0)
+  const priorInc = priorTxns.reduce((sum, t) => sum + earnedIncomeCents(t), 0)
+  const priorSpend = priorTxns.reduce((sum, t) => sum + expenseEffectCents(t), 0)
   const incChangePct = priorInc === 0 ? 0 : Math.round(((inc - priorInc) / priorInc) * 1000) / 10
   const spendChangePct = priorSpend === 0 ? 0 : Math.round(((spend - priorSpend) / priorSpend) * 1000) / 10
   
@@ -111,7 +112,7 @@ export default function Dashboard() {
   // category with no real budget is left out rather than measured against a
   // number nobody chose (see the empty state below when this is empty).
   const catSpending: Record<string, number> = {}
-  recentTxns.filter(t => t.amount < 0).forEach(t => {
+  recentTxns.filter(isGrossExpense).forEach(t => {
     if (t.cat) catSpending[t.cat] = (catSpending[t.cat] || 0) + Math.abs(t.amount)
   })
   const shields = Object.entries(catSpending)

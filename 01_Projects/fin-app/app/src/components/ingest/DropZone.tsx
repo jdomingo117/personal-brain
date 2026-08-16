@@ -42,7 +42,7 @@ export default function DropZone({
       tabIndex={disabled ? -1 : 0}
       aria-label="Upload a CSV file"
       aria-disabled={disabled}
-      className={`grid cursor-pointer place-items-center rounded-[12px] border-2 border-dashed px-6 py-10 text-center transition ${
+      className={`grid min-h-32 cursor-pointer place-items-center rounded-[12px] border-2 border-dashed px-6 py-10 text-center transition ${
         dragging
           ? 'border-accent bg-[var(--accent-wash)]'
           : 'border-[var(--hair)] hover:border-accent hover:bg-black/[0.02]'
@@ -60,7 +60,7 @@ export default function DropZone({
         <p className="text-[14px] font-medium">
           {dragging ? 'Release to upload' : 'Drop a CSV here'}
         </p>
-        <p className="text-[12.5px] text-muted">or click to browse</p>
+        <p className="text-[13px] text-ink2">or click to browse</p>
       </div>
     </div>
   )

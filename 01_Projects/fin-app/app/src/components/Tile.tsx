@@ -29,7 +29,7 @@ export default function Tile({
       {(title || tag) && (
         <header className="mb-3.5 flex items-baseline justify-between gap-3">
           {title && <h3 className="font-display text-[14px] font-bold text-ink">{title}</h3>}
-          {tag && <span className="text-[11px] uppercase tracking-[0.06em] text-muted">{tag}</span>}
+          {tag && <span className="text-[12.5px] font-medium uppercase tracking-[0.06em] text-muted">{tag}</span>}
         </header>
       )}
       {children}
