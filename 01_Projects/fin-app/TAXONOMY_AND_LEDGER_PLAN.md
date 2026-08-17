@@ -622,6 +622,8 @@ static-lint-incompatible temporary staging table before completion.
 
 ## Non-negotiable safeguards
 
+- The personal local Supabase database is persistent user data. Validation must follow
+  `SYSTEM_INTEGRITY.md`; it must not reset the default project or use a real tenant for fixtures.
 - Money remains integer cents end to end.
 - Every application-data mutation remains a Zod-validated, authenticated,
   tenant-scoped Edge Function with audit logging.
@@ -632,6 +634,31 @@ static-lint-incompatible temporary staging table before completion.
   analytics change as one tested release.
 - Reclassification actions must offer clear impact wording and undo where
   practical.
+
+### Re-running categorisation
+
+The implemented `categorize-pending` action is a backlog drain, not a general
+reclassification command. It is intentionally eligible only for transactions
+that remain `Uncategorized` with no `category_source`. This protects bank,
+AI/cache, user-rule and transaction-level manual decisions from an indiscriminate
+second pass.
+
+A user-facing re-run capability would be useful after recovery, taxonomy or
+engine improvements, but it requires a new audited contract: unresolved-only
+must be the default; selected-row re-evaluation may be offered separately;
+manual classifications and user rules remain protected; and exact impact,
+source changes, caps, confirmation and guarded undo must precede mutation.
+
+**Deferred TODO — implement after system recovery and integrity validation:**
+add a user-facing **Review with categorisation engine** workflow with three
+separate scopes: unresolved transactions (safe default), selected ledger
+transactions, and all eligible transactions. Previously classified rows receive
+suggestions before mutation; users can accept individually or in bulk. The
+preview must show protected rows, current/proposed source and classification,
+confidence, category/reporting deltas and the operation cap. Application must
+preserve transaction-level manual corrections and user rules by default, use a
+grouped audit operation and provide guarded undo. This work must not begin until
+account access, database durability and baseline report integrity are restored.
 
 ## Decisions deferred beyond this plan
 

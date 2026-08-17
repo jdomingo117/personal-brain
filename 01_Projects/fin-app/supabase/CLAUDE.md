@@ -7,6 +7,13 @@ Edge Functions are the only place a mutation is validated. Root orientation:
 `analyze-csv`/`categorize-merchants`/`transferMatch`'s categorisation path need `GEMINI_API_KEY` in
 `supabase/.env.local` or they fail loudly rather than silently degrading.
 
+## Persistent-data warning
+
+The default local stack may hold the owner's real auth identity and financial data. It is not a
+resettable integration-test fixture. Before migrations, live tests, cleanup or recovery, follow
+[../SYSTEM_INTEGRITY.md](../SYSTEM_INTEGRITY.md). `supabase db reset`, destructive volume removal
+and broad cleanup are prohibited on this target; use a separately identified test project.
+
 ## The Technical Laws
 
 These are enforced by convention and review, not by a linter — treat them as hard constraints when

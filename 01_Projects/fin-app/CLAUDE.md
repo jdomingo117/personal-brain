@@ -19,8 +19,14 @@ before touching that area; don't guess from this file alone.
 | Design tokens, components, motion spec | [Halcyon_DesignSystem.md](Halcyon_DesignSystem.md) — reference only, load when doing UI/visual work |
 | Full product vision + security model | [System requirements - SRD.md](System%20requirements%20-%20SRD.md) |
 | What's in scope now vs. deferred | [MVP_SCOPE.md](MVP_SCOPE.md) |
+| Database safety, backups, validation and recovery | [SYSTEM_INTEGRITY.md](SYSTEM_INTEGRITY.md) — **mandatory before any migration, live integration test, Supabase reset, fixture cleanup or recovery work** |
 
 ## Rules that apply everywhere
+
+- **The default local database is persistent user data, never a disposable test target.** Do not
+  run `supabase db reset`, discard its Docker volume, broadly delete fixtures, or restore over it.
+  Read and follow [SYSTEM_INTEGRITY.md](SYSTEM_INTEGRITY.md). Destructive database validation is
+  permitted only on an explicitly isolated project with a positively verified target.
 
 - **Money is always integer cents**, end to end — DB columns, `DataContext`, every analytics lib.
   Convert to dollars in exactly one place per surface (`fmt()`/`fmtCents()` in `app/src/data.ts`).
@@ -57,6 +63,10 @@ hand to find the transfer-linker gap.
 
 ## Recent changes
 
+- 2026-08-17 — Logged the deferred, preview-first “Review with categorisation engine” workflow for implementation only after system recovery and baseline integrity validation.
+
+- 2026-08-17 — Retired reset-based validation and added mandatory persistent-data, backup, isolated-test and recovery safeguards after a local account-loss incident.
+
 - 2026-08-15 — Added six repeatable Playwright Ledger regressions covering mixed/impact semantics, cross-page and 500-row selection, safe attributes/protection, grouped undo and modal focus restoration.
 
 - 2026-08-15 — Added reusable focus trapping and opener/fallback restoration across all Ledger dialogs, including animated drawer exit and completed bulk-selection flows.
@@ -72,7 +82,3 @@ hand to find the transfer-linker gap.
 - 2026-08-14 — Made Ledger bulk correction field-safe with shared/Mixed states, explicit partial updates, mandatory category-pair choices, heterogeneous undo, and full live/browser validation.
 
 - 2026-08-14 — Repaired expense metric integrity: equal-day prior windows, correct daily denominators, rejected-transfer reporting precedence, strict TypeScript health, and database/browser reconciliation.
-
-- 2026-08-14 — Shipped Phase 5 classification refinement: exact-cent split reporting/undo, tenant custom subcategories, merchant-rule management, persisted confidence policy, and full RLS/browser validation.
-
-- 2026-08-14 — Shipped Phase 4 transaction classification: first-class kind and focused attributes, correct contra-expense semantics, ledger edit/filter/undo UX, kind-based matching/analytics, and live RLS/browser validation.

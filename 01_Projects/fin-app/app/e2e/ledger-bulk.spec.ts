@@ -2,6 +2,13 @@ import { test, expect, type Page } from '@playwright/test'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321'
+if (
+  process.env.HALCYON_ALLOW_DESTRUCTIVE_TEST_FIXTURES !== 'isolated-only'
+  || !process.env.HALCYON_TEST_TARGET_ID
+  || ['http://127.0.0.1:54321', 'http://localhost:54321'].includes(SUPABASE_URL.replace(/\/$/, ''))
+) {
+  throw new Error('Ledger browser fixtures require an explicitly identified isolated Supabase target; see SYSTEM_INTEGRITY.md.')
+}
 const ANON_KEY = process.env.SUPABASE_ANON_KEY ?? ''
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 const PASSWORD = 'correct-horse-battery-staple-1'

@@ -18,6 +18,7 @@ related:
   - "[[Halcyon_DesignSystem]]"
   - "[[System requirements - SRD]]"
   - "[[MIGRATION_PLAN]]"
+  - "[[SYSTEM_INTEGRITY]]"
   - "[[app/README|App README]]"
 ---
 
@@ -59,8 +60,16 @@ MVP_SCOPE.md                  the thin-slice MVP + deferred phases (plan of reco
 Halcyon_DesignSystem.md       definitive design system
 System requirements - SRD.md  full product vision + security model (reconciled to the build; missing a data model + API contract)
 MIGRATION_PLAN.md             historical (vanilla → React port)
+SYSTEM_INTEGRITY.md           mandatory database-safety, validation, backup and recovery runbook
 app/                          the Vite + React + TS app (design source of truth: app/src/index.css)
 ```
+
+## Data safety
+
+The default local Supabase stack may contain the owner's real account and financial history. It is
+not a disposable test database. Before migrations, live integration tests, fixture cleanup or any
+database recovery, read [SYSTEM_INTEGRITY.md](SYSTEM_INTEGRITY.md). In particular, do not use
+`supabase db reset` against the default local project.
 
 ## Stack
 

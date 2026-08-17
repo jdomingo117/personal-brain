@@ -6,6 +6,9 @@
  *   node app/scripts/test-token-broker.mjs
  */
 import { createClient } from '@supabase/supabase-js'
+import { assertSafeTestTarget } from './lib/assertSafeTestTarget.mjs'
+
+assertSafeTestTarget()
 
 const URL = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321'
 const ANON = process.env.SUPABASE_ANON_KEY

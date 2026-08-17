@@ -1,0 +1,5 @@
+# Local database backups can contain authentication identities and financial data.
+backups/*.dump
+backups/*.sql
+backups/*.tar
+

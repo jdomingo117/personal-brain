@@ -16,8 +16,13 @@
     "finance": 1,
     "halcyon": 5,
     "investments": 12,
+    "ledger": 13,
     "papaparse": 10,
+    "playwright-test-generator": 14,
+    "playwright-test-healer": 15,
+    "playwright-test-planner": 16,
     "projects": 3,
+    "taxonomy": 17,
     "typescript": 7,
     "projects/fin-app": 1
   },

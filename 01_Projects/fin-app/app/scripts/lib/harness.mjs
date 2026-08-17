@@ -8,8 +8,11 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { assertSafeTestTarget } from './assertSafeTestTarget.mjs'
 
-export const URL_ = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321'
+assertSafeTestTarget()
+
+export const URL_ = process.env.SUPABASE_URL
 export const ANON = process.env.SUPABASE_ANON_KEY
 
 if (!ANON) {
