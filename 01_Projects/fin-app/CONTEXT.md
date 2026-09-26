@@ -8,7 +8,7 @@ tags:
   - projects/fin-app
   - finance
 type: handoff
-status: canonical
+status: historical
 project: Halcyon
 related:
   - "[[MVP_SCOPE]]"
@@ -19,6 +19,11 @@ related:
 ---
 
 # Halcyon — Context & Handoff
+
+> **Historical implementation diary.** For the current resume point, operational
+> database state and next-work options, start with [CURRENT_STATUS.md](CURRENT_STATUS.md).
+> Some dated notes below deliberately record bugs as they were at the time; later
+> entries and [INDEX.md](INDEX.md) record their resolution.
 
 > **Start here.** This file orients a new developer or AI session on what Halcyon is, the state
 > it's in, the decisions already locked, and exactly where to pick up. Read this, then the docs

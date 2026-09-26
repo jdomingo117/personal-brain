@@ -14,6 +14,7 @@ import {
 } from '../lib/ledger'
 import { KIND_LABELS, TRANSACTION_KINDS, type TransactionKind } from '../lib/classification'
 import ClassificationRulesDialog from '../components/ClassificationRulesDialog'
+import CategorizationReviewDialog from '../components/CategorizationReviewDialog'
 
 const PAGE_SIZE = 50
 const REVIEW_FILTERS: { id: LedgerReviewFilter; label: string }[] = [
@@ -47,6 +48,7 @@ export default function LedgerView() {
   const [bulkOpen, setBulkOpen] = useState(false)
   const [bulkClassificationOpen, setBulkClassificationOpen] = useState(false)
   const [rulesOpen, setRulesOpen] = useState(false)
+  const [categorizationReviewOpen, setCategorizationReviewOpen] = useState(false)
 
   const filtered = useMemo(() => filterLedger(transactions, { query, accountId, category, kind, review }), [transactions, query, accountId, category, kind, review])
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
@@ -131,6 +133,7 @@ export default function LedgerView() {
                   : `Select all matching (${filtered.length})`}
             </button>
             {selection.total > 0 && <Button onClick={() => setBulkOpen(true)}>Correct categories ({selection.total})</Button>}
+            {selection.total > 0 && <Button variant="ghost" onClick={() => setCategorizationReviewOpen(true)}>Review with engine ({selection.total})</Button>}
             {selection.total > 0 && <Button variant="ghost" onClick={() => setBulkClassificationOpen(true)}>Edit attributes ({selection.total})</Button>}
             {selection.total > 0 && <button type="button" onClick={() => setSelectedIds(new Set())} className="min-h-11 px-2 text-[11px] font-semibold text-muted">Clear all ({selection.total})</button>}
           </div>
@@ -194,6 +197,10 @@ export default function LedgerView() {
       }} onChanged={refreshData} />}
       {bulkClassificationOpen && <BulkClassificationDialog transactions={selectedTransactions} onClose={(clearSelection) => {
         setBulkClassificationOpen(false)
+        if (clearSelection) setSelectedIds(new Set())
+      }} onChanged={refreshData} />}
+      {categorizationReviewOpen && <CategorizationReviewDialog transactions={selectedTransactions} onClose={(clearSelection) => {
+        setCategorizationReviewOpen(false)
         if (clearSelection) setSelectedIds(new Set())
       }} onChanged={refreshData} />}
       {rulesOpen && <ClassificationRulesDialog onClose={() => setRulesOpen(false)} onChanged={refreshData} />}

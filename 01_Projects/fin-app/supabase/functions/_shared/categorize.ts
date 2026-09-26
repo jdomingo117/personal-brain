@@ -43,7 +43,7 @@ const AiRowSchema = z.object({
   key: z.string(),
   category: z.string(),
   subcategory: z.string().nullable().optional(),
-  confidence: z.number().min(0).max(1).optional(),
+  confidence: z.number().min(0).max(1),
 })
 
 const GEMINI_BATCH = 50
@@ -69,6 +69,15 @@ export interface CategorizeStats {
   fromBank: number
   fromAi: number
   geminiCalls: number
+}
+
+export interface ResolveMerchantOptions {
+  /** Keep durable user rules, but ignore bank/AI/seed cache entries so a
+   * review preview asks the current model for a fresh opinion. */
+  bypassNonUserCache?: boolean
+  /** Preview requests must never teach the durable merchant cache before a
+   * person accepts their suggestions. Defaults to true for ingestion paths. */
+  cacheAiResults?: boolean
 }
 
 async function askGemini(
@@ -148,7 +157,7 @@ Reply with strict JSON: an array of
                 subcategory: { type: 'STRING' },
                 confidence: { type: 'NUMBER' },
               },
-              required: ['key', 'category'],
+              required: ['key', 'category', 'confidence'],
             },
           },
         },
@@ -189,7 +198,7 @@ Reply with strict JSON: an array of
       // transaction out of transfer matching, so it is rewritten rather
       // than trusted — the prompt asks for this too, this is the guard.
       subcategory: coerced.subcategory === RESERVED_SUBCATEGORY ? 'Internal' : coerced.subcategory,
-      confidence: row.confidence ?? 0.5,
+      confidence: row.confidence,
     })
   }
 
@@ -200,6 +209,7 @@ export async function resolveMerchantCategories(
   db: SupabaseClient,
   tenantId: string,
   merchants: MerchantInput[],
+  options: ResolveMerchantOptions = {},
 ): Promise<{ resolved: Map<string, Resolved>; stats: CategorizeStats }> {
   const byKey = new Map(merchants.map((m) => [m.key, m]))
   const resolved = new Map<string, Resolved>()
@@ -258,8 +268,10 @@ export async function resolveMerchantCategories(
   }
 
   // Tier 2: non-user cache entries.
-  for (const [key, rule] of cached) {
-    if (!resolved.has(key)) resolved.set(key, rule)
+  if (!options.bypassNonUserCache) {
+    for (const [key, rule] of cached) {
+      if (!resolved.has(key)) resolved.set(key, rule)
+    }
   }
 
   // ── Tier 3: Gemini, for the leftovers only ────────────────────────
@@ -325,7 +337,7 @@ export async function resolveMerchantCategories(
         confidence: r.confidence,
       }))
 
-    if (toCache.length > 0) {
+    if (toCache.length > 0 && options.cacheAiResults !== false) {
       // ignoreDuplicates: a concurrent run may have cached the same merchant,
       // and a user rule must never be overwritten by an AI guess.
       const { error: cacheErr } = await db

@@ -10,8 +10,9 @@ tags:
 type: readme
 status: current
 project: Halcyon
-up: "[[CONTEXT]]"
+up: "[[CURRENT_STATUS]]"
 related:
+  - "[[CURRENT_STATUS]]"
   - "[[CONTEXT]]"
   - "[[MANAGED_INVESTMENTS]]"
   - "[[MVP_SCOPE]]"
@@ -30,10 +31,12 @@ tenant-scoped Postgres/RLS, Edge Functions, CSV ingestion, provider synchronisat
 categorisation, and transfer matching. `app/src/data.ts` now supplies shared types and formatters;
 the application data itself comes from Supabase.
 
-## → Start with [CONTEXT.md](CONTEXT.md)
+## → Start with [CURRENT_STATUS.md](CURRENT_STATUS.md)
 
-It's the onboarding doc: current state, locked decisions, architecture, gotchas, and exactly where
-to pick up. Then read the docs it points to.
+It is the concise resume point: what has shipped, the safety-critical local-data
+state, and the current choices for what to tackle next. Then use
+[INDEX.md](INDEX.md) for the file-by-file system map and [CONTEXT.md](CONTEXT.md)
+for historical decisions and rationale.
 
 ## Run
 
@@ -54,7 +57,8 @@ npm run build      # → app/dist/
 ## Layout
 
 ```
-CONTEXT.md                    ← read first (handoff / orientation)
+CURRENT_STATUS.md             ← read first (current handoff / next options)
+CONTEXT.md                    historical decision diary and implementation rationale
 MANAGED_INVESTMENTS.md        managed-fund implementation, operations, and known transfer gap
 MVP_SCOPE.md                  the thin-slice MVP + deferred phases (plan of record)
 Halcyon_DesignSystem.md       definitive design system

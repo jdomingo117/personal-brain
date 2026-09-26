@@ -14,8 +14,9 @@ before touching that area; don't guess from this file alone.
 |---|---|
 | Frontend conventions, testing, animation rules | [app/CLAUDE.md](app/CLAUDE.md) — auto-loads when working in `app/` |
 | Backend conventions, RLS/migration patterns, the "Laws" | [supabase/CLAUDE.md](supabase/CLAUDE.md) — auto-loads when working in `supabase/` |
-| File-by-file system map, current known bugs | [INDEX.md](INDEX.md) — **read this first** for anything touching architecture or an unfamiliar area |
-| Full history, rationale, dated diary of past fixes | [CONTEXT.md](CONTEXT.md) — the human/Obsidian handoff doc; more thorough than this file, less current-by-default |
+| Current resume point, operational data state, next-work options | [CURRENT_STATUS.md](CURRENT_STATUS.md) — **read this first** when resuming work |
+| File-by-file system map, current known bugs | [INDEX.md](INDEX.md) — read before changing an unfamiliar architectural area |
+| Full history, rationale, dated diary of past fixes | [CONTEXT.md](CONTEXT.md) — historical background, not the live backlog |
 | Design tokens, components, motion spec | [Halcyon_DesignSystem.md](Halcyon_DesignSystem.md) — reference only, load when doing UI/visual work |
 | Full product vision + security model | [System requirements - SRD.md](System%20requirements%20-%20SRD.md) |
 | What's in scope now vs. deferred | [MVP_SCOPE.md](MVP_SCOPE.md) |
@@ -63,6 +64,14 @@ hand to find the transfer-linker gap.
 
 ## Recent changes
 
+- 2026-09-21 — Completed Gate 2 categorisation quality validation over five representative CSVs/793 transactions, repairing nullable subscription derivation and the missing required AI-confidence contract.
+
+- 2026-09-20 — Completed Gate 1 for selected-row categorisation review: disposable-stack migration/API/live-Gemini checks passed 13/13 and the authenticated rendered apply/undo flow passed without touching the personal database.
+
+- 2026-09-17 — Implemented selected-row categorisation-engine review with fresh preview-only suggestions, protected sources, atomic heterogeneous acceptance, stale-state rejection, impact projection and grouped guarded undo.
+
+- 2026-09-16 — Added `CURRENT_STATUS.md` as the live resume point; clarified that `CONTEXT.md` is the historical diary and recorded recovery-first next-work options.
+
 - 2026-08-17 — Logged the deferred, preview-first “Review with categorisation engine” workflow for implementation only after system recovery and baseline integrity validation.
 
 - 2026-08-17 — Retired reset-based validation and added mandatory persistent-data, backup, isolated-test and recovery safeguards after a local account-loss incident.
@@ -74,11 +83,3 @@ hand to find the transfer-linker gap.
 - 2026-08-15 — Added safe Ledger bulk kind/attribute editing with per-field mixed/tri-state semantics, exact reporting previews, atomic grouped undo, 500-row enforcement and live browser/RLS validation.
 
 - 2026-08-15 — Added capped Ledger “select all matching,” enforced a visible 500-row UI/API boundary, fixed oversized visibility-query URLs, and validated exact 500 update/undo plus 501 rejection.
-
-- 2026-08-15 — Made Ledger cross-page selection observable and self-clearing after completed bulk work, with scoped counts/actions, stale-ID pruning, retained undo, and a 57-row browser regression.
-
-- 2026-08-15 — Added exact Ledger bulk impact previews for current mixes, label/provenance counts, clearing, derived classification and reporting deltas, with explicit-change gating and browser validation.
-
-- 2026-08-14 — Made Ledger bulk correction field-safe with shared/Mixed states, explicit partial updates, mandatory category-pair choices, heterogeneous undo, and full live/browser validation.
-
-- 2026-08-14 — Repaired expense metric integrity: equal-day prior windows, correct daily denominators, rejected-transfer reporting precedence, strict TypeScript health, and database/browser reconciliation.

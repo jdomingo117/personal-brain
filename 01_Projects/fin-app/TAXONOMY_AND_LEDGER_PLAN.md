@@ -649,16 +649,56 @@ must be the default; selected-row re-evaluation may be offered separately;
 manual classifications and user rules remain protected; and exact impact,
 source changes, caps, confirmation and guarded undo must precede mutation.
 
-**Deferred TODO — implement after system recovery and integrity validation:**
-add a user-facing **Review with categorisation engine** workflow with three
+**Implementation update — selected-row slice implemented 2026-09-17.** The Ledger
+now offers **Review with categorisation engine** for an intentional selection
+of up to 500 rows. Preview is non-mutating and bypasses non-user cache for a
+fresh current-model answer without teaching the durable cache. Manual
+transaction corrections, user merchant rules, bank classifications and system
+reconciliation entries are protected. Suggested, unchanged, protected and
+unresolved results are separated; actionable suggestions default selected and
+their combined category, review, derived-kind, subscription, expense and earned-
+income effects are shown before application. Accepted heterogeneous suggestions
+apply atomically as Manual under one history/audit operation, compare the exact
+previewed state to reject stale writes, and use the existing guarded grouped
+undo. Unit, TypeScript and production-build verification is green. Gate 1
+completed on 2026-09-20 against a positively identified disposable Supabase
+project: the full migration chain applied cleanly; 13/13 isolated contract
+checks covered protections, heterogeneous atomic acceptance, Manual provenance,
+shared history/undo, stale-state refusal, tenant isolation, audit, direct-RPC
+denial and a live Gemini preview with no transaction/cache mutation. The
+authenticated rendered pass covered mixed bank/AI selection, preview and impact
+presentation, keyboard focus wrapping and Escape, apply and grouped undo. The
+personal local database was not used or modified.
+
+**Gate 2 completed — 2026-09-21.** A positively identified disposable stack was
+reset and rebuilt through the complete migration chain, then all five
+representative bank CSVs were exercised through production staging, live Gemini
+categorisation and atomic import. The corpus produced 793 transactions across
+167 merchants: 137 bank-sourced rows stayed protected and 656 were AI-sourced.
+The final confidence-aware import left 6 rows needing review, including 3
+unresolved. A cache-bypassing fresh review over 676 rows returned 618 unchanged,
+38 actionable suggestions and 20 protected bank rows; 26 category and 36 full
+category/subcategory differences demonstrate the value of preview and selective
+acceptance. The preview wrote no transactions and taught no merchant-cache
+entries. Gate 2 also repaired nullable subscription derivation and made Gemini
+confidence mandatory in the response contract so the 75% policy receives real
+scores rather than a universal 0.5 fallback. The personal database was not used
+or modified.
+
+**Remaining follow-up:** extend the workflow with the safe unresolved default
+and all-eligible scopes. Introduce durable/resumable review-run storage only if
+large-review usage demonstrates that the current bounded in-memory preview is
+insufficient. The complete target remains a user-facing workflow with three
 separate scopes: unresolved transactions (safe default), selected ledger
 transactions, and all eligible transactions. Previously classified rows receive
 suggestions before mutation; users can accept individually or in bulk. The
 preview must show protected rows, current/proposed source and classification,
 confidence, category/reporting deltas and the operation cap. Application must
 preserve transaction-level manual corrections and user rules by default, use a
-grouped audit operation and provide guarded undo. This work must not begin until
-account access, database durability and baseline report integrity are restored.
+grouped audit operation and provide guarded undo. The original recovery gate was
+met by the clean-account checkpoint in `SYSTEM_INTEGRITY.md`; destructive/live
+validation remains isolated-project-only; the completed Gate 1 followed that
+constraint, and future destructive/live harness work must do the same.
 
 ## Decisions deferred beyond this plan
 

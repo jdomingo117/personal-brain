@@ -116,6 +116,9 @@ verify_jwt = true
 [functions.categorize-pending]
 verify_jwt = true
 
+[functions.review-categorization]
+verify_jwt = true
+
 [functions.apply-merchant-rule]
 verify_jwt = true
 
