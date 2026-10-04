@@ -64,6 +64,12 @@ URL that is not the default port plus `HALCYON_TEST_TARGET_ID` and
 `HALCYON_ALLOW_DESTRUCTIVE_TEST_FIXTURES=isolated-only`. Do not weaken or bypass
 this guard to make a test convenient; provision the isolated stack instead.
 
+The preferred full workflow check is `cd app && npm run test:golden`. Its
+runner provisions a uniquely named temporary project on ports `55421+`, refuses
+the personal API port, uses a dedicated non-reused browser port, and tears the
+stack down without backup after scoped fixture cleanup. Do not repoint this
+command at an existing project or weaken its `isolated-only` guard.
+
 ## Required preflight for schema or live-data validation
 
 Before applying a migration or running an integration/browser harness:

@@ -9,7 +9,7 @@ tags:
 type: handoff
 status: current
 project: Halcyon
-updated: 2026-09-21
+updated: 2026-10-01
 related:
   - "[[README]]"
   - "[[INDEX]]"
@@ -26,8 +26,10 @@ with Supabase Auth, Postgres/RLS and validated Deno Edge Functions on the backen
 The earlier implementation run ended **2026-08-17**; work resumed with the
 selected categorisation-review slice on **2026-09-17**. Gate 1 isolated-stack
 validation completed on **2026-09-20**, followed by representative-CSV Gate 2
-validation on **2026-09-21**. This document is the concise current handoff as at
-that date.
+validation on **2026-09-21** and safe forward migration of the personal local
+stack on **2026-09-26**. Real statement-import testing resumed on
+**2026-09-30**. A full isolated golden-pass browser harness was added and passed
+on **2026-10-01**. This document is the concise current handoff as at that date.
 
 The application has moved well beyond the original thin MVP. Its major completed
 capabilities are:
@@ -60,9 +62,27 @@ not the live backlog.
 
 The default local Supabase database was reset during validation in August. The
 owner has since recreated the account through normal sign-up, and a verified
-custom-format backup captured a clean zero-row baseline. It currently contains
-no restored financial history. Do not run reset-based validation or use this
-database for destructive test fixtures.
+custom-format backup captured a clean zero-row baseline. On 2026-09-26 it contained one user/profile,
+one tenant/member, three accounts and zero transactions. A pre-migration backup
+was catalog-verified at
+`backups/halcyon-pre-categorization-migrations-20260926.dump` (SHA-256
+`4da3ab92f986fd7a4d725aa7036b6f842b538ec99b51f8964bb0dd7f87755322`), then
+the Gate 1/2 migrations `20260917000000` and `20260921000000` were applied with
+forward-only `migration up`. Post-migration counts were unchanged. Do not run
+reset-based validation or use this database for destructive test fixtures.
+
+Real-data testing has now moved beyond that zero-row checkpoint. On 2026-09-30
+the personal stack held 799 transactions from two durable upload batches and
+203 suggested transfer links. Attempting to confirm the whole account-pair
+group exposed a client/server cap mismatch: the UI selected 203 although the
+validated Edge/SQL boundary permits 200 per atomic decision. The request was
+rejected before execution and left zero transfer decisions. The client now
+selects a deterministic maximum of 200, visibly defers the remainder to the
+next action and has an exact 203-item regression. Preserve this imported state;
+it is evidence, not a reason to reset.
+A post-import custom-format backup was catalog-verified at
+`backups/halcyon-post-test-import-20260930.dump` (SHA-256
+`93e0b4f5214a4d191c0972bfd34995d40ec394094ae639c3260001d125f01c5c`).
 
 Before any migration, recovery, live integration test or re-import, read and
 follow [SYSTEM_INTEGRITY.md](SYSTEM_INTEGRITY.md). In particular, use a positively
@@ -72,8 +92,8 @@ identified isolated project for destructive test flows.
 
 The August verification passed the unit suite, strict TypeScript check,
 production build, live Phase 4/5 checks, database invariants and authenticated
-Ledger browser checks. The selected categorisation-review slice passes 290 unit
-tests with 12 environment-dependent skips, frontend and browser-suite
+Ledger browser checks. The current suite passes 301 unit tests with 14
+environment-dependent skips, frontend and browser-suite
 TypeScript checks, and a production build. On 2026-09-20 its migration applied
 cleanly to a positively identified disposable Supabase project; the isolated
 contract harness passed 13/13 checks, including a real Gemini preview that did
@@ -95,15 +115,25 @@ required by the response schema, causing every answer to fall back to 0.5. The
 full migration chain and Gate 2 harness passed after both repairs. The personal
 local database remained untouched.
 
+On 2026-10-01 the new `npm run test:golden` harness passed against a fresh,
+positively identified disposable Supabase project on dedicated ports. It
+replayed every migration, served the real Edge Functions, created both accounts
+through the rendered workflow, imported the current 565-row Macquarie
+transaction and 234-row Macquarie savings CSVs, exercised live categorisation,
+matched 203 transfer links (202 review plus one automatic), confirmed the safe
+200-row batch and remaining decisions, generated a fresh categorisation-review
+preview, and asserted 799 source rows, two upload batches, final balances and
+zero browser errors. It then deleted only its fixture tenant/user and stopped
+the disposable stack. The personal database was neither targeted nor modified.
+
 ## Sensible next directions
 
 Choose one of these deliberately; they represent different kinds of work rather
 than a single mandatory sequence.
 
-1. **Restore confidence in the fresh environment (recommended first).** Follow
-   the integrity runbook, confirm account/tenant/RLS health, re-import a small
-   known-safe data sample and reconcile the resulting metrics. This is the
-   prerequisite for work that depends on real history.
+1. **Keep the golden pass as the release gate.** Run `npm run test:golden`
+   after changes to migrations, ingestion, transfer review or categorisation.
+   It now provides the repeatable confidence check that was previously missing.
 2. **Classification review workflow — Gates 1 and 2 complete.** The Ledger
    now previews and applies fresh suggestions for an intentional selection of
    up to 500 rows, with protected decisions, impact preview, atomic application
@@ -136,6 +166,7 @@ npx supabase functions serve --no-verify-jwt --env-file supabase/.env.local
 cd app
 npm test
 npm run build
+npm run test:golden  # self-provisions and tears down an isolated local stack
 ```
 
 Run browser and live integration harnesses only against an isolated, explicitly

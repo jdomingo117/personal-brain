@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:browser": "node scripts/run-browser-tests.mjs",
     "test:browser:install": "playwright install chromium",
-    "test:browser:typecheck": "tsc --noEmit -p e2e/tsconfig.json"
+    "test:browser:typecheck": "tsc --noEmit -p e2e/tsconfig.json",
+    "test:golden": "node scripts/run-golden-pass.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.7",

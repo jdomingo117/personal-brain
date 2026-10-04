@@ -21,7 +21,7 @@ const ACCOUNT = '11111111-1111-1111-1111-111111111111'
 
 describe('stageRows', () => {
   it('stages every row of a real file as importable', async () => {
-    const res = await stageRows(load('StGreorge_CreditCardtrans180726.csv'), STG, ACCOUNT)
+    const res = await stageRows(load('St George CC.csv'), STG, ACCOUNT)
     expect(res.stats.total).toBeGreaterThan(0)
     expect(res.stats.badDate).toBe(0)
     expect(res.stats.noAmount).toBe(0)
@@ -29,19 +29,19 @@ describe('stageRows', () => {
   })
 
   it('uses the bank category column for free (tier 1)', async () => {
-    const res = await stageRows(load('StGreorge_CreditCardtrans180726.csv'), STG, ACCOUNT)
+    const res = await stageRows(load('St George CC.csv'), STG, ACCOUNT)
     expect(res.stats.fromBankCategory).toBeGreaterThan(0)
     const banked = res.rows.filter((r) => r.categorySource === 'bank')
     for (const r of banked) expect(r.category).not.toBe('Uncategorized')
   })
 
   it('maps the expanded bank vocabulary without hiding gaps', async () => {
-    const res = await stageRows(load('StGreorge_CreditCardtrans180726.csv'), STG, ACCOUNT)
+    const res = await stageRows(load('St George CC.csv'), STG, ACCOUNT)
     expect(res.unmappedBankCategories).not.toContain('Fees & Charges')
   })
 
   it('sends banked merchants through precedence resolution with their bank answer', async () => {
-    const res = await stageRows(load('StGreorge_CreditCardtrans180726.csv'), STG, ACCOUNT)
+    const res = await stageRows(load('St George CC.csv'), STG, ACCOUNT)
     const bankedKeys = new Set(res.rows.filter((r) => r.categorySource === 'bank').map((r) => r.merchantKey))
     const bankedMerchants = res.pendingMerchants.filter((merchant) => bankedKeys.has(merchant.key))
     expect(bankedMerchants.length).toBeGreaterThan(0)
@@ -49,7 +49,7 @@ describe('stageRows', () => {
   })
 
   it('deduplicates merchants so the AI batch is far smaller than the row count', async () => {
-    const res = await stageRows(load('AMEX_transactions.csv'), {
+    const res = await stageRows(load('AMEX.csv'), {
       dateCol: 'Date', descCol: 'Description', amountCol: 'Amount', invertAmount: true,
     }, ACCOUNT)
     expect(res.pendingMerchants.length).toBeLessThanOrEqual(res.stats.total)
@@ -93,7 +93,7 @@ describe('stageRows', () => {
 
 describe('applyAssignments', () => {
   it('fills in AI categories but never overwrites a bank-sourced one', async () => {
-    const res = await stageRows(load('StGreorge_CreditCardtrans180726.csv'), STG, ACCOUNT)
+    const res = await stageRows(load('St George CC.csv'), STG, ACCOUNT)
     const banked = res.rows.find((r) => r.categorySource === 'bank')!
     const applied = applyAssignments(res.rows, [
       { key: banked.merchantKey, category: 'Investing', subcategory: null, source: 'ai' },
@@ -104,7 +104,7 @@ describe('applyAssignments', () => {
   })
 
   it('lets a durable user rule override a bank-sourced category', async () => {
-    const res = await stageRows(load('StGreorge_CreditCardtrans180726.csv'), STG, ACCOUNT)
+    const res = await stageRows(load('St George CC.csv'), STG, ACCOUNT)
     const banked = res.rows.find((r) => r.categorySource === 'bank')!
     const applied = applyAssignments(res.rows, [
       { key: banked.merchantKey, category: 'Shopping', subcategory: 'Household', source: 'user' },

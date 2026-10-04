@@ -32,22 +32,26 @@ const FILES = readdirSync(SAMPLES).filter((f) => f.toLowerCase().endsWith('.csv'
 
 /** Mapping per file, as analyze-csv resolves it (asserted separately by the AI suite). */
 const MAPPINGS: Record<string, { dateCol: string; descCol: string; amountCol?: string; debitCol?: string; creditCol?: string; invertAmount?: boolean; categoryCol?: string; subcategoryCol?: string }> = {
-  'AMEX_transactions.csv': {
+  'AMEX.csv': {
     dateCol: 'Date', descCol: 'Description', amountCol: 'Amount', invertAmount: true,
   },
-  'StGreorge_CreditCardtrans180726.csv': {
+  'St George CC.csv': {
     dateCol: 'Date', descCol: 'Description', debitCol: 'Debit', creditCol: 'Credit',
     categoryCol: 'Category', subcategoryCol: 'SubCategory',
   },
-  'StGeroge_Transaction_trans180726.csv': {
+  'St George Trans.csv': {
     dateCol: 'Date', descCol: 'Description', debitCol: 'Debit', creditCol: 'Credit',
     categoryCol: 'Category', subcategoryCol: 'SubCategory',
   },
-  'Macquarie_Transactions-2026-07-18-222903.csv': {
+  'St George Savings.csv': {
+    dateCol: 'Date', descCol: 'Description', debitCol: 'Debit', creditCol: 'Credit',
+    categoryCol: 'Category', subcategoryCol: 'SubCategory',
+  },
+  'MAcq Trans.csv': {
     dateCol: 'Transaction Date', descCol: 'Details', debitCol: 'Debit', creditCol: 'Credit',
     categoryCol: 'Category', subcategoryCol: 'Subcategory',
   },
-  'Macquarie_savings_Transactions-2026-07-18-222939.csv': {
+  'Macq Savings.csv': {
     dateCol: 'Transaction Date', descCol: 'Details', debitCol: 'Debit', creditCol: 'Credit',
     categoryCol: 'Category', subcategoryCol: 'Subcategory',
   },

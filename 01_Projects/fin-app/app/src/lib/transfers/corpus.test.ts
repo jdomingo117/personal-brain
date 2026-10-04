@@ -49,23 +49,27 @@ interface FileSpec {
 }
 
 const FILES: Record<string, FileSpec> = {
-  'AMEX_transactions.csv': {
+  'AMEX.csv': {
     accountId: 'amex', accountName: 'American Express', accountType: 'Credit Card',
     dateCol: 'Date', descCol: 'Description', amountCol: 'Amount', invertAmount: true,
   },
-  'Macquarie_Transactions-2026-07-18-222903.csv': {
+  'MAcq Trans.csv': {
     accountId: 'macquarie-txn', accountName: 'Macquarie Platinum Transaction Account', accountType: 'Liquid',
     dateCol: 'Transaction Date', descCol: 'Details', debitCol: 'Debit', creditCol: 'Credit',
   },
-  'Macquarie_savings_Transactions-2026-07-18-222939.csv': {
+  'Macq Savings.csv': {
     accountId: 'macquarie-savings', accountName: 'Macquarie Savings Account', accountType: 'Savings',
     dateCol: 'Transaction Date', descCol: 'Details', debitCol: 'Debit', creditCol: 'Credit',
   },
-  'StGeroge_Transaction_trans180726.csv': {
+  'St George Trans.csv': {
     accountId: 'stgeorge-txn', accountName: 'St George Complete Freedom', accountType: 'Liquid',
     dateCol: 'Date', descCol: 'Description', debitCol: 'Debit', creditCol: 'Credit',
   },
-  'StGreorge_CreditCardtrans180726.csv': {
+  'St George Savings.csv': {
+    accountId: 'stgeorge-savings', accountName: 'St George Savings', accountType: 'Savings',
+    dateCol: 'Date', descCol: 'Description', debitCol: 'Debit', creditCol: 'Credit',
+  },
+  'St George CC.csv': {
     accountId: 'stgeorge-cc', accountName: 'St George Vertigo Visa', accountType: 'Credit Card',
     dateCol: 'Date', descCol: 'Description', debitCol: 'Debit', creditCol: 'Credit',
   },

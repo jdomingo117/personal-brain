@@ -138,7 +138,7 @@ describe.skipIf(!process.env.SUPABASE_ANON_KEY)('end-to-end ingestion (live stac
   it('re-importing the same file changes nothing', async () => {
     if (!live) return
     const ctx = await newUser('redup')
-    const file = 'StGreorge_CreditCardtrans180726.csv'
+    const file = 'St George CC.csv'
 
     const first = await importFile(ctx, file, -50_000)
     const { data: after1 } = await ctx.client.from('transactions').select('id, category')
@@ -256,8 +256,8 @@ describe.skipIf(!process.env.SUPABASE_ANON_KEY)('end-to-end ingestion (live stac
   it('a second, different file reuses the cache for merchants it has seen', async () => {
     if (!live) return
     const ctx = await newUser('cache')
-    const a = await importFile(ctx, 'StGreorge_CreditCardtrans180726.csv', -50_000)
-    const b = await importFile(ctx, 'StGeroge_Transaction_trans180726.csv', -50_000)
+    const a = await importFile(ctx, 'St George CC.csv', -50_000)
+    const b = await importFile(ctx, 'St George Trans.csv', -50_000)
 
     // Asserted against the actual overlap rather than a bare "> 0": if the two
     // statements happen to share no uncategorised merchants, there is nothing

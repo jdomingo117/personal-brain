@@ -22,6 +22,7 @@ splits, tenant custom subcategories, merchant-rule management and confidence rev
 ## Directory Map
 
 ### `app/` (Frontend)
+- `playwright.golden.config.ts` / `e2e/golden-pass.spec.ts` / `scripts/run-golden-pass.mjs` - Self-contained golden-pass harness. `npm run test:golden` copies Supabase into a temporary directory, assigns a unique project ID and non-personal ports, migrates from zero, serves the real Edge Functions, and starts the app on a dedicated non-reused browser port through a same-origin isolated proxy. The rendered test creates Macquarie transaction/savings accounts, uploads the current 565+234 row CSV corpus, waits for live categorisation, resolves the 202-review-plus-one-auto result across the enforced 200-item mutation boundary, previews a fresh categorisation review, checks exact row/batch/balance invariants, cleans its captured fixture IDs and tears the stack down. Fail-closed guards reject the personal `54321` project.
 - `playwright.config.ts` / `e2e/ledger-bulk.spec.ts` - Real Chromium regression harness for the Ledger repair sequence. The runner uses one serial, schema-complete 512-row tenant fixture (507 cap rows plus mixed category, mixed attribute and protected reconciliation cases), authenticates through the real UI, exercises mutations through the app/Edge Functions, retains traces/screenshots only on failure, and deletes its tenant/auth user after success or partial fixture construction failure. Coverage includes mixed leave-unchanged semantics, explicit impact/change gating, cross-page selection and global clearing, exact 500-row apply/undo with seven disabled overflow rows, safe kind/attribute impact/apply/undo/protection, and focus wrapping/restoration across every Ledger dialog.
 - `src/`
   - `components/` - React UI Components.
@@ -154,13 +155,19 @@ rejection or an unmatched-leg verdict survive a delete-and-reimport. Repetitive 
 summarised behind disclosure; ambiguous pairs never enter bulk selection and get a dedicated review
 action when no safe rows are selectable. Paired verdicts explicitly confirm an internal transfer or
 return it to regular analytics, while transfer to/from an untracked account is available only for a
-lone unmatched leg.
+lone unmatched leg. Both paired and unmatched group selections mirror the validated 200-item
+Edge/SQL boundary: a larger group selects a deterministic 200-row prefix, names how many are
+deferred, disables those deferred checkboxes, and promotes the remainder after the first atomic
+decision succeeds. This prevents the real 203-link account-pair failure found during personal-data
+testing without weakening the server cap or creating partial multi-request writes.
 The enclosing workflow surface raises contrast and opacity over the decorative scene; queue
 disclosures publish expanded state, compact actions/checkbox rows meet 44px, and async/error copy is
 announced through status/alert semantics.
 
 ### Tests
-`npm test` (vitest, in `app/`) - 285 unit/corpus/pipeline/workflow tests over the real files in `Sample datasets/`, including user-rule-over-bank CSV precedence, editable-ledger review/filter, capped all-matching and cross-page selection, safe mixed-field category/classification semantics, exact impact projections and modal focus wrapping, managed-investment decimal/parser/price/cash-matcher fixtures, ingestion target-lock state, dedicated workflow-route boundaries, transfer-review presentation state, WCAG token/workflow guardrails, exact-range adaptive cash-flow pacing, shared multi-series tooltip collision avoidance, responsive chart sizing/migration/density/compact-layout regressions, four-viewport (390/768/1024/1440px) chart visual-and-interaction regression coverage, and transfer-matcher corpus tests. Environment-dependent tests are skipped unless their keys are set.
+`npm test` (vitest, in `app/`) - 301 passing unit/corpus/pipeline/workflow tests over every current file in `Sample datasets/`, including user-rule-over-bank CSV precedence, editable-ledger review/filter, capped all-matching and cross-page selection, safe mixed-field category/classification semantics, exact impact projections and modal focus wrapping, managed-investment decimal/parser/price/cash-matcher fixtures, ingestion target-lock state, dedicated workflow-route boundaries, transfer-review presentation state including the exact 203-to-200 batch boundary, WCAG token/workflow guardrails, exact-range adaptive cash-flow pacing, shared multi-series tooltip collision avoidance, responsive chart sizing/migration/density/compact-layout regressions, four-viewport (390/768/1024/1440px) chart visual-and-interaction regression coverage, and transfer-matcher corpus tests. Fourteen environment-dependent tests are skipped unless their keys are set.
+
+`npm run test:golden` (Playwright + disposable Supabase, in `app/`) - The release-confidence path described above. It owns its temporary database lifecycle and must remain isolated; no personal-stack credentials are accepted.
 
 `npm run test:browser` (Playwright, in `app/`) - Six real-browser Ledger regressions against the local Supabase stack. Run `npm run test:browser:install` once per machine; the test runner reads ephemeral local anon/service credentials from `supabase status`, starts or reuses Vite on port 5300, runs Chromium with one worker, and cleans its generated tenant/user. `npm run test:browser:typecheck` strictly checks the Playwright config and suite separately from the Vitest source tree. The fixture's service role is setup/teardown only; every behavior under test signs in and mutates through the rendered app.
 

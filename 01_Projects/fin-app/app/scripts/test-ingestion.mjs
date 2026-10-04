@@ -20,7 +20,7 @@ const BATCH = () => crypto.randomUUID()
 
 /** Build an import payload from the St George credit-card sample. */
 function stGeorgeRows(accountId, limit = 25) {
-  const parsed = Papa.parse(readSample('StGreorge_CreditCardtrans180726.csv'), {
+  const parsed = Papa.parse(readSample('St George CC.csv'), {
     header: true, skipEmptyLines: true,
   })
   const rows = parsed.data.filter((r) => r.Date).slice(0, limit)

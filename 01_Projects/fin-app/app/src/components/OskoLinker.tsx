@@ -6,8 +6,10 @@ import { Button } from './Controls'
 import { fmtCents } from '../data'
 import { normalizeMerchant } from '../lib/csv/normalizeMerchant'
 import {
+  boundedReviewSelection,
   suggestedReviewSelection,
   summariseOverflow,
+  TRANSFER_DECISION_BATCH_LIMIT,
   untrackedTransferLabel,
 } from '../lib/transfers/reviewPresentation'
 import InvestmentCashLinker from './InvestmentCashLinker'
@@ -232,6 +234,10 @@ export default function OskoLinker() {
 
   const decideBatch = async (groupKey: string, linkIds: string[], verdict: 'confirmed' | 'rejected' | 'external') => {
     if (linkIds.length === 0) return
+    if (linkIds.length > TRANSFER_DECISION_BATCH_LIMIT) {
+      setError(`Choose no more than ${TRANSFER_DECISION_BATCH_LIMIT} transfers in one batch.`)
+      return
+    }
     setBatchBusy(groupKey)
     setError('')
     try {
@@ -251,6 +257,10 @@ export default function OskoLinker() {
 
   const decideLegBatch = async (groupKey: string, txnIds: string[], verdict: 'rejected' | 'external') => {
     if (txnIds.length === 0) return
+    if (txnIds.length > TRANSFER_DECISION_BATCH_LIMIT) {
+      setError(`Choose no more than ${TRANSFER_DECISION_BATCH_LIMIT} transactions in one batch.`)
+      return
+    }
     setUnmatchedBatchBusy(groupKey)
     setError('')
     try {
@@ -525,6 +535,8 @@ function SuggestedGroupPanel({
   const ambiguous = group.links.filter((l) => l.ambiguous)
   const selection = suggestedReviewSelection(group.links, deselected)
   const selectedIds = selection.selectedIds
+  const selectedIdSet = new Set(selectedIds)
+  const deferredIdSet = new Set(selection.deferredIds)
   const total = group.links.reduce((sum, l) => sum + Math.abs(l.from_txn?.amount ?? 0), 0)
 
   return (
@@ -562,6 +574,11 @@ function SuggestedGroupPanel({
           {ambiguous.length} ambiguous match{ambiguous.length === 1 ? '' : 'es'} excluded from bulk actions — review individually.
         </div>
       )}
+      {selection.deferredCount > 0 && (
+        <div className="px-4 pb-2 text-[12px] text-muted" role="status">
+          The safe batch limit is 200. {selection.deferredCount} transfer{selection.deferredCount === 1 ? '' : 's'} will remain for the next action.
+        </div>
+      )}
 
       <AnimatePresence>
         {expanded && (
@@ -576,7 +593,8 @@ function SuggestedGroupPanel({
                 <GroupItemRow
                   key={link.id}
                   link={link}
-                  selected={!deselected.has(link.id)}
+                  selected={selectedIdSet.has(link.id)}
+                  deferred={deferredIdSet.has(link.id)}
                   onToggle={() => onToggleSelect(link.id)}
                 />
               ))}
@@ -605,19 +623,23 @@ function SuggestedGroupPanel({
 function GroupItemRow({
   link,
   selected,
+  deferred,
   onToggle,
 }: {
   link: TransferLinkRow
   selected: boolean
+  deferred: boolean
   onToggle: () => void
 }) {
   const from = link.from_txn
   return (
-    <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-[10px] border border-[var(--hair)] px-3 py-2 text-[13px] transition hover:bg-black/[0.02]">
+    <label className={`flex min-h-11 items-center gap-3 rounded-[10px] border border-[var(--hair)] px-3 py-2 text-[13px] transition ${deferred ? 'cursor-not-allowed opacity-55' : 'cursor-pointer hover:bg-black/[0.02]'}`}>
       <input
         type="checkbox"
         checked={selected}
+        disabled={deferred}
         onChange={onToggle}
+        title={deferred ? 'Deferred to the next 200-item batch' : undefined}
         className="h-[15px] w-[15px] flex-shrink-0 accent-[var(--color-accent)]"
       />
       <span className="min-w-0 flex-1 truncate text-muted">
@@ -666,7 +688,10 @@ function UnmatchedGroupPanel({
   onSingleDecide: (txnId: string, verdict: 'rejected' | 'external') => void
   singleBusy: string | null
 }) {
-  const selectedIds = group.rows.filter((r) => !deselected.has(r.id)).map((r) => r.id)
+  const selection = boundedReviewSelection(group.rows.map((row) => row.id), deselected)
+  const selectedIds = selection.selectedIds
+  const selectedIdSet = new Set(selectedIds)
+  const deferredIdSet = new Set(selection.deferredIds)
   const total = group.rows.reduce((sum, r) => sum + Math.abs(r.amount), 0)
 
   // A single-row group needs no checkbox/select ceremony — the two buttons
@@ -731,6 +756,12 @@ function UnmatchedGroupPanel({
         )}
       </div>
 
+      {selection.deferredCount > 0 && (
+        <div className="px-4 pb-2 text-[12px] text-muted" role="status">
+          The safe batch limit is 200. {selection.deferredCount} transaction{selection.deferredCount === 1 ? '' : 's'} will remain for the next action.
+        </div>
+      )}
+
       <AnimatePresence>
         {expanded && (
           <motion.div
@@ -743,12 +774,14 @@ function UnmatchedGroupPanel({
               {group.rows.map((u) => (
                 <label
                   key={u.id}
-                  className="flex min-h-11 cursor-pointer items-center gap-3 rounded-[10px] border border-[var(--hair)] px-3 py-2 text-[13px] transition hover:bg-black/[0.02]"
+                  className={`flex min-h-11 items-center gap-3 rounded-[10px] border border-[var(--hair)] px-3 py-2 text-[13px] transition ${deferredIdSet.has(u.id) ? 'cursor-not-allowed opacity-55' : 'cursor-pointer hover:bg-black/[0.02]'}`}
                 >
                   <input
                     type="checkbox"
-                    checked={!deselected.has(u.id)}
+                    checked={selectedIdSet.has(u.id)}
+                    disabled={deferredIdSet.has(u.id)}
                     onChange={() => onToggleSelect(u.id)}
+                    title={deferredIdSet.has(u.id) ? 'Deferred to the next 200-item batch' : undefined}
                     className="h-[15px] w-[15px] flex-shrink-0 accent-[var(--color-accent)]"
                   />
                   <span className="min-w-0 flex-1 truncate text-muted">

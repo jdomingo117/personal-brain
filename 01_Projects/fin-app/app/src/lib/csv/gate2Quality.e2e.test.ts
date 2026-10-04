@@ -14,22 +14,26 @@ const EXISTING_EMAIL = process.env.HALCYON_GATE2_EXISTING_EMAIL ?? ''
 const SAMPLES = join(__dirname, '..', '..', '..', '..', 'Sample datasets')
 
 const MAPPINGS: Record<string, ColumnMapping> = {
-  'AMEX_transactions.csv': {
+  'AMEX.csv': {
     dateCol: 'Date', descCol: 'Description', amountCol: 'Amount', invertAmount: true,
   },
-  'StGreorge_CreditCardtrans180726.csv': {
+  'St George CC.csv': {
     dateCol: 'Date', descCol: 'Description', debitCol: 'Debit', creditCol: 'Credit',
     categoryCol: 'Category', subcategoryCol: 'SubCategory',
   },
-  'StGeroge_Transaction_trans180726.csv': {
+  'St George Trans.csv': {
     dateCol: 'Date', descCol: 'Description', debitCol: 'Debit', creditCol: 'Credit',
     categoryCol: 'Category', subcategoryCol: 'SubCategory',
   },
-  'Macquarie_Transactions-2026-07-18-222903.csv': {
+  'St George Savings.csv': {
+    dateCol: 'Date', descCol: 'Description', debitCol: 'Debit', creditCol: 'Credit',
+    categoryCol: 'Category', subcategoryCol: 'SubCategory',
+  },
+  'MAcq Trans.csv': {
     dateCol: 'Transaction Date', descCol: 'Details', debitCol: 'Debit', creditCol: 'Credit',
     categoryCol: 'Category', subcategoryCol: 'Subcategory',
   },
-  'Macquarie_savings_Transactions-2026-07-18-222939.csv': {
+  'Macq Savings.csv': {
     dateCol: 'Transaction Date', descCol: 'Details', debitCol: 'Debit', creditCol: 'Credit',
     categoryCol: 'Category', subcategoryCol: 'Subcategory',
   },
@@ -55,7 +59,7 @@ function safeTarget() {
   expect(URL_).toMatch(/^http:\/\/(127\.0\.0\.1|localhost):\d+$/)
   expect(URL_).not.toMatch(/:54321\/?$/)
   expect(ANON).not.toBe('')
-  expect(process.env.HALCYON_TEST_TARGET_ID).toBe('halcyon-gate1-isolated-20260920')
+  expect(process.env.HALCYON_TEST_TARGET_ID).toMatch(/^halcyon-(gate2|golden)-isolated-/)
   expect(process.env.HALCYON_ALLOW_DESTRUCTIVE_TEST_FIXTURES).toBe('isolated-only')
 }
 

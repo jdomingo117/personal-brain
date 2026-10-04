@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import fixture from '../../../../Sample datasets/Vanguard_8134_prices_fixture.json'
 import { normalizeVanguardPriceResponse } from './vanguardPrices'
+
+const fixture = { data: [{ navPrices: [
+  { measureTypeCode: 'NAV', asOfDate: '2026-08-06', currencyCode: 'AUD', price: 2.3601 },
+  { measureTypeCode: 'NAV', asOfDate: '2026-08-04', currencyCode: 'AUD', price: 2.3493 },
+  { measureTypeCode: 'NAV', asOfDate: '2026-08-05', currencyCode: 'AUD', price: 2.3583 },
+] }] }
 
 describe('Vanguard price adapter', () => {
   it('normalises and chronologically sorts verified official response data', () => {

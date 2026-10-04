@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Playwright's optional HTML report is generated below `app/`. Tailwind v4's
+   automatic source detection must not treat that disposable report as app
+   source: its relative trace assets disappear when the report is cleaned up,
+   which otherwise leaves Vite trying to resolve stale SVG URLs in dev mode. */
+@source not "../playwright-report-golden";
+
 /* ============================================================
    Halcyon design tokens → Tailwind v4 (CSS-first @theme config).
    The vanilla prototype's design system, encoded once.

@@ -64,6 +64,10 @@ hand to find the transfer-linker gap.
 
 ## Recent changes
 
+- 2026-09-30 — Fixed real-data transfer review at the 200-item mutation boundary: oversized groups now visibly defer the remainder instead of submitting a failing 203-link request.
+
+- 2026-09-26 — Backed up and safely forward-migrated the personal local stack through the Gate 1/2 categorisation-review migrations with unchanged identity/account/transaction counts.
+
 - 2026-09-21 — Completed Gate 2 categorisation quality validation over five representative CSVs/793 transactions, repairing nullable subscription derivation and the missing required AI-confidence contract.
 
 - 2026-09-20 — Completed Gate 1 for selected-row categorisation review: disposable-stack migration/API/live-Gemini checks passed 13/13 and the authenticated rendered apply/undo flow passed without touching the personal database.
@@ -79,7 +83,3 @@ hand to find the transfer-linker gap.
 - 2026-08-15 — Added six repeatable Playwright Ledger regressions covering mixed/impact semantics, cross-page and 500-row selection, safe attributes/protection, grouped undo and modal focus restoration.
 
 - 2026-08-15 — Added reusable focus trapping and opener/fallback restoration across all Ledger dialogs, including animated drawer exit and completed bulk-selection flows.
-
-- 2026-08-15 — Added safe Ledger bulk kind/attribute editing with per-field mixed/tri-state semantics, exact reporting previews, atomic grouped undo, 500-row enforcement and live browser/RLS validation.
-
-- 2026-08-15 — Added capped Ledger “select all matching,” enforced a visible 500-row UI/API boundary, fixed oversized visibility-query URLs, and validated exact 500 update/undo plus 501 rejection.

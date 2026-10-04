@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  boundedReviewSelection,
   suggestedReviewSelection,
   summariseOverflow,
   untrackedTransferLabel,
@@ -15,6 +16,8 @@ describe('transfer review presentation', () => {
     expect(state).toEqual({
       selectableCount: 0,
       selectedIds: [],
+      deferredIds: [],
+      deferredCount: 0,
       ambiguousCount: 2,
       reviewLabel: 'Review 2 ambiguous matches',
     })
@@ -30,6 +33,27 @@ describe('transfer review presentation', () => {
     expect(state.selectedIds).toEqual(['safe-a'])
     expect(state.selectableCount).toBe(2)
     expect(state.ambiguousCount).toBe(1)
+  })
+
+  it('caps a 203-link group at the mutation boundary and defers the remainder', () => {
+    const ids = Array.from({ length: 203 }, (_, index) => `link-${index + 1}`)
+    const state = boundedReviewSelection(ids, new Set())
+
+    expect(state.selectedIds).toHaveLength(200)
+    expect(state.selectedIds[0]).toBe('link-1')
+    expect(state.selectedIds[199]).toBe('link-200')
+    expect(state.deferredIds).toEqual(['link-201', 'link-202', 'link-203'])
+    expect(state.deferredCount).toBe(3)
+  })
+
+  it('promotes the next deferred item when one selected item is unchecked', () => {
+    const ids = Array.from({ length: 203 }, (_, index) => `link-${index + 1}`)
+    const state = boundedReviewSelection(ids, new Set(['link-2']))
+
+    expect(state.selectedIds).toHaveLength(200)
+    expect(state.selectedIds).not.toContain('link-2')
+    expect(state.selectedIds).toContain('link-201')
+    expect(state.deferredIds).toEqual(['link-202', 'link-203'])
   })
 
   it('summarises repetitive buckets without dropping their leg count', () => {

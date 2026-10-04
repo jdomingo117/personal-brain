@@ -31,7 +31,7 @@ async function main() {
   const u = await newUserWithAccount('analyze')
 
   section('Regression guard — papaparse object rows')
-  const stg = parseLikeApp('StGreorge_CreditCardtrans180726.csv')
+  const stg = parseLikeApp('St George CC.csv')
   const r = await invoke('analyze-csv', u.token, {
     header: stg.header,
     sampleRows: stg.rows.slice(0, 5),
@@ -53,7 +53,7 @@ async function main() {
   }
 
   section('Mapping quality — AMEX (single column, expenses positive)')
-  const amex = parseLikeApp('AMEX_transactions.csv')
+  const amex = parseLikeApp('AMEX.csv')
   const ra = await invoke('analyze-csv', u.token, {
     header: amex.header, sampleRows: amex.rows.slice(0, 5),
   })
@@ -69,7 +69,7 @@ async function main() {
   }
 
   section('Mapping quality — Macquarie (DD MMM YYYY, split columns)')
-  const mq = parseLikeApp('Macquarie_Transactions-2026-07-18-222903.csv')
+  const mq = parseLikeApp('MAcq Trans.csv')
   const rm = await invoke('analyze-csv', u.token, {
     header: mq.header, sampleRows: mq.rows.slice(0, 5),
   })
