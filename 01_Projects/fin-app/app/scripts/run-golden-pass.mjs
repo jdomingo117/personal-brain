@@ -9,7 +9,8 @@ import { assertSafeTestTarget } from './lib/assertSafeTestTarget.mjs'
 const appDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const repoDir = resolve(appDir, '..')
 const npmCache = process.env.NPM_CONFIG_CACHE ?? resolve(tmpdir(), 'fin-app-npm-cache')
-const projectId = `halcyon-golden-isolated-${Date.now()}`
+const suite = process.argv.includes('--gate2') ? 'gate2' : 'golden'
+const projectId = `halcyon-${suite}-isolated-${Date.now()}`
 const workDir = mkdtempSync(resolve(tmpdir(), 'halcyon-golden-'))
 const isolatedSupabase = resolve(workDir, 'supabase')
 let functions
@@ -65,6 +66,55 @@ function status() {
   return JSON.parse(run('npx', ['supabase', 'status', '--workdir', workDir, '--output', 'json'], { capture: true }))
 }
 
+/**
+ * Supabase CLI normally removes this stack as part of `stop --no-backup`.
+ * On a few Docker/CLI combinations it returns successfully while Compose
+ * containers remain alive, leaving the next isolated run unable to claim its
+ * dedicated ports. The generated project label is unique to this process, so
+ * this is a deliberately narrow fallback -- it can never select the personal
+ * `fin-app` project or another test run.
+ */
+function removeResidualProjectContainers() {
+  if (!/^halcyon-(golden|gate2)-isolated-\d+$/.test(projectId)) {
+    throw new Error(`Refusing to remove containers for unexpected project ID: ${projectId}`)
+  }
+  const listed = spawnSync('docker', [
+    'ps', '-aq', '--filter', `label=com.docker.compose.project=${projectId}`,
+  ], { encoding: 'utf8' })
+  if (listed.status !== 0) {
+    console.error('Could not inspect isolated Docker containers after shutdown.')
+    return
+  }
+  const ids = (listed.stdout ?? '').split(/\s+/).filter(Boolean)
+  if (ids.length === 0) return
+  const removed = spawnSync('docker', ['rm', '-f', ...ids], { encoding: 'utf8' })
+  if (removed.status !== 0) {
+    console.error(`Could not remove residual isolated containers: ${removed.stderr ?? 'unknown Docker error'}`)
+  } else {
+    console.log(`Removed ${ids.length} residual containers for ${projectId}.`)
+  }
+  const remaining = spawnSync('docker', [
+    'ps', '-aq', '--filter', `label=com.docker.compose.project=${projectId}`,
+  ], { encoding: 'utf8' })
+  if (remaining.status !== 0 || (remaining.stdout ?? '').trim()) {
+    throw new Error(`Isolated stack cleanup left containers for ${projectId}.`)
+  }
+}
+
+async function stopFunctions() {
+  if (!functions || functions.exitCode !== null || functions.signalCode !== null) return
+  const exited = new Promise((resolveExit) => functions.once('exit', resolveExit))
+  functions.kill('SIGTERM')
+  const stopped = await Promise.race([
+    exited.then(() => true),
+    new Promise((resolveTimeout) => setTimeout(() => resolveTimeout(false), 10_000)),
+  ])
+  if (!stopped && functions.exitCode === null && functions.signalCode === null) {
+    functions.kill('SIGKILL')
+    await exited
+  }
+}
+
 async function waitForFunctions(url) {
   const deadline = Date.now() + 60_000
   while (Date.now() < deadline) {
@@ -107,12 +157,31 @@ try {
   functions.stderr.on('data', (chunk) => process.stderr.write(`[functions] ${chunk}`))
   await waitForFunctions(apiUrl)
 
-  run('npx', ['playwright', 'test', '--config', 'playwright.golden.config.ts'], { cwd: appDir, env })
+  if (suite === 'gate2') {
+    run('npx', ['vitest', 'run', 'src/lib/csv/gate2Quality.e2e.test.ts'], {
+      cwd: appDir,
+      env: {
+        ...env,
+        HALCYON_GATE2: '1',
+        HALCYON_GATE2_ORIGIN: 'http://127.0.0.1:55300',
+        // Preserve this aggregate quality evidence outside the disposable
+        // stack directory. It contains no credentials and is deliberately
+        // kept out of the repository; the stack and all fixtures still go
+        // away in finally below.
+        HALCYON_GATE2_REPORT: process.env.HALCYON_GATE2_REPORT
+          ?? resolve(tmpdir(), 'halcyon-gate2-categorization.json'),
+      },
+    })
+  } else {
+    run('npx', ['playwright', 'test', '--config', 'playwright.golden.config.ts'], { cwd: appDir, env })
+  }
 } finally {
-  if (functions && !functions.killed) functions.kill('SIGTERM')
+  await stopFunctions()
   if (stackStarted) {
     try { run('npx', ['supabase', 'stop', '--workdir', workDir, '--no-backup']) } catch (error) {
       console.error(`Could not stop isolated stack: ${error.message}`)
+    } finally {
+      removeResidualProjectContainers()
     }
   }
   rmSync(workDir, { recursive: true, force: true })

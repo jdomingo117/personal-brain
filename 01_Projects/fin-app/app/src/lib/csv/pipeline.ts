@@ -213,6 +213,24 @@ export function applyAssignments(
   })
 }
 
+/**
+ * Makes only unresolved merchants from failed categorisation chunks explicit
+ * review rows. Existing bank classifications stay intact: they are already a
+ * deterministic answer even when the optional precedence/AI request failed.
+ */
+export function markFailedCategorizationRows(rows: StagedRow[], failedMerchantKeys: Set<string>): StagedRow[] {
+  return rows.map((row) => {
+    if (!failedMerchantKeys.has(row.merchantKey) || row.categorySource !== null) return row
+    return {
+      ...row,
+      category: UNCATEGORIZED,
+      subcategory: null,
+      categoryConfidence: null,
+      needsReview: true,
+    }
+  })
+}
+
 /** Shapes staged rows into the upsert-transactions payload. */
 export function toTransactionPayload(
   rows: StagedRow[],

@@ -9,7 +9,7 @@ tags:
 type: handoff
 status: current
 project: Halcyon
-updated: 2026-10-01
+updated: 2026-10-04
 related:
   - "[[README]]"
   - "[[INDEX]]"
@@ -143,10 +143,24 @@ than a single mandatory sequence.
    all-eligible runner, and durable/resumable review runs only if their usage
    justifies persistence. The contract is in
    [TAXONOMY_AND_LEDGER_PLAN.md](TAXONOMY_AND_LEDGER_PLAN.md).
-3. **Ingestion hardening.** Close the known ingestion follow-ups: align the
-   5,000-row cap with reconciliation rows, chunk categorisation beyond 300
-   merchants, validate taxonomy pairs server-side, and add live coverage for
-   overlap/cutover/profile edge cases. See [INGESTION_REVIEW.md](INGESTION_REVIEW.md).
+3. **Ingestion hardening.** Phases 1–3 are complete: a 5,000
+   physical-source-row cap fails closed before browser staging, in the Edge
+   Function and in atomic SQL; categorisation retains successful ≤300-merchant
+   batches when a later request fails and flags only unresolved rows for
+   review; imports resolve active global and tenant-custom category pairs
+   before entering the atomic write. Isolated golden coverage proves the
+   source cap/anchor/zero-write boundary, server batch cap and taxonomy
+   isolation. Phase 4 is complete: isolated golden coverage verifies
+   sequential partial-overlap/reconciliation, atomic rollback, connected
+   cutover and saved-profile persistence; it also bounds a hung categorisation
+   chunk and verifies project-scoped test-container cleanup. A forward
+   security migration removes the legacy browser-direct transaction-mutation
+   path. The unit/build/browser-typecheck gate, real-AI golden rerun and
+   six-file (2,850-row, 605-merchant) Gate 2 corpus are green; the non-mutating
+   fresh review made no transaction writes or merchant-cache changes. The
+   implementation workflow, phased contract and isolated-test gates are in
+   [INGESTION_HARDENING_PLAN.md](INGESTION_HARDENING_PLAN.md); the original
+   audit remains in [INGESTION_REVIEW.md](INGESTION_REVIEW.md).
 4. **Investment expansion.** Add parcel-level cost base/disposal accounting or
    another provider/instrument adapter. The Vanguard vertical slice is designed
    as an adapter boundary, so this extends an existing model rather than starts

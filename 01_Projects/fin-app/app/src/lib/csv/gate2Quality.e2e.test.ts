@@ -11,6 +11,7 @@ const URL_ = process.env.SUPABASE_URL ?? ''
 const ANON = process.env.SUPABASE_ANON_KEY ?? ''
 const REPORT_PATH = process.env.HALCYON_GATE2_REPORT ?? '/private/tmp/halcyon-gate2-categorization.json'
 const EXISTING_EMAIL = process.env.HALCYON_GATE2_EXISTING_EMAIL ?? ''
+const ORIGIN = process.env.HALCYON_GATE2_ORIGIN ?? 'http://localhost:5300'
 const SAMPLES = join(__dirname, '..', '..', '..', '..', 'Sample datasets')
 
 const MAPPINGS: Record<string, ColumnMapping> = {
@@ -70,7 +71,7 @@ async function invoke(token: string, fn: string, body: unknown) {
       'Content-Type': 'application/json',
       apikey: ANON,
       Authorization: `Bearer ${token}`,
-      Origin: 'http://localhost:5300',
+      Origin: ORIGIN,
     },
     body: JSON.stringify(body),
   })
@@ -277,8 +278,13 @@ describe.skipIf(!RUN)('Gate 2 categorisation quality', () => {
     const afterRules = await client.from('merchant_rules').select('id', { count: 'exact', head: true })
     expect(afterRules.count).toBe(beforeRules.count)
 
+    // Protected bank/user rows deliberately have no proposal. Their current
+    // classification is an import-preservation concern, not an AI-quality
+    // failure; judge this expectation set only where a fresh AI suggestion
+    // was actually requested and returned.
     const expectationFindings = previewRows.flatMap((row) => EXPECTATIONS
-      .filter((rule) => rule.pattern.test(row.merchant)
+      .filter((rule) => row.status === 'suggested'
+        && rule.pattern.test(row.merchant)
         && !('exclude' in rule && rule.exclude.test(row.merchant))
         && row.proposed?.category !== rule.category)
       .map((rule) => ({

@@ -9,11 +9,13 @@ import DropZone from './ingest/DropZone'
 import MappingEditor from './ingest/MappingEditor'
 import StagingTable from './ingest/StagingTable'
 import {
-  stageRows, applyAssignments, toTransactionPayload,
+  stageRows, applyAssignments, markFailedCategorizationRows, toTransactionPayload,
   type ColumnMapping, type StagedRow,
 } from '../lib/csv/pipeline'
 import { runDetectRecurrenceHints } from '../lib/detectRecurrenceHints'
 import { profileDisplayName, profileFingerprint } from '../lib/csv/profileFingerprint'
+import { sourceRowLimitError } from '../lib/csv/limits'
+import { runCategorizationChunks } from '../lib/csv/categorizeChunks'
 
 /**
  * The single ingestion engine.
@@ -58,7 +60,7 @@ export default function CSVUploader({
   onImportStateChange,
   onReviewTransfers,
 }: Props) {
-  const { refreshData } = useData()
+  const { refreshData, customSubcategories } = useData()
   const [step, setStep] = useState<Step>('upload')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -77,6 +79,7 @@ export default function CSVUploader({
   const [stageStats, setStageStats] = useState<Awaited<ReturnType<typeof stageRows>> | null>(null)
   const [categorizing, setCategorizing] = useState(false)
   const [catStats, setCatStats] = useState<{ fromCache: number; fromBank: number; fromAi: number; geminiCalls: number } | null>(null)
+  const [categorizationWarning, setCategorizationWarning] = useState('')
 
   const [currentBalance, setCurrentBalance] = useState('')
   const [summary, setSummary] = useState<Summary | null>(null)
@@ -91,7 +94,7 @@ export default function CSVUploader({
 
   const reset = () => {
     setStep('upload'); setError(''); setHeaders([]); setRawRows([])
-    setMapping(null); setStaged([]); setStageStats(null); setCatStats(null)
+    setMapping(null); setStaged([]); setStageStats(null); setCatStats(null); setCategorizationWarning('')
     setCurrentBalance(''); setSummary(null)
     setProfileExisted(false); setProfileLabel(''); setSourceFileName('')
     setProfileSaveWarning(''); setRemember(true)
@@ -110,6 +113,8 @@ export default function CSVUploader({
         if (cols.length === 0) { setError('Could not detect any columns in that CSV.'); return }
         const rows = results.data.filter((r) => Object.keys(r).length > 0)
         if (rows.length === 0) { setError('That CSV has headers but no rows.'); return }
+        const rowLimitError = sourceRowLimitError(rows.length)
+        if (rowLimitError) { setError(rowLimitError); return }
 
         setHeaders(cols)
         setRawRows(rows)
@@ -162,6 +167,8 @@ export default function CSVUploader({
     setBusy(true)
     setError('')
     try {
+      setCatStats(null)
+      setCategorizationWarning('')
       const result = await stageRows(rawRows, mapping, accountId)
       setStaged(result.rows)
       setStageStats(result)
@@ -193,25 +200,46 @@ export default function CSVUploader({
 
       if (result.pendingMerchants.length > 0) {
         setCategorizing(true)
+        setCategorizationWarning('')
         setStatus(`Categorising ${result.pendingMerchants.length} merchants…`)
         try {
-          const assignments: Parameters<typeof applyAssignments>[1] = []
-          const totals = { fromCache: 0, fromBank: 0, fromAi: 0, geminiCalls: 0 }
-          for (let offset = 0; offset < result.pendingMerchants.length; offset += 300) {
+          const categorized = await runCategorizationChunks(result.pendingMerchants, async (merchants) => {
             const { data, error: fnErr } = await supabase.functions.invoke('categorize-merchants', {
-              body: { merchants: result.pendingMerchants.slice(offset, offset + 300) },
+              body: { merchants },
             })
             if (fnErr) throw fnErr
-            assignments.push(...data.assignments)
-            totals.fromCache += data.stats.fromCache
-            totals.fromBank += data.stats.fromBank ?? 0
-            totals.fromAi += data.stats.fromAi
-            totals.geminiCalls += data.stats.geminiCalls
+            return {
+              assignments: data.assignments,
+              stats: {
+                fromCache: data.stats.fromCache,
+                fromBank: data.stats.fromBank ?? 0,
+                fromAi: data.stats.fromAi,
+                geminiCalls: data.stats.geminiCalls,
+              },
+            }
+          }, ({ completedChunks, totalChunks, failedChunks }) => {
+            const failed = failedChunks > 0 ? ` · ${failedChunks} unavailable` : ''
+            setStatus(`Categorising ${result.pendingMerchants.length} merchants — batch ${completedChunks} of ${totalChunks}${failed}…`)
+          })
+          const failedMerchantKeys = new Set(categorized.failedMerchantKeys)
+          const resolvedRows = markFailedCategorizationRows(
+            applyAssignments(result.rows, categorized.assignments),
+            failedMerchantKeys,
+          )
+          setStaged(resolvedRows)
+          setCatStats(categorized.stats)
+          const unresolvedRows = resolvedRows.filter((row) => (
+            failedMerchantKeys.has(row.merchantKey) && row.needsReview
+          )).length
+          if (failedMerchantKeys.size > 0) {
+            setCategorizationWarning(
+              `Automated categorisation was unavailable for ${failedMerchantKeys.size} merchant${failedMerchantKeys.size === 1 ? '' : 's'}. Successful batches were kept; ${unresolvedRows} row${unresolvedRows === 1 ? '' : 's'} need review before importing.`,
+            )
           }
-          setStaged((rows) => applyAssignments(rows, assignments))
-          setCatStats(totals)
-        } catch {
-          setError('Categorisation is unavailable — rows are staged as Uncategorized. You can set categories below and import anyway.')
+        } catch (error) {
+          // The runner treats endpoint failures as recoverable per-chunk. This
+          // guard remains for unexpected client/runtime failures only.
+          setError(error instanceof Error ? error.message : 'Could not prepare categorisation for this statement.')
         } finally {
           setCategorizing(false); setStatus('')
         }
@@ -390,6 +418,12 @@ export default function CSVUploader({
               {categorizing && <span role="status" aria-live="polite" className="text-accent-ink">{status}</span>}
             </div>
 
+            {categorizationWarning && (
+              <p role="status" className="rounded-[10px] border border-[var(--color-warn)] bg-[var(--color-warn)]/5 px-3 py-2 text-[13px] text-ink2">
+                {categorizationWarning}
+              </p>
+            )}
+
             {stageStats.unmappedBankCategories.length > 0 && (
               <p className="text-[13px] text-ink2">
                 Your bank used categories Halcyon has no direct equivalent for
@@ -418,7 +452,12 @@ export default function CSVUploader({
               </div>
             )}
 
-            <StagingTable rows={staged} onChange={setStaged} categorizing={categorizing} />
+            <StagingTable
+              rows={staged}
+              onChange={setStaged}
+              categorizing={categorizing}
+              customSubcategories={customSubcategories}
+            />
 
             <div className="flex gap-2">
               <Button onClick={goToBalance} disabled={busy || categorizing || importable === 0 || connectedOverlapCount > 0}>

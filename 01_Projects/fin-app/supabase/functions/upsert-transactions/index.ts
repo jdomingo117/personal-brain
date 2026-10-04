@@ -3,8 +3,12 @@ import { SafeHttpError, withAuth } from '../_shared/withAuth.ts'
 import { dedupeHashHex } from '../_shared/dedupe.ts'
 import { isTransferCandidateText } from '../_shared/transferMatch.ts'
 import { connectedImportViolation } from '../_shared/connectedImportPolicy.ts'
-import { ALL_CATEGORIES, FULL_TAXONOMY } from '../_shared/taxonomy.ts'
 import { defaultTransactionKind } from '../_shared/classification.ts'
+
+// Mirrors app/src/lib/csv/limits.ts and the atomic SQL migration. The client
+// rejects an oversized source early, but the server owns the write boundary.
+const MAX_SOURCE_ROWS = 5_000
+const MAX_SUBMITTED_TRANSACTIONS = 5_000
 
 const TransactionSchema = z.object({
   id: z.string().uuid().optional(),
@@ -12,8 +16,8 @@ const TransactionSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD
   original_description: z.string().max(500),
   merchant: z.string().max(200),
-  category: z.string().max(100),
-  subcategory: z.string().max(100).optional().nullable(),
+  category: z.string().trim().min(1).max(100),
+  subcategory: z.string().trim().max(100).optional().nullable(),
   amount: z.number().int(), // Cents (negative for expenses)
   original_amount: z.number().int().optional().nullable(),
   original_currency: z.string().length(3).optional().nullable(),
@@ -21,27 +25,99 @@ const TransactionSchema = z.object({
   category_source: z.enum(['user', 'bank', 'ai', 'seed']).optional().nullable(),
   category_confidence: z.number().min(0).max(1).optional().nullable(),
   needs_review: z.boolean().optional(),
-}).superRefine((row, ctx) => {
-  if (!ALL_CATEGORIES.includes(row.category)) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['category'], message: 'Unknown category' })
-    return
-  }
-  if (row.subcategory && !(FULL_TAXONOMY[row.category] ?? []).includes(row.subcategory)) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['subcategory'], message: 'Subcategory does not belong to this category' })
-  }
-  if (row.category === 'Transfer' && row.subcategory === 'Reconciliation'
-      && row.original_description !== 'Opening Balance Offset (Reconciliation)') {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['subcategory'], message: 'Reconciliation is reserved for system entries' })
-  }
 })
+
+type ImportRow = z.infer<typeof TransactionSchema>
+
+/**
+ * The schema validates untrusted value shapes; this resolver validates their
+ * meaning against the active database taxonomy for the importing tenant.
+ *
+ * `_shared/taxonomy.ts` remains authoritative for model output, but an import
+ * can legitimately use an active tenant custom subcategory which cannot live
+ * in that static, global vocabulary. The database trigger remains the final
+ * constraint; resolving here produces a clear 422 before the atomic import.
+ */
+async function resolveTaxonomyPairs(db: any, tenantId: string, rows: ImportRow[]): Promise<ImportRow[]> {
+  const [categoriesResult, subcategoriesResult] = await Promise.all([
+    db.from('taxonomy_categories').select('id,display_name').eq('active', true),
+    db.from('taxonomy_subcategories').select('category_id,display_name').eq('active', true),
+  ])
+  if (categoriesResult.error) throw categoriesResult.error
+  if (subcategoriesResult.error) throw subcategoriesResult.error
+
+  const categoriesByName = new Map<string, { id: string; displayName: string }>()
+  for (const category of categoriesResult.data ?? []) {
+    categoriesByName.set(category.display_name.toLocaleLowerCase(), {
+      id: category.id,
+      displayName: category.display_name,
+    })
+  }
+  const globalSubcategories = new Map<string, string>()
+  for (const subcategory of subcategoriesResult.data ?? []) {
+    globalSubcategories.set(
+      `${subcategory.category_id}:${subcategory.display_name.toLocaleLowerCase()}`,
+      subcategory.display_name,
+    )
+  }
+
+  const { data: customSubcategories, error: customError } = await db
+    .from('tenant_subcategories')
+    .select('category_id,display_name')
+    .eq('tenant_id', tenantId)
+    .eq('active', true)
+  if (customError) throw customError
+  const customSubcategoryNames = new Map<string, string>()
+  for (const subcategory of customSubcategories ?? []) {
+    customSubcategoryNames.set(
+      `${subcategory.category_id}:${subcategory.display_name.toLocaleLowerCase()}`,
+      subcategory.display_name,
+    )
+  }
+
+  return rows.map((row, index) => {
+    const category = categoriesByName.get(row.category.toLocaleLowerCase())
+    if (!category) {
+      throw new SafeHttpError(422, {
+        error: 'invalid_taxonomy_pair',
+        message: `Category "${row.category}" is not active in your taxonomy.`,
+        row: index,
+      })
+    }
+
+    const requestedSubcategory = row.subcategory?.trim() || null
+    const key = requestedSubcategory
+      ? `${category.id}:${requestedSubcategory.toLocaleLowerCase()}`
+      : null
+    const subcategory = key
+      ? globalSubcategories.get(key) ?? customSubcategoryNames.get(key)
+      : null
+    if (requestedSubcategory && !subcategory) {
+      throw new SafeHttpError(422, {
+        error: 'invalid_taxonomy_pair',
+        message: `Subcategory "${requestedSubcategory}" does not belong to "${category.displayName}" in your taxonomy.`,
+        row: index,
+      })
+    }
+    if (category.displayName === 'Transfer' && subcategory === 'Reconciliation'
+      && row.original_description !== 'Opening Balance Offset (Reconciliation)') {
+      throw new SafeHttpError(422, {
+        error: 'reserved_reconciliation',
+        message: 'Reconciliation is reserved for system entries.',
+        row: index,
+      })
+    }
+    return { ...row, category: category.displayName, subcategory }
+  })
+}
 
 // A CSV import arrives as one batch. The cap bounds both the request body and
 // the size of the resulting insert.
 const ImportSchema = z.object({
-  transactions: z.array(TransactionSchema).min(1).max(5000),
+  transactions: z.array(TransactionSchema).min(1).max(MAX_SUBMITTED_TRANSACTIONS),
   target_balance: z.number().int().optional().nullable(),
   file_name: z.string().trim().min(1).max(255).optional(),
-  source_row_count: z.number().int().nonnegative().optional(),
+  source_row_count: z.number().int().nonnegative().max(MAX_SOURCE_ROWS).optional(),
   blocked_count: z.number().int().nonnegative().optional(),
 }).superRefine((value, ctx) => {
   const sourceRows = value.source_row_count ?? value.transactions.length
@@ -62,29 +138,31 @@ const ImportSchema = z.object({
 })
 const PayloadSchema = z.union([
   TransactionSchema,
-  z.array(TransactionSchema).max(5000),
+  z.array(TransactionSchema).max(MAX_SUBMITTED_TRANSACTIONS),
   ImportSchema,
 ])
 
 Deno.serve(
   withAuth({ schema: PayloadSchema, maxBodyBytes: 8 * 1024 * 1024 }, async (ctx) => {
     const isImport = !Array.isArray(ctx.body) && 'transactions' in ctx.body
-    const rows = isImport
+    const submittedRows = isImport
       ? ctx.body.transactions
       : Array.isArray(ctx.body) ? ctx.body : [ctx.body]
     const targetBalance = isImport ? ctx.body.target_balance ?? null : null
     const fileName = isImport ? ctx.body.file_name ?? null : null
-    const sourceRowCount = isImport ? ctx.body.source_row_count ?? rows.length : rows.length
+    const sourceRowCount = isImport ? ctx.body.source_row_count ?? submittedRows.length : submittedRows.length
     const blockedCount = isImport ? ctx.body.blocked_count ?? 0 : 0
-    if (rows.length === 0) return { inserted: 0, skipped: 0, needsReview: 0 }
+    if (submittedRows.length === 0) return { inserted: 0, skipped: 0, needsReview: 0 }
 
-    const accountIds = [...new Set(rows.map((row) => row.account_id))]
+    const accountIds = [...new Set(submittedRows.map((row) => row.account_id))]
     if (accountIds.length !== 1) {
       throw new SafeHttpError(422, {
         error: 'single_account_required',
         message: 'A transaction import must target exactly one account.',
       })
     }
+
+    const rows = await resolveTaxonomyPairs(ctx.db, ctx.tenantId, submittedRows)
 
     // A provider-connected account has an explicit ownership seam: CSV may
     // write history before cutover_date, while the provider owns that date and

@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import Papa from 'papaparse'
-import { stageRows, applyAssignments, toTransactionPayload } from './pipeline'
+import { stageRows, applyAssignments, markFailedCategorizationRows, toTransactionPayload } from './pipeline'
 
 const SAMPLES = join(__dirname, '..', '..', '..', '..', 'Sample datasets')
 const load = (n: string) =>
@@ -124,5 +124,22 @@ describe('applyAssignments', () => {
       { key: res.rows[0].merchantKey, category: 'Uncategorized', subcategory: null, source: 'ai' },
     ])
     expect(applied[0].needsReview).toBe(true)
+  })
+
+  it('marks only unresolved rows from a failed categorisation chunk for review', async () => {
+    const res = await stageRows([
+      { Date: '18/06/2026', Description: 'No Answer Co', Debit: '5.00', Credit: '' },
+      { Date: '18/06/2026', Description: 'Bank Answer Co', Debit: '6.00', Credit: '', Category: 'Groceries' },
+    ], STG, ACCOUNT)
+    const unresolved = res.rows.find((row) => row.originalDescription === 'No Answer Co')!
+    const banked = res.rows.find((row) => row.originalDescription === 'Bank Answer Co')!
+    const failed = markFailedCategorizationRows(res.rows, new Set([unresolved.merchantKey, banked.merchantKey]))
+
+    expect(failed.find((row) => row.id === unresolved.id)).toMatchObject({
+      category: 'Uncategorized', categorySource: null, needsReview: true,
+    })
+    expect(failed.find((row) => row.id === banked.id)).toMatchObject({
+      category: banked.category, categorySource: 'bank', needsReview: false,
+    })
   })
 })

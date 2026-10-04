@@ -64,6 +64,14 @@ hand to find the transfer-linker gap.
 
 ## Recent changes
 
+- 2026-10-04 — Completed Phase 4 ingestion hardening: isolated golden coverage verifies overlap/reconciliation, rollback, connected cutover, profile persistence and direct-write denial; hung chunks recover safely, test-stack cleanup is project-scoped, and the full golden plus six-file Gate 2 gates are green.
+
+- 2026-10-04 — Completed Phase 3 ingestion hardening: imports now canonicalize and validate global and active tenant custom taxonomy pairs before the atomic write; isolated golden coverage verifies custom, inactive, mismatched, unknown and cross-tenant cases plus denied direct browser writes.
+
+- 2026-10-04 — Completed Phase 2 ingestion hardening: categorisation now keeps successful ≤300-merchant batches when another batch fails, continues independently and flags only unresolved affected rows for review; unit and disposable golden boundaries are green.
+
+- 2026-10-04 — Completed Phase 1 ingestion hardening: a 5,000 source-row cap now fails closed in the browser, Edge Function and atomic SQL path; isolated golden coverage proves an exact-limit import plus one reconciliation anchor and a zero-write 5,001-row rejection.
+
 - 2026-09-30 — Fixed real-data transfer review at the 200-item mutation boundary: oversized groups now visibly defer the remainder instead of submitting a failing 203-link request.
 
 - 2026-09-26 — Backed up and safely forward-migrated the personal local stack through the Gate 1/2 categorisation-review migrations with unchanged identity/account/transaction counts.
@@ -75,11 +83,3 @@ hand to find the transfer-linker gap.
 - 2026-09-17 — Implemented selected-row categorisation-engine review with fresh preview-only suggestions, protected sources, atomic heterogeneous acceptance, stale-state rejection, impact projection and grouped guarded undo.
 
 - 2026-09-16 — Added `CURRENT_STATUS.md` as the live resume point; clarified that `CONTEXT.md` is the historical diary and recorded recovery-first next-work options.
-
-- 2026-08-17 — Logged the deferred, preview-first “Review with categorisation engine” workflow for implementation only after system recovery and baseline integrity validation.
-
-- 2026-08-17 — Retired reset-based validation and added mandatory persistent-data, backup, isolated-test and recovery safeguards after a local account-loss incident.
-
-- 2026-08-15 — Added six repeatable Playwright Ledger regressions covering mixed/impact semantics, cross-page and 500-row selection, safe attributes/protection, grouped undo and modal focus restoration.
-
-- 2026-08-15 — Added reusable focus trapping and opener/fallback restoration across all Ledger dialogs, including animated drawer exit and completed bulk-selection flows.

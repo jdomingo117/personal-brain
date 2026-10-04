@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { StagedRow } from '../../lib/csv/pipeline'
-import { CATEGORY_TAXONOMY, FULL_TAXONOMY, ALL_CATEGORIES, UNCATEGORIZED } from '../../data'
+import { CATEGORY_TAXONOMY, FULL_TAXONOMY, ALL_CATEGORIES, UNCATEGORIZED, type CustomSubcategory } from '../../data'
 
 /**
  * The staging buffer (SRD §6.E).
@@ -36,10 +36,12 @@ export default function StagingTable({
   rows,
   onChange,
   categorizing,
+  customSubcategories,
 }: {
   rows: StagedRow[]
   onChange: (rows: StagedRow[]) => void
   categorizing: boolean
+  customSubcategories: CustomSubcategory[]
 }) {
   const [filter, setFilter] = useState<'all' | 'review' | 'issues'>('all')
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -137,6 +139,12 @@ export default function StagingTable({
           <tbody>
             {visible.map((r) => {
               const blocked = r.issues.length > 0
+              const subcategoryOptions = [
+                ...(FULL_TAXONOMY[r.category] ?? []),
+                ...customSubcategories
+                  .filter((item) => item.category === r.category)
+                  .map((item) => item.displayName),
+              ]
               return (
                 <tr
                   key={r.id}
@@ -185,7 +193,7 @@ export default function StagingTable({
                             <option key={c} value={c}>{c}</option>
                           ))}
                         </select>
-                        {(FULL_TAXONOMY[r.category]?.length ?? 0) > 0 && (
+                        {subcategoryOptions.length > 0 && (
                           <select
                             value={r.subcategory ?? ''}
                             onChange={(e) => setRow(r.id, {
@@ -196,7 +204,7 @@ export default function StagingTable({
                             aria-label={`Subcategory for ${r.merchantDisplay}`}
                           >
                             <option value="">—</option>
-                            {FULL_TAXONOMY[r.category].map((s) => (
+                            {subcategoryOptions.map((s) => (
                               <option key={s} value={s}>{s}</option>
                             ))}
                           </select>

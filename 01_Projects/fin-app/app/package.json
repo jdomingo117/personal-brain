@@ -12,7 +12,8 @@
     "test:browser": "node scripts/run-browser-tests.mjs",
     "test:browser:install": "playwright install chromium",
     "test:browser:typecheck": "tsc --noEmit -p e2e/tsconfig.json",
-    "test:golden": "node scripts/run-golden-pass.mjs"
+    "test:golden": "node scripts/run-golden-pass.mjs",
+    "test:gate2": "node scripts/run-golden-pass.mjs --gate2"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.7",

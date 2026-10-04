@@ -79,12 +79,16 @@ boundaries come before workflow and visual refinement.
    204-test frontend suite, production build, light/dark signed-in browser review, 15-check live
    ingestion harness and 51-check live transfer harness are green.
 
-## Follow-up hardening discovered in the same review
+## Follow-up hardening status
 
-- Align the 5,000-row transaction cap with the optional reconciliation row and chunk categorisation
-  beyond 300 distinct merchants.
-- Validate categories and parent/subcategory combinations against the authoritative server taxonomy
-  in `upsert-transactions`.
-- Add regression coverage for consecutive distinct imports, partial-overlap reconciliation,
-  partial failure, connected-account cutover enforcement, and saved-profile persistence. The live
-  integration suite is the appropriate place for database/RLS behaviour.
+Phases 1–3 are complete: the 5,000 physical-source-row contract is enforced
+before staging and again by Edge/SQL, categorisation retains completed
+≤300-merchant chunks through rejected requests, and import taxonomy validation
+is tenant-aware. Phase 4 adds isolated golden coverage for sequential and
+partially overlapping imports, reconciliation replacement, rollback,
+connected-account cutover and profile persistence, plus timeout recovery for a
+hung categorisation chunk and project-scoped test-stack cleanup. It also
+removes the legacy direct browser transaction-mutation policy. The full
+isolated golden pass and six-file Gate 2 corpus are green; Gate 2's fresh
+review made no transaction or merchant-cache mutations and produced zero
+actionable expectation findings.
