@@ -64,6 +64,8 @@ hand to find the transfer-linker gap.
 
 ## Recent changes
 
+- 2026-10-05 — Backed up and forward-migrated the persistent local stack through the ingestion hardening migrations; identity/ledger counts are unchanged and direct browser transaction mutations are now denied.
+
 - 2026-10-04 — Completed Phase 4 ingestion hardening: isolated golden coverage verifies overlap/reconciliation, rollback, connected cutover, profile persistence and direct-write denial; hung chunks recover safely, test-stack cleanup is project-scoped, and the full golden plus six-file Gate 2 gates are green.
 
 - 2026-10-04 — Completed Phase 3 ingestion hardening: imports now canonicalize and validate global and active tenant custom taxonomy pairs before the atomic write; isolated golden coverage verifies custom, inactive, mismatched, unknown and cross-tenant cases plus denied direct browser writes.
@@ -76,10 +78,8 @@ hand to find the transfer-linker gap.
 
 - 2026-09-26 — Backed up and safely forward-migrated the personal local stack through the Gate 1/2 categorisation-review migrations with unchanged identity/account/transaction counts.
 
-- 2026-09-21 — Completed Gate 2 categorisation quality validation over five representative CSVs/793 transactions, repairing nullable subscription derivation and the missing required AI-confidence contract.
+- 2026-09-21 — Completed Gate 2 categorisation quality validation over the original five representative CSVs/793 transactions, repairing nullable subscription derivation and the missing required AI-confidence contract.
 
 - 2026-09-20 — Completed Gate 1 for selected-row categorisation review: disposable-stack migration/API/live-Gemini checks passed 13/13 and the authenticated rendered apply/undo flow passed without touching the personal database.
 
 - 2026-09-17 — Implemented selected-row categorisation-engine review with fresh preview-only suggestions, protected sources, atomic heterogeneous acceptance, stale-state rejection, impact projection and grouped guarded undo.
-
-- 2026-09-16 — Added `CURRENT_STATUS.md` as the live resume point; clarified that `CONTEXT.md` is the historical diary and recorded recovery-first next-work options.

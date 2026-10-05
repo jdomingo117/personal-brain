@@ -1,6 +1,6 @@
 # Ingestion engine review and delivery order
 
-Review date: 2026-08-09. This is the ordered implementation backlog from the backend and UX audit
+Review date: 2026-08-09. This began as the ordered implementation backlog from the backend and UX audit
 of the CSV ingestion and transfer-review experience. The order is intentional: data-integrity
 boundaries come before workflow and visual refinement.
 
@@ -81,14 +81,14 @@ boundaries come before workflow and visual refinement.
 
 ## Follow-up hardening status
 
-Phases 1–3 are complete: the 5,000 physical-source-row contract is enforced
-before staging and again by Edge/SQL, categorisation retains completed
-≤300-merchant chunks through rejected requests, and import taxonomy validation
-is tenant-aware. Phase 4 adds isolated golden coverage for sequential and
-partially overlapping imports, reconciliation replacement, rollback,
-connected-account cutover and profile persistence, plus timeout recovery for a
-hung categorisation chunk and project-scoped test-stack cleanup. It also
-removes the legacy direct browser transaction-mutation policy. The full
-isolated golden pass and six-file Gate 2 corpus are green; Gate 2's fresh
-review made no transaction or merchant-cache mutations and produced zero
-actionable expectation findings.
+Ingestion hardening is complete. The first three phases enforce the 5,000
+physical-source-row contract before staging and again by Edge/SQL, retain
+completed ≤300-merchant categorisation chunks through rejected requests, and
+make import taxonomy validation tenant-aware. The release gate covers
+sequential and partially overlapping imports, reconciliation replacement,
+rollback, connected-account cutover and profile persistence, plus timeout
+recovery for a hung categorisation chunk and project-scoped test-stack cleanup.
+The forward security migration also removes the legacy direct browser
+transaction-mutation policy. The full isolated golden pass and six-file Gate 2
+corpus are green; Gate 2's fresh review made no transaction or merchant-cache
+mutations and produced zero actionable expectation findings.

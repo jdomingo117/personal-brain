@@ -9,7 +9,7 @@ tags:
 type: handoff
 status: current
 project: Halcyon
-updated: 2026-10-04
+updated: 2026-10-05
 related:
   - "[[README]]"
   - "[[INDEX]]"
@@ -84,6 +84,16 @@ A post-import custom-format backup was catalog-verified at
 `backups/halcyon-post-test-import-20260930.dump` (SHA-256
 `93e0b4f5214a4d191c0972bfd34995d40ec394094ae639c3260001d125f01c5c`).
 
+On 2026-10-05, after a fresh restorable backup at
+`backups/halcyon-pre-transaction-mutation-policy-20261005.dump` (SHA-256
+`59baf2d1d2bfa2e95df318c2fe88cfe16d6fd1fb53af9bac23c69803921051cd`), the
+forward-only ingestion migrations `20261004000000` and `20261004010000` were
+applied to the personal stack. Identity/account/transaction counts remained
+1/9/8,777 and the net ledger total remained 14,526,233 cents. `anon` and
+`authenticated` now hold no direct INSERT, UPDATE or DELETE privilege on
+`public.transactions`; imports remain available only through the validated
+Edge Function/RPC boundary. No fixture data or reset was used.
+
 Before any migration, recovery, live integration test or re-import, read and
 follow [SYSTEM_INTEGRITY.md](SYSTEM_INTEGRITY.md). In particular, use a positively
 identified isolated project for destructive test flows.
@@ -103,7 +113,7 @@ impact presentation, keyboard focus wrapping and Escape, atomic apply and
 grouped undo. The personal local database was not used or modified.
 
 Gate 2 then reset only that positively identified disposable stack and imported
-all five representative bank CSVs through the production staging,
+the then-five-file representative bank CSV corpus through the production staging,
 categorisation and atomic-ingestion path: 793 transactions across 167 merchants,
 with 137 bank-sourced and 656 AI-sourced rows. The final run left 6 rows needing
 review, including 3 unresolved. A cache-bypassing fresh review sampled 676 rows
@@ -137,20 +147,20 @@ than a single mandatory sequence.
 2. **Classification review workflow — Gates 1 and 2 complete.** The Ledger
    now previews and applies fresh suggestions for an intentional selection of
    up to 500 rows, with protected decisions, impact preview, atomic application
-   and guarded undo. Its isolated migration/API/browser gate and five-file,
+   and guarded undo. Its isolated migration/API/browser gate and original five-file,
    793-row representative CSV quality gate are green. Remaining product scope
    is the safe unresolved default, an
    all-eligible runner, and durable/resumable review runs only if their usage
    justifies persistence. The contract is in
    [TAXONOMY_AND_LEDGER_PLAN.md](TAXONOMY_AND_LEDGER_PLAN.md).
-3. **Ingestion hardening.** Phases 1–3 are complete: a 5,000
+3. **Ingestion hardening is complete.** A 5,000
    physical-source-row cap fails closed before browser staging, in the Edge
    Function and in atomic SQL; categorisation retains successful ≤300-merchant
    batches when a later request fails and flags only unresolved rows for
    review; imports resolve active global and tenant-custom category pairs
    before entering the atomic write. Isolated golden coverage proves the
    source cap/anchor/zero-write boundary, server batch cap and taxonomy
-   isolation. Phase 4 is complete: isolated golden coverage verifies
+   isolation. The release gate verifies
    sequential partial-overlap/reconciliation, atomic rollback, connected
    cutover and saved-profile persistence; it also bounds a hung categorisation
    chunk and verifies project-scoped test-container cleanup. A forward
