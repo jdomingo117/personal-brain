@@ -16,6 +16,7 @@
     "elixir": 9,
     "finance": 1,
     "halcyon": 5,
+    "ingestion": 20,
     "investments": 12,
     "ledger": 13,
     "operations": 19,
@@ -24,6 +25,7 @@
     "playwright-test-healer": 15,
     "playwright-test-planner": 16,
     "projects": 3,
+    "quality": 21,
     "taxonomy": 17,
     "typescript": 7,
     "projects/fin-app": 1

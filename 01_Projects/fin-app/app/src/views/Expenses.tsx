@@ -4,7 +4,7 @@ import { Screen, ViewHeader, Grid } from '../components/Screen'
 import TransactionsPanel from '../components/TransactionsPanel'
 import ExpenseTrendCard from '../components/ExpenseTrendCard'
 import ExpenseFlowCard from '../components/ExpenseFlowCard'
-import ExpensePacingCard from '../components/ExpensePacingCard'
+import ExpenseChangesCard from '../components/ExpenseChangesCard'
 
 import ExpenseScopeBar from '../components/ExpenseScopeBar'
 import SegmentedTabs from '../components/SegmentedTabs'
@@ -119,10 +119,10 @@ export default function Expenses() {
 
 /* ── Expense analytics ───────────────────────────────────────────────────
    Header toolbar (period range · spending accounts) drives the cash-flow
-   pacing chart and the outflow ledger; budget capacity is cycle-based.
+   comparison and the outflow ledger; budget capacity is cycle-based.
 
    A single category focus (`sel`) is shared across the tiles. The two
-   comparison tiles (flow · pacing) are its *sources* and never filter
+   comparison tiles (flow · changes) are its *sources* and never filter
    themselves — they highlight, because filtering a part-to-whole view down to
    one part deletes the comparison that is the question. Everything that answers
    "how much / which ones?" (hero · trend · ledger) follows the focus. */
@@ -238,6 +238,24 @@ function ExpenseAnalytics({ from, to, accounts }: { from: string; to: string; ac
     return base.outflows.filter((t) => t.date >= timeFocus.from && t.date <= timeFocus.to)
   }, [base.outflows, timeFocus])
 
+  // The category-change comparison is another source of the shared focus, so
+  // it intentionally receives unfiltered current/prior sets. Otherwise a
+  // selected category would erase the comparison that makes its change useful.
+  const priorBaseOutflows = useMemo(() => {
+    const activeFrom = timeFocus ? timeFocus.from : from
+    const activeTo = timeFocus ? timeFocus.to : to
+    const comparison = previousPeriodRange(activeFrom, activeTo)
+    if (!base.gated) return []
+    return transactions.filter((t) =>
+      isGrossExpense(t) && !t.isTransfer && t.account_id && accounts.includes(t.account_id) && t.date >= comparison.from && t.date <= comparison.to,
+    )
+  }, [accounts, base.gated, from, timeFocus, to, transactions])
+
+  const categoryFlowHeight = useMemo(() => {
+    const categoryCount = new Set(timeFilteredBaseOutflows.map((transaction) => transaction.cat)).size
+    return Math.max(360, Math.min(540, categoryCount * 48 + 70))
+  }, [timeFilteredBaseOutflows])
+
   if (accounts.length === 0) {
     return (
       <Grid>
@@ -249,7 +267,7 @@ function ExpenseAnalytics({ from, to, accounts }: { from: string; to: string; ac
           </svg>
           <div className="font-display text-[16px] font-bold text-ink">No spending accounts selected</div>
           <p className="max-w-[440px] text-[13px] leading-relaxed text-muted">
-            Please select at least one outflow account from the filter bar above to analyze transaction history, pacing, and category outflow.
+            Please select at least one outflow account from the filter bar above to analyze transaction history, category changes, and category outflow.
           </p>
         </div>
       </Grid>
@@ -322,6 +340,7 @@ function ExpenseAnalytics({ from, to, accounts }: { from: string; to: string; ac
           scopeLabel={focused ? focusLabel : undefined}
           timeFocus={timeFocus}
           onTimeFocus={setTimeFocus}
+          height={categoryFlowHeight}
         />
         {/* a selection *source*: takes the unfiltered set and highlights */}
         <ExpenseFlowCard
@@ -329,18 +348,16 @@ function ExpenseAnalytics({ from, to, accounts }: { from: string; to: string; ac
           selection={sel}
           onToggleCategory={onToggleCategory}
           onToggleSubcat={onToggleSubcat}
+          height={categoryFlowHeight}
         />
       </div>
-      {/* Row 3 — category pacing vs the prior window of equal length. Derives its
-          own trailing history from the ledger, so it takes the range rather than
-          the range-scoped `outflows` the cards above share. Also a source. */}
-      <ExpensePacingCard
-        from={timeFocus ? timeFocus.from : from}
-        to={timeFocus ? timeFocus.to : to}
-        gated={m.gated}
+      {/* Row 3 — a direct current-versus-prior category comparison. It is a
+          selection source, but deliberately never filters itself. */}
+      <ExpenseChangesCard
+        outflows={timeFilteredBaseOutflows}
+        previousOutflows={priorBaseOutflows}
         selection={sel}
         onToggleCategory={onToggleCategory}
-        onToggleSubcat={onToggleSubcat}
       />
       {/* Row 4 — transactions. `rows` stays UNFILTERED: this panel is the filterer,
           it just sources its category state from the shared focus now. Pre-filtering

@@ -101,13 +101,13 @@ src/
     Controls (Button/Chip/Select/DateInput/MultiSelect/DateRangePicker/Switch)
     SegmentedTabs  Screen (Screen/ViewHeader/Grid)  motion.ts
     AnalyzerFilters  HeroMetric  TransactionsPanel
-    ExpenseTrendCard  ExpenseFlowCard  ExpensePacingCard  ExpenseScopeBar
+    ExpenseTrendCard  ExpenseFlowCard  ExpenseChangesCard  ExpenseScopeBar
     charts/ Area  Bar  Donut
   views/              Landing Dashboard Accounts Income Expenses Ingestion Settings
   three/              SceneBackground.tsx
   hooks/              useScramble  useCountUp  useChartReveal (anime.js firewall)
                       usePeriodRange
-  lib/                period.ts (presets · month bucketing)  pacing.ts (volatility + pacing)
+  lib/                period.ts (presets · exact equal-day comparisons)
                       expenseSelection.ts (the Expenses cross-filter)
 ```
 

@@ -12,7 +12,7 @@ import { CATEGORY_TAXONOMY, EXPENSE_CATEGORIES, type Txn } from '../data'
  *  min–max bound.
  *
  *  `categories`/`subcats` are **controlled**: they're the view's shared focus, so
- *  clicking a category in the flow or pacing card lands here. Search and the
+ *  clicking a category in the flow or category-changes card lands here. Search and the
  *  amount bound stay local — no other tile speaks them.
  *
  *  `rows` arrives scoped by the view's period + account filters but is otherwise

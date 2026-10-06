@@ -1,7 +1,7 @@
 /* The Expenses analyzer's shared category focus.
  *
  * One selection drives the whole view: click a category (or sub-category) in the
- * flow or pacing card and the hero row, trend chart and ledger follow it. The two
+ * flow or category-changes card and the hero row, trend chart and ledger follow it. The two
  * comparison tiles never filter *themselves* — they highlight — because filtering
  * a part-to-whole view to one part deletes the comparison that is the question.
  *

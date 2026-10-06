@@ -62,11 +62,14 @@ export default function ExpenseFlowCard({
   selection,
   onToggleCategory,
   onToggleSubcat,
+  height,
 }: {
   outflows: Txn[]
   selection: CatSelection
   onToggleCategory: (cat: string) => void
   onToggleSubcat: (cat: string, sub: string) => void
+  /** Taller category sets need a taller graph rather than smaller nodes. */
+  height?: number
 }) {
   // Which category is expanded when nothing is focused. Kept across a focus so
   // clearing returns you where you were rather than snapping to the biggest.
@@ -100,6 +103,7 @@ export default function ExpenseFlowCard({
      When a focus is active the expanded category is always one of the selected
      ones, so you never get the broken-looking "expanded but dimmed". */
   const focusOn = isActive(selection)
+  const flowHeight = height ?? Math.max(360, Math.min(540, cats.length * 48 + 70))
   const inScope = cats.filter((c) => catInScope(c.name, selection)) // cats is sorted desc
   const expanded = focusOn
     ? inScope[0]?.name ?? null
@@ -179,7 +183,7 @@ export default function ExpenseFlowCard({
           No spending in the selected period.
         </div>
       ) : (
-        <div ref={paneRef} style={{ height: 330 }}>
+        <div ref={paneRef} style={{ height: flowHeight }}>
           <ReactFlow
             nodes={nodes}
             edges={edges}

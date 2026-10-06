@@ -138,7 +138,7 @@ function AppFrame({
             <Route path="/dashboard" element={<DataRoute index="01 — Command" title="Dashboard" sub="Your finances at a glance"><Dashboard /></DataRoute>} />
             <Route path="/accounts" element={<LazyDataRoute index="02 — Accounts" title="Accounts" sub="Balances, activity & connections"><Accounts /></LazyDataRoute>} />
             <Route path="/income" element={<LazyDataRoute index="03 — Income" title="Income" sub="Inflow analysis & patterns"><Income /></LazyDataRoute>} />
-            <Route path="/expenses" element={<LazyDataRoute index="04 — Expenses" title="Expenses" sub="Outflow analysis, pacing & recurring costs"><Expenses /></LazyDataRoute>} />
+            <Route path="/expenses" element={<LazyDataRoute index="04 — Expenses" title="Expenses" sub="Outflow analysis, category changes & recurring costs"><Expenses /></LazyDataRoute>} />
             <Route path="/ledger" element={<LazyDataRoute index="05 — Ledger" title="Ledger" sub="Inspect, review and correct every transaction"><LedgerView /></LazyDataRoute>} />
             <Route path="/ingestion" element={<LazyDataRoute index="06 — Ingestion" title="Ingestion" sub="Import statements, categorise, reconcile balances"><Ingestion /></LazyDataRoute>} />
             <Route path="/transfers" element={<LazyDataRoute index="07 — Reconciliation" title="Transfer review" sub="Resolve movements between accounts"><TransferReview /></LazyDataRoute>} />

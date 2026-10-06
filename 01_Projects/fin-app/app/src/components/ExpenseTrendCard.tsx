@@ -28,6 +28,7 @@ export default function ExpenseTrendCard({
   scopeLabel,
   timeFocus,
   onTimeFocus,
+  height = 330,
 }: {
   outflows: Txn[]
   from: string
@@ -37,6 +38,8 @@ export default function ExpenseTrendCard({
   scopeLabel?: string
   timeFocus: { from: string; to: string; label: string } | null
   onTimeFocus: (focus: { from: string; to: string; label: string } | null) => void
+  /** Kept in step with the adjacent category-flow panel when it expands. */
+  height?: number
 }) {
   const [tab, setTab] = useState('cumulative')
 
@@ -159,7 +162,7 @@ export default function ExpenseTrendCard({
           key={`cum-${from}-${to}`}
           series={[{ data: cumulative, color: 'var(--color-neg)' }]}
           labels={bins.labels}
-          height={330}
+          height={height}
           selectedIndex={selectedIndex}
           onClickDataPoint={handleSelectBin}
         />
@@ -168,7 +171,7 @@ export default function ExpenseTrendCard({
           key={`int-${from}-${to}`}
           series={[{ data: bins.data, color: 'var(--color-neg)' }]}
           labels={bins.labels}
-          height={330}
+          height={height}
           selectedIndex={selectedIndex}
           onClickDataPoint={handleSelectBin}
         />
