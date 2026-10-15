@@ -9,7 +9,7 @@ tags:
 type: handoff
 status: current
 project: Halcyon
-updated: 2026-10-05
+updated: 2026-10-16
 related:
   - "[[README]]"
   - "[[INDEX]]"
@@ -29,7 +29,9 @@ validation completed on **2026-09-20**, followed by representative-CSV Gate 2
 validation on **2026-09-21** and safe forward migration of the personal local
 stack on **2026-09-26**. Real statement-import testing resumed on
 **2026-09-30**. A full isolated golden-pass browser harness was added and passed
-on **2026-10-01**. This document is the concise current handoff as at that date.
+on **2026-10-01**. Durable recurring/planning work and the application-wide
+legibility pass followed on 2026-10-13–15. This document is the concise current
+handoff as at **2026-10-16**.
 
 The application has moved well beyond the original thin MVP. Its major completed
 capabilities are:
@@ -52,7 +54,12 @@ capabilities are:
   isolated migration, Edge Function, live-provider and rendered-browser Gate 1
   verification plus representative-CSV Gate 2 quality validation are green); and
 - Vanguard managed-investment activity import, NAV valuation, performance/tax
-  awareness and bank-to-investment cash-link review.
+  awareness and bank-to-investment cash-link review;
+- recurring commitment overlays with stop/resume, guarded undo, in-app reminder
+  states and bounded multi-year annual cadence detection; and
+- durable, account-scoped financial planning goals, scenarios, planned events,
+  month-by-month explainability, completed-month plan review and auditable
+  rebaselining.
 
 The detailed architectural map is [INDEX.md](INDEX.md). The original decision and
 implementation diary is [CONTEXT.md](CONTEXT.md); it is useful background but is
@@ -102,7 +109,7 @@ identified isolated project for destructive test flows.
 
 The August verification passed the unit suite, strict TypeScript check,
 production build, live Phase 4/5 checks, database invariants and authenticated
-Ledger browser checks. The current suite passes 301 unit tests with 14
+Ledger browser checks. The current suite passes 321 unit tests with 14
 environment-dependent skips, frontend and browser-suite
 TypeScript checks, and a production build. On 2026-09-20 its migration applied
 cleanly to a positively identified disposable Supabase project; the isolated
@@ -198,11 +205,15 @@ than a single mandatory sequence.
    baseline version/guarded undo, or a copied actual-review scenario. Its
    bounded delivery plan is
    [PLANNING_EXPERIENCE_PLAN.md](PLANNING_EXPERIENCE_PLAN.md).
-7. **Legibility and density.** The planning screens revealed system-wide small-body-text and
-   compressed-form issues. The staged shared-primitive, typography, spacing, responsive-audit and
-   visual-regression remediation is documented in
-   [LEGIBILITY_AND_DENSITY_PLAN.md](LEGIBILITY_AND_DENSITY_PLAN.md); it should be implemented as a
-   cross-application design-system pass rather than incremental per-panel adjustments.
+7. **Legibility and density — implementation complete; visual sign-off remains.** Shared
+   typography, spacing, outcome and data-table primitives are now in use across the planning,
+   categorisation, recurring, ingestion, settings and authentication surfaces. Planning charts now
+   use the available space of their adjacent decision panel rather than leaving an empty plot area.
+   The remaining closure task is an owner-led authenticated visual pass at the documented
+   breakpoints and themes, followed by a commit; it is not an unimplemented product feature. The
+   completed remediation and ongoing review rules are in
+   [LEGIBILITY_AND_DENSITY_PLAN.md](LEGIBILITY_AND_DENSITY_PLAN.md) and
+   [DESIGN_REVIEW_CHECKLIST.md](DESIGN_REVIEW_CHECKLIST.md).
 
 ## First commands when resuming
 

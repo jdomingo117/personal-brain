@@ -20,8 +20,9 @@ related:
 
 **Checkpoint — 2026-10-15:** Phases 1–4 are implemented and validated. The existing deterministic
 projection model now has cent-accurate dated planning inputs, saved-baseline-versus-scenario
-comparison, an inspectable monthly reconciliation and clear completeness warnings. The broader
-output-contract work in Phase 0 remains future work.
+comparison, an inspectable monthly reconciliation and clear completeness warnings. All four
+delivery phases below are shipped; a future output cache remains intentionally out of scope unless
+performance evidence justifies a separately fingerprinted, invalidated design.
 
 ## Decision and boundary
 
@@ -283,9 +284,10 @@ These are valuable, but must not delay the completed scope above:
 | UI | Loading/error/empty states, scenario isolation, accessible modal focus, keyboard controls, reduced motion, responsive charts/table fallback. |
 | Regression | Existing projections and recurring tests, full unit suite, production build, browser TypeScript check, `git diff --check`; isolated browser/database checks only against a generated non-personal target. |
 
-## Suggested implementation order
+## Completion and future ownership
 
-Do not begin Phase 1 until the rest of the current app completion work is done. When this plan is
-resumed, complete one phase and its exit gate before starting the next. Phase 1 is the first
-deployment-worthy milestone; Phase 2 makes saved planning genuinely useful; Phase 3 makes it
-trustworthy; and Phase 4 completes the planning feedback loop promised by this plan.
+**All four phases shipped 2026-10-15.** The completed plan is now the authoritative delivery
+record for the planning workspace. The Dashboard goal summary remains intentionally deferred; it
+should be designed only after real use confirms selected-goal semantics. Any forecast-output cache
+must likewise be a separate proposal with an input fingerprint, bounded invalidation and no
+authority over the pure calculation model.

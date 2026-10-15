@@ -7,8 +7,9 @@ tags:
   - projects/fin-app
   - design-system
   - accessibility
-status: planned
+status: implemented
 project: Halcyon
+updated: 2026-10-16
 up: "[[Halcyon_DesignSystem]]"
 related:
   - "[[CURRENT_STATUS]]"
@@ -26,6 +27,18 @@ panel-by-panel font-size fixes would make the application inconsistent.
 
 This plan establishes one typography and spacing contract, applies it through shared primitives,
 then audits high-use screens against that contract.
+
+## Completion status
+
+**Implementation shipped 2026-10-15; owner visual sign-off remains.** The shared typography,
+spacing, outcome-panel and data-table primitives are implemented. The high-impact planning,
+categorisation, recurring, import/reconciliation, settings and authentication surfaces now use
+the contract, and responsive chart sizing preserves geometry while allowing a primary chart to
+use the space assigned by its adjacent decision panel.
+
+The remaining task is deliberately human: an authenticated visual pass at 390px, 768px, 1024px
+and 1440px in both themes, using [DESIGN_REVIEW_CHECKLIST.md](DESIGN_REVIEW_CHECKLIST.md). It is
+release/polish sign-off, not a reason to reopen the completed remediation as a new feature.
 
 ## Design critique summary
 
@@ -88,7 +101,16 @@ green/red denote financial direction; do not use decorative blue callouts for �
 
 ## Phased implementation
 
+The numbered lists below are the historical delivery contract. The status notes
+record the implemented form of each phase; they supersede any future-tense
+wording retained for decision history.
+
 ### Phase A — Tokens and shared primitives
+
+**Status: shipped 2026-10-15.** `body-copy`, `detail-copy`, `field-label`, `control-label`,
+`outcome-panel`, `data-table-wrap` and `data-table` provide the shared contract in
+`app/src/index.css`; the corresponding usage rules are documented in
+`Halcyon_DesignSystem.md`.
 
 1. Add semantic `body`, `detail`, `field-label`, `control-label`, `data-value` and `micro` utility
 classes to `app/src/index.css`; document them in `Halcyon_DesignSystem.md`.
@@ -103,6 +125,10 @@ metadata must be explicitly labelled as such.
 typography and spacing match the contract in light and dark themes.
 
 ### Phase B — High-impact workflow pass
+
+**Status: shipped 2026-10-15.** Strategic Projections is the reference implementation; the
+recurring, categorisation, ingestion/reconciliation, settings and authentication workflows have
+also received the shared text, control, spacing and outcome treatment.
 
 1. Rebuild **Strategic Projections** as three visibly separated sections:
    - goal assumptions;
@@ -119,6 +145,10 @@ of the same decision.
 lean in, and each workflow presents one clear primary action per section.
 
 ### Phase C — Data-view and responsive audit
+
+**Status: implemented 2026-10-15; owner visual sign-off remains.** Data-bearing components have
+the responsive table/chart primitives and automated regression coverage. The final authenticated,
+real-content review at the listed breakpoints and themes is intentionally assigned to the owner.
 
 1. Audit Dashboard, Accounts, Income, Expenses, Ledger, Recurring and Settings at 390px, 768px,
    1024px and 1440px.
@@ -140,10 +170,10 @@ live in `DESIGN_REVIEW_CHECKLIST.md`. Stable screenshot baselines are deliberate
 deterministic fixture states so the ambient scene and time-dependent content do not create noisy
 test failures.
 
-1. Add Playwright screenshots for representative form, table, explanation and error states in both
-   themes and at desktop/mobile breakpoints.
-2. Add a design-review checklist to pull-request guidance: type role, minimum text size, spacing
-   rhythm, semantic colour, focus state and responsive wrapping.
+1. Keep screenshot assertions limited to deterministic fixture states; review a desktop and narrow
+   viewport whenever a new baseline is added.
+2. Use `DESIGN_REVIEW_CHECKLIST.md` for every visual or workflow change: type role, minimum text
+   size, spacing rhythm, semantic colour, focus state and responsive wrapping.
 3. Review any exceptions quarterly; exceptions must name why compact density materially improves
    the task rather than merely fitting more content.
 
