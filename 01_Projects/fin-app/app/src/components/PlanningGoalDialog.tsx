@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import { useDialogFocus } from '../hooks/useDialogFocus'
 import type { Account } from '../data'
 import type { PlanningGoal, PlanningGoalStatus, PlanningMetric } from '../lib/planning'
+import { InlineActivity } from './OperationStatus'
 
 type Props = { goal: PlanningGoal | null; accounts: Account[]; onClose: () => void; onChanged: () => Promise<void>; onSaved: (eventId: string) => void }
 
@@ -66,7 +67,7 @@ export default function PlanningGoalDialog({ goal, accounts, onClose, onChanged,
       </div>
       <fieldset className="mt-5"><legend className="text-[13px] font-semibold text-ink2">Included accounts</legend><p className="mt-1 text-[12px] text-muted">Only selected accounts inform this goal’s current value and observed run rate.</p><div className="mt-3 max-h-44 space-y-1.5 overflow-auto rounded-lg border border-[var(--hair)] p-2">{accounts.map((account) => <label key={account.id} className="flex min-h-10 items-center gap-3 rounded-md px-2 text-[13px] hover:bg-black/[0.03]"><input type="checkbox" checked={accountIds.includes(account.id)} onChange={() => toggleAccount(account.id)} className="h-4 w-4 accent-[var(--color-accent)]" /><span className="font-semibold text-ink">{account.name}</span><span className="ml-auto text-muted">{account.type}</span></label>)}</div></fieldset>
       {error && <p className="mt-4 rounded-lg border border-neg/30 bg-neg/5 p-3 text-[13px] text-neg" role="alert">{error}</p>}
-      <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={onClose} disabled={saving} className="rounded-lg border border-[var(--hair)] px-3 py-2 text-[13px] font-semibold text-ink">Cancel</button><button type="button" onClick={save} disabled={saving} className="rounded-lg bg-ink px-3 py-2 text-[13px] font-semibold text-surface disabled:opacity-50">{saving ? 'Saving…' : 'Save goal'}</button></div>
+      <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={onClose} disabled={saving} className="rounded-lg border border-[var(--hair)] px-3 py-2 text-[13px] font-semibold text-ink">Cancel</button><button type="button" onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-ink px-3 py-2 text-[13px] font-semibold text-surface disabled:opacity-50">{saving && <InlineActivity label="Saving goal" size="compact" />}{saving ? 'Saving goal…' : 'Save goal'}</button></div>
     </section>
   </div>
 }

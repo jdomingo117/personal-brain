@@ -13,6 +13,7 @@ import Shell from './components/Shell'
 import ThemeToggle from './components/ThemeToggle'
 import Boot from './components/Boot'
 import MilestoneToast, { type ToastData } from './components/MilestoneToast'
+import ProviderSyncNotice from './components/ProviderSyncNotice'
 import Login from './views/Login'
 import AuthCallback from './views/AuthCallback'
 import ResetPassword from './views/ResetPassword'
@@ -27,6 +28,7 @@ const LedgerView = lazy(() => import('./views/LedgerView'))
 const Ingestion = lazy(() => import('./views/Ingestion'))
 const TransferReview = lazy(() => import('./views/TransferReview'))
 const Settings = lazy(() => import('./views/Settings'))
+const OperationStatusConcept = lazy(() => import('./views/OperationStatusConcept'))
 
 function DataRoute({ index, title, sub, children }: { index: string; title: string; sub?: string; children: ReactNode }) {
   return <ViewDataBoundary index={index} title={title} sub={sub}>{children}</ViewDataBoundary>
@@ -143,6 +145,7 @@ function AppFrame({
             <Route path="/ingestion" element={<LazyDataRoute index="06 — Ingestion" title="Ingestion" sub="Import statements, categorise, reconcile balances"><Ingestion /></LazyDataRoute>} />
             <Route path="/transfers" element={<LazyDataRoute index="07 — Reconciliation" title="Transfer review" sub="Resolve movements between accounts"><TransferReview /></LazyDataRoute>} />
             <Route path="/settings" element={<LazyDataRoute index="⚙ — Configuration" title="Settings" sub="Interface, identity & preferences"><Settings /></LazyDataRoute>} />
+            <Route path="/concept/operation-status" element={<LazyDataRoute index="LAB — Feedback" title="Operation status patterns" sub="Concept review — not connected to live operations"><OperationStatusConcept /></LazyDataRoute>} />
           </Route>
 
           {/* Unknown URL: home for a signed-in user, login otherwise. */}
@@ -151,6 +154,7 @@ function AppFrame({
       )}
 
       {booted && <ThemeToggle />}
+      {booted && session && <ProviderSyncNotice />}
       <MilestoneToast toast={toast} />
     </ViewBridge>
   )

@@ -214,6 +214,20 @@ than a single mandatory sequence.
    completed remediation and ongoing review rules are in
    [LEGIBILITY_AND_DENSITY_PLAN.md](LEGIBILITY_AND_DENSITY_PLAN.md) and
    [DESIGN_REVIEW_CHECKLIST.md](DESIGN_REVIEW_CHECKLIST.md).
+8. **Operation status and progress feedback — Phases 0–4 complete.** The app-wide asynchronous
+   workflow inventory, truthful-progress/accessibility contract and review-only concept route are
+   documented in [OPERATION_STATUS_PLAN.md](OPERATION_STATUS_PLAN.md). Shared primitives now back
+   the real Ledger categorisation preview: it shows completed bounded merchant groups, a no-write
+   guarantee, accurate close/retry language and inline apply/undo activity without changing review
+   or mutation guarantees. CSV staging shows real categorisation-batch counts; atomic imports and
+   investment writes remain named indeterminate stages; provider flows show saved page/row
+   checkpoints; and transfer queues name bounded refresh work. Routine account, Ledger, planning,
+   recurring and identity writes now add a named inline activity cue without changing their
+   underlying mutation/undo behavior; selected data tiles use compact loading activity rather than
+   bare loading paragraphs. A single signed-in persistent notice reads durable `sync_runs` records
+   for provider work that continues safely across navigation, naming the affected account and only
+   displaying persisted page/transaction/change checkpoints. The next candidate is Phase 5
+   verification, visual review and concept-route disposition.
 
 ## First commands when resuming
 

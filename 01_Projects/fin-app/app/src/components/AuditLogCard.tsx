@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import Tile from './Tile'
+import { InlineActivity } from './OperationStatus'
 
 interface AuditRow {
   id: number
@@ -40,7 +41,7 @@ export default function AuditLogCard() {
   return (
     <Tile title="Security log" span={3}>
       {loading ? (
-        <p className="text-[13px] text-muted">Loading…</p>
+        <div className="flex min-h-12 items-center gap-2 text-[13px] text-muted" role="status"><InlineActivity label="Loading security log" size="compact" />Loading security log…</div>
       ) : rows.length === 0 ? (
         <p className="text-[13px] text-muted">No events recorded yet.</p>
       ) : (

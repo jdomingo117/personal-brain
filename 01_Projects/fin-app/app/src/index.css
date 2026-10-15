@@ -161,6 +161,31 @@ body {
   .field-label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-muted); }
   .control-label { font-size: 14px; line-height: 1.35; font-weight: 700; color: var(--color-ink); }
   .outcome-panel { border: 1px solid var(--hair); border-radius: 12px; background: var(--input-bg); padding: 20px; }
+  .operation-status { border-color: var(--hair); }
+  .operation-status--success { border-color: color-mix(in srgb, var(--color-pos) 42%, var(--hair)); }
+  .operation-status--error { border-color: color-mix(in srgb, var(--color-neg) 48%, var(--hair)); }
+  .operation-activity { display: inline-grid; flex: 0 0 auto; place-items: center; border: 1px solid color-mix(in srgb, var(--color-accent) 45%, var(--hair)); border-radius: 999px; background: var(--accent-wash); color: var(--color-accent-ink); }
+  .operation-activity--regular { width: 36px; height: 36px; }
+  .operation-activity--compact { width: 24px; height: 24px; }
+  .operation-activity__icon { width: 18px; height: 18px; animation: operation-activity-spin 1s linear infinite; }
+  .operation-activity--compact .operation-activity__icon { width: 13px; height: 13px; }
+  .operation-status__check, .operation-status__failure-icon, .operation-steps__mark { display: inline-grid; flex: 0 0 auto; width: 28px; height: 28px; place-items: center; border-radius: 999px; }
+  .operation-status__check, .operation-steps__mark--complete { background: color-mix(in srgb, var(--color-pos) 14%, transparent); color: var(--color-pos); }
+  .operation-status__failure-icon { background: color-mix(in srgb, var(--color-neg) 14%, transparent); color: var(--color-neg); font-weight: 800; }
+  .operation-steps { display: grid; gap: 4px; padding: 0; margin: 0; list-style: none; }
+  .operation-steps__item { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 12px; border-radius: 10px; color: var(--color-muted); }
+  .operation-steps__item--current { background: var(--accent-wash); color: var(--color-ink); }
+  .operation-steps__mark--upcoming { width: 10px; height: 10px; margin-inline: 9px; border: 1px solid var(--hair); background: var(--input-bg); }
+  .operation-steps__label { display: block; font-size: 14px; line-height: 1.35; font-weight: 700; }
+  .operation-steps__detail { display: block; margin-top: 2px; font-size: 13px; line-height: 1.5; color: var(--color-muted); }
+  .operation-progress__count { flex: 0 0 auto; font-size: 16px; font-variant-numeric: tabular-nums; color: var(--color-ink); }
+  .operation-progress__meter { display: block; width: 100%; height: 8px; margin-top: 12px; overflow: hidden; border: 0; border-radius: 999px; background: var(--track); color: var(--color-accent); accent-color: var(--color-accent); }
+  .operation-progress__meter::-webkit-progress-bar { background: var(--track); }
+  .operation-progress__meter::-webkit-progress-value { border-radius: 999px; background: var(--color-accent); }
+  .operation-progress__meter::-moz-progress-bar { border-radius: 999px; background: var(--color-accent); }
+  .operation-background { border: 1px solid var(--hair); border-radius: 12px; background: var(--input-bg); padding: 16px; }
+  .operation-background--succeeded { border-color: color-mix(in srgb, var(--color-pos) 42%, var(--hair)); }
+  .operation-background--failed { border-color: color-mix(in srgb, var(--color-neg) 48%, var(--hair)); }
   .data-table-wrap { overflow-x: auto; border: 1px solid var(--hair); border-radius: 12px; }
   .data-table { min-width: 720px; width: 100%; font-size: 13px; line-height: 1.45; }
   .workflow-surface {
@@ -180,6 +205,8 @@ body {
     accent-color: var(--color-accent-ink);
   }
 }
+
+@keyframes operation-activity-spin { to { transform: rotate(360deg); } }
 
 .dark .workflow-surface {
   background: color-mix(in srgb, var(--color-surface) 94%, transparent);
@@ -242,4 +269,5 @@ input[type="date"] { color-scheme: light; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  .operation-activity__icon { animation: none !important; }
 }

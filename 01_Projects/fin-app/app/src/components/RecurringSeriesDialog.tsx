@@ -3,6 +3,7 @@ import { fmt } from '../data'
 import { supabase } from '../lib/supabaseClient'
 import type { Cadence } from '../lib/cadence'
 import type { Series } from '../lib/recurring'
+import { InlineActivity } from './OperationStatus'
 
 type Props = {
   series: Series
@@ -153,13 +154,13 @@ export default function RecurringSeriesDialog({ series, onClose, onChanged, onSa
         {undoEventId && <p className="mt-4 text-[13px] text-pos" role="status">Saved. You can undo this change while this panel is open.</p>}
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <button type="button" onClick={() => persist(stopped ? 'active' : 'stopped')} disabled={saving} className="text-[13px] font-bold text-neg hover:underline disabled:opacity-50">
-            {stopped ? 'Resume tracking' : 'Stop tracking'}
+          <button type="button" onClick={() => persist(stopped ? 'active' : 'stopped')} disabled={saving} className="inline-flex items-center gap-2 text-[13px] font-bold text-neg hover:underline disabled:opacity-50">
+            {saving && <InlineActivity label={stopped ? 'Resuming tracking' : 'Stopping tracking'} size="compact" />}{saving ? (stopped ? 'Resuming tracking…' : 'Stopping tracking…') : (stopped ? 'Resume tracking' : 'Stop tracking')}
           </button>
           <div className="flex gap-2">
-            {undoEventId && <button type="button" onClick={undo} disabled={saving} className="rounded-lg border border-[var(--hair)] px-3 py-2 text-[13px] font-semibold text-ink hover:bg-black/[0.03] disabled:opacity-50">Undo</button>}
+            {undoEventId && <button type="button" onClick={undo} disabled={saving} className="inline-flex items-center gap-2 rounded-lg border border-[var(--hair)] px-3 py-2 text-[13px] font-semibold text-ink hover:bg-black/[0.03] disabled:opacity-50">{saving && <InlineActivity label="Undoing change" size="compact" />}{saving ? 'Undoing…' : 'Undo'}</button>}
             <button type="button" onClick={onClose} disabled={saving} className="rounded-lg border border-[var(--hair)] px-3 py-2 text-[13px] font-semibold text-ink hover:bg-black/[0.03] disabled:opacity-50">Close</button>
-            {!stopped && <button type="button" onClick={() => persist('active')} disabled={saving} className="rounded-lg bg-ink px-3 py-2 text-[13px] font-semibold text-surface disabled:opacity-50">{saving ? 'Saving…' : 'Save changes'}</button>}
+            {!stopped && <button type="button" onClick={() => persist('active')} disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-ink px-3 py-2 text-[13px] font-semibold text-surface disabled:opacity-50">{saving && <InlineActivity label="Saving commitment" size="compact" />}{saving ? 'Saving changes…' : 'Save changes'}</button>}
           </div>
         </div>
         <p className="mt-3 text-[11px] text-faint">Detected amount: {fmt(series.expected)} · next {series.nextExpected}</p>

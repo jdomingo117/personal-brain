@@ -8,6 +8,7 @@ import { canonicalDecimal, decimalEquals, subtractDecimals } from '../lib/invest
 import { isVanguardPersonalInvestorCsv, parseVanguardInvestmentRows } from '../lib/investments/vanguard'
 import type { InvestmentImport } from '../lib/investments/types'
 import { Button } from './Controls'
+import { OperationStatusPanel, OperationSteps } from './OperationStatus'
 import DropZone from './ingest/DropZone'
 
 type Step = 'upload' | 'review' | 'reconcile' | 'processing' | 'success'
@@ -173,7 +174,11 @@ export default function InvestmentCSVUploader({ accountId, accountName, onImport
           <div className="flex gap-2"><Button onClick={commit}>Confirm and import</Button><Button variant="ghost" onClick={() => setStep('review')}>Back</Button></div>
         </motion.div>}
 
-        {step === 'processing' && <motion.p role="status" aria-live="polite" key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-8 text-center text-[13px] text-ink2">Importing and reconciling the holding…</motion.p>}
+        {step === 'processing' && <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-2"><OperationStatusPanel state="working" title="Importing your investment activity" description="The import is writing activities, reconciling the confirmed unit balance and checking existing valuation/linking data. The service does not expose per-activity progress, so this remains a named activity state."><OperationSteps steps={[
+          { id: 'validate', label: 'Validating the confirmed holding', state: 'complete' },
+          { id: 'write', label: 'Writing investment activities', state: 'current' },
+          { id: 'reconcile', label: 'Reconciling valuation and cash links', state: 'upcoming' },
+        ]} label="Investment import stages" /></OperationStatusPanel></motion.div>}
         {step === 'success' && result && <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid gap-3">
           <p className="text-[15px] font-semibold">{result.inserted === 0 ? 'No new investment activity' : 'Investment activity imported'}</p>
           <ul className="grid gap-2 body-copy"><li><strong className="text-ink">{result.inserted}</strong> activities imported</li>{result.skipped > 0 && <li><strong className="text-ink">{result.skipped}</strong> duplicates skipped</li>}<li><strong className="text-ink">{result.units}</strong> units held</li></ul>

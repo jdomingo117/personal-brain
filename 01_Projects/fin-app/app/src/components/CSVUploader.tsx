@@ -4,6 +4,7 @@ import Papa from 'papaparse'
 import { supabase } from '../lib/supabaseClient'
 import { useData } from '../contexts/DataContext'
 import { Button } from './Controls'
+import { OperationProgress, OperationStatusPanel } from './OperationStatus'
 import UploadHistory from './UploadHistory'
 import DropZone from './ingest/DropZone'
 import MappingEditor from './ingest/MappingEditor'
@@ -78,6 +79,7 @@ export default function CSVUploader({
   const [staged, setStaged] = useState<StagedRow[]>([])
   const [stageStats, setStageStats] = useState<Awaited<ReturnType<typeof stageRows>> | null>(null)
   const [categorizing, setCategorizing] = useState(false)
+  const [categorizationProgress, setCategorizationProgress] = useState<{ completed: number; total: number; failed: number } | null>(null)
   const [catStats, setCatStats] = useState<{ fromCache: number; fromBank: number; fromAi: number; geminiCalls: number } | null>(null)
   const [categorizationWarning, setCategorizationWarning] = useState('')
 
@@ -94,7 +96,7 @@ export default function CSVUploader({
 
   const reset = () => {
     setStep('upload'); setError(''); setHeaders([]); setRawRows([])
-    setMapping(null); setStaged([]); setStageStats(null); setCatStats(null); setCategorizationWarning('')
+    setMapping(null); setStaged([]); setStageStats(null); setCatStats(null); setCategorizationWarning(''); setCategorizationProgress(null)
     setCurrentBalance(''); setSummary(null)
     setProfileExisted(false); setProfileLabel(''); setSourceFileName('')
     setProfileSaveWarning(''); setRemember(true)
@@ -169,6 +171,7 @@ export default function CSVUploader({
     try {
       setCatStats(null)
       setCategorizationWarning('')
+      setCategorizationProgress(null)
       const result = await stageRows(rawRows, mapping, accountId)
       setStaged(result.rows)
       setStageStats(result)
@@ -220,6 +223,7 @@ export default function CSVUploader({
           }, ({ completedChunks, totalChunks, failedChunks }) => {
             const failed = failedChunks > 0 ? ` · ${failedChunks} unavailable` : ''
             setStatus(`Categorising ${result.pendingMerchants.length} merchants — batch ${completedChunks} of ${totalChunks}${failed}…`)
+            setCategorizationProgress({ completed: completedChunks, total: totalChunks, failed: failedChunks })
           })
           const failedMerchantKeys = new Set(categorized.failedMerchantKeys)
           const resolvedRows = markFailedCategorizationRows(
@@ -241,7 +245,7 @@ export default function CSVUploader({
           // guard remains for unexpected client/runtime failures only.
           setError(error instanceof Error ? error.message : 'Could not prepare categorisation for this statement.')
         } finally {
-          setCategorizing(false); setStatus('')
+          setCategorizing(false); setStatus(''); setCategorizationProgress(null)
         }
       }
     } catch (e) {
@@ -379,7 +383,7 @@ export default function CSVUploader({
 
         {step === 'mapping' && (
           <motion.div key="mapping" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid gap-4">
-            {busy && <p role="status" aria-live="polite" className="text-[13px] text-ink2">{status}</p>}
+            {busy && <OperationStatusPanel state="working" title="Preparing your statement" description={status || 'Checking the saved layout and preparing a safe mapping. No transaction data has been written.'} />}
             {mapping && (
               <>
                 <MappingEditor
@@ -415,8 +419,11 @@ export default function CSVUploader({
                   {catStats.fromAi > 0 && `, ${catStats.fromAi} via AI`}
                 </span>
               )}
-              {categorizing && <span role="status" aria-live="polite" className="text-accent-ink">{status}</span>}
             </div>
+
+            {categorizing && <OperationStatusPanel state="working" title="Categorising staged merchants" description="This works on the staged statement only. No transaction data has been written yet.">
+              {categorizationProgress && <div className="mt-4"><OperationProgress label="Merchant batches completed" progress={{ kind: 'determinate', current: categorizationProgress.completed, total: categorizationProgress.total }} detail={`${categorizationProgress.completed} of ${categorizationProgress.total} batches completed${categorizationProgress.failed > 0 ? ` · ${categorizationProgress.failed} unavailable` : ''}.`} /></div>}
+            </OperationStatusPanel>}
 
             {categorizationWarning && (
               <p role="status" className="rounded-[10px] border border-[var(--color-warn)] bg-[var(--color-warn)]/5 px-3 py-2 text-[13px] text-ink2">
@@ -505,9 +512,9 @@ export default function CSVUploader({
         )}
 
         {step === 'processing' && (
-          <motion.p role="status" aria-live="polite" key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-6 text-center text-[13px] text-ink2">
-            Importing…
-          </motion.p>
+          <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-2">
+            <OperationStatusPanel state="working" title="Committing your statement" description="Writing the reviewed rows and reconciliation together. The server does not expose a row checkpoint for this atomic commit." />
+          </motion.div>
         )}
 
         {step === 'success' && summary && (

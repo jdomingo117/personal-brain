@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useView } from '../router'
 import Tile from '../components/Tile'
 import { Button } from '../components/Controls'
+import { InlineActivity } from '../components/OperationStatus'
 
 const INPUT =
   'min-h-[42px] w-full rounded-[10px] border border-[var(--hair)] bg-[var(--input-bg)] px-3 text-[14px] outline-none focus:border-accent focus:ring-4 focus:ring-[var(--accent-wash)]'
@@ -80,7 +81,7 @@ export function PasswordCard() {
         )}
         {mismatch && <p className="text-[12px] text-muted">Passwords do not match.</p>}
 
-        <div><Button type="submit" disabled={!canSubmit}>{saving ? 'Saving…' : 'Change password'}</Button></div>
+        <div><Button type="submit" disabled={!canSubmit}>{saving && <InlineActivity label="Changing password" size="compact" />} {saving ? 'Changing password…' : 'Change password'}</Button></div>
       </form>
     </Tile>
   )
@@ -118,7 +119,7 @@ export function EmailCard() {
           Confirmation links go to both your current and new address; the change only
           takes effect once both are followed.
         </p>
-        <div><Button type="submit" disabled={saving || !email}>{saving ? 'Sending…' : 'Change email'}</Button></div>
+        <div><Button type="submit" disabled={saving || !email}>{saving && <InlineActivity label="Sending email confirmation" size="compact" />} {saving ? 'Sending confirmation…' : 'Change email'}</Button></div>
       </form>
     </Tile>
   )

@@ -64,6 +64,16 @@ hand to find the transfer-linker gap.
 
 ## Recent changes
 
+- 2026-10-16 — Completed Phase 4 operation feedback: routine writes and known-shape tile reads now use named activity cues, while one durable provider-sync notice safely survives navigation.
+
+- 2026-10-16 — Completed Phase 3 operation feedback: ingestion, investment, provider and transfer-review waits now show real checkpoints or explicit indeterminate stages without changing service behavior.
+
+- 2026-10-16 — Completed Phase 2 operation feedback: Ledger categorisation previews now show real merchant-group progress, safe retry/close copy and inline apply/undo activity without changing mutation rules.
+
+- 2026-10-16 — Completed Phase 1 of operation feedback: reusable truthful-status primitives, review fixtures and focused contract tests are live; production workflows remain unchanged.
+
+- 2026-10-16 — Added an authenticated operation-status concept route and completed its shared, truthful loading/progress contract and workflow inventory; no production workflow behavior changed.
+
 - 2026-10-05 — Backed up and forward-migrated the persistent local stack through the ingestion hardening migrations; identity/ledger counts are unchanged and direct browser transaction mutations are now denied.
 
 - 2026-10-04 — Completed Phase 4 ingestion hardening: isolated golden coverage verifies overlap/reconciliation, rollback, connected cutover, profile persistence and direct-write denial; hung chunks recover safely, test-stack cleanup is project-scoped, and the full golden plus six-file Gate 2 gates are green.
@@ -73,13 +83,3 @@ hand to find the transfer-linker gap.
 - 2026-10-04 — Completed Phase 2 ingestion hardening: categorisation now keeps successful ≤300-merchant batches when another batch fails, continues independently and flags only unresolved affected rows for review; unit and disposable golden boundaries are green.
 
 - 2026-10-04 — Completed Phase 1 ingestion hardening: a 5,000 source-row cap now fails closed in the browser, Edge Function and atomic SQL path; isolated golden coverage proves an exact-limit import plus one reconciliation anchor and a zero-write 5,001-row rejection.
-
-- 2026-09-30 — Fixed real-data transfer review at the 200-item mutation boundary: oversized groups now visibly defer the remainder instead of submitting a failing 203-link request.
-
-- 2026-09-26 — Backed up and safely forward-migrated the personal local stack through the Gate 1/2 categorisation-review migrations with unchanged identity/account/transaction counts.
-
-- 2026-09-21 — Completed Gate 2 categorisation quality validation over the original five representative CSVs/793 transactions, repairing nullable subscription derivation and the missing required AI-confidence contract.
-
-- 2026-09-20 — Completed Gate 1 for selected-row categorisation review: disposable-stack migration/API/live-Gemini checks passed 13/13 and the authenticated rendered apply/undo flow passed without touching the personal database.
-
-- 2026-09-17 — Implemented selected-row categorisation-engine review with fresh preview-only suggestions, protected sources, atomic heterogeneous acceptance, stale-state rejection, impact projection and grouped guarded undo.

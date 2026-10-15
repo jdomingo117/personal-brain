@@ -13,6 +13,7 @@ import {
   untrackedTransferLabel,
 } from '../lib/transfers/reviewPresentation'
 import InvestmentCashLinker from './InvestmentCashLinker'
+import { OperationStatusPanel } from './OperationStatus'
 
 interface LinkedTxn {
   id: string
@@ -311,7 +312,7 @@ export default function OskoLinker() {
       return next
     })
 
-  if (loading) return <p role="status" aria-live="polite" className="text-[13px] text-ink2">Loading transfer suggestions…</p>
+  if (loading) return <OperationStatusPanel state="working" title="Loading transfer suggestions" description="Fetching the current bounded review queue. No transfer decision is being changed." />
 
   const suggested = links.filter((l) => l.state === 'suggested')
   const auto = links.filter((l) => l.state === 'auto')
@@ -322,6 +323,7 @@ export default function OskoLinker() {
     return (
       <div className="grid gap-3">
         <InvestmentCashLinker refreshKey={investmentRefreshKey} />
+        {rescanning && <OperationStatusPanel state="working" title="Scanning your ledger for transfers" description="Replacing the bounded review queue with the latest matches. No transfer decision is being changed." />}
         <p className="text-[13px] text-muted">
           No internal transfers pending review. Import statements from more than one account
           to start finding them, or scan what's already in your ledger.
@@ -341,6 +343,8 @@ export default function OskoLinker() {
           {error}
         </div>
       )}
+
+      {rescanning && <OperationStatusPanel state="working" title="Scanning your ledger for transfers" description="Replacing the bounded review queue with the latest matches. No transfer decision is being changed." />}
 
       <div className="flex items-center justify-between">
         <p className="text-[13px] text-muted">

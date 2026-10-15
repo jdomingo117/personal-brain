@@ -5,6 +5,7 @@ import { useData } from '../contexts/DataContext'
 import { runCategorizePending } from '../lib/categorizePending'
 import { runDetectRecurrenceHints } from '../lib/detectRecurrenceHints'
 import { Button } from './Controls'
+import { OperationStatusPanel } from './OperationStatus'
 import { fmtCents, type Account } from '../data'
 
 type Props = {
@@ -505,14 +506,11 @@ export default function ConnectBankModal({ isOpen, onClose }: Props) {
                   <p className="mt-1 text-[13px] text-muted">
                     Pulling transaction history from Up. This is safe to close — it resumes exactly where it left off.
                   </p>
-                  <div className="mt-6 flex flex-col items-center gap-3 py-4">
-                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--hair)] border-t-accent" />
-                    <p className="text-[13px] font-medium text-ink2">
-                      {categorizing
-                        ? 'Categorising transactions…'
-                        : progress ? `${progress.rows_inserted} transactions imported so far…` : 'Starting…'}
-                    </p>
-                  </div>
+                  <OperationStatusPanel className="mt-6" state="working" title={categorizing ? 'Categorising imported transactions' : 'Importing Up transaction history'} description={categorizing
+                    ? 'Checking newly imported rows that Up did not categorise. This follows the saved sync checkpoints.'
+                    : progress
+                      ? `${progress.pages_fetched} provider page${progress.pages_fetched === 1 ? '' : 's'} fetched · ${progress.rows_inserted} transaction${progress.rows_inserted === 1 ? '' : 's'} imported so far.`
+                      : 'Starting the resumable provider sync. Progress appears after the first saved checkpoint.'} />
                   <div className="mt-5 flex items-center justify-end gap-3 border-t border-[var(--hair-soft)] pt-5">
                     <button type="button" onClick={() => void runInBackground()} className="px-4 py-2 text-[13px] font-semibold text-muted hover:text-ink transition cursor-pointer">
                       Run in background

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Txn } from '../data'
 import {
-  buildCategorizationReviewImpact, buildReviewAssignments, categorizationPreviewPages, suggestedReviewIds,
+  buildCategorizationReviewImpact, buildReviewAssignments, categorizationPreviewPages, categorizationPreviewProgress, suggestedReviewIds,
   reviewScopeTransactions,
   type CategorizationReviewRow,
 } from './categorizationReview'
@@ -65,6 +65,13 @@ describe('categorisation review selection', () => {
     expect(categorizationPreviewPages(transactions, 2, 500)).toEqual([
       ['a1', 'a2', 'b1'], ['c1'],
     ])
+  })
+
+  it('reports only completed bounded preview requests as progress', () => {
+    expect(categorizationPreviewProgress(3, 0)).toEqual({ totalPages: 3, completedPages: 0, activePage: 1 })
+    expect(categorizationPreviewProgress(3, 1)).toEqual({ totalPages: 3, completedPages: 1, activePage: 2 })
+    expect(categorizationPreviewProgress(3, 9)).toEqual({ totalPages: 3, completedPages: 3, activePage: null })
+    expect(categorizationPreviewProgress(0, 1)).toEqual({ totalPages: 0, completedPages: 0, activePage: null })
   })
 
   it('accepts only actionable suggestions by default', () => {

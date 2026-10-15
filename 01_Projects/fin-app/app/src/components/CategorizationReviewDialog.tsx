@@ -3,12 +3,13 @@ import { createPortal } from 'react-dom'
 import { fmtCents, type Txn } from '../data'
 import { supabase } from '../lib/supabaseClient'
 import {
-  buildCategorizationReviewImpact, buildReviewAssignments, categorizationPreviewPages, suggestedReviewIds,
+  buildCategorizationReviewImpact, buildReviewAssignments, categorizationPreviewPages, categorizationPreviewProgress, suggestedReviewIds,
   type CategorizationReviewResponse, type CategorizationReviewRow, type CategorizationReviewScope,
 } from '../lib/categorizationReview'
 import { KIND_LABELS } from '../lib/classification'
 import { useDialogFocus } from '../hooks/useDialogFocus'
 import { Button } from './Controls'
+import { InlineActivity, OperationProgress, OperationStatusPanel, OperationSteps } from './OperationStatus'
 
 const pair = (category: string, subcategory: string | null) =>
   subcategory ? `${category} · ${subcategory}` : category
@@ -41,13 +42,18 @@ export default function CategorizationReviewDialog({
   const [response, setResponse] = useState<CategorizationReviewResponse | null>(null)
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [savingAction, setSavingAction] = useState<'apply' | 'undo' | null>(null)
   const [error, setError] = useState('')
+  const [retryToken, setRetryToken] = useState(0)
+  const [completedPreviewPages, setCompletedPreviewPages] = useState(0)
   const [operationId, setOperationId] = useState<string | null>(null)
   const [updated, setUpdated] = useState<number | null>(null)
   const dialogRef = useDialogFocus()
   const completed = updated !== null && updated > 0
+  const saving = savingAction !== null
   const transactionKey = transactions.map((transaction) => transaction.id).join(',')
+  const previewPages = useMemo(() => categorizationPreviewPages(transactions), [transactionKey])
+  const previewProgress = categorizationPreviewProgress(previewPages.length, completedPreviewPages)
   const scopeLabel = scope === 'unresolved' ? 'Unresolved transactions'
     : scope === 'eligible' ? 'Eligible transactions' : 'Selected transactions'
 
@@ -55,41 +61,48 @@ export default function CategorizationReviewDialog({
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true); setError('')
+    setLoading(true); setError(''); setCompletedPreviewPages(0)
     const load = async () => {
       const pages: CategorizationReviewResponse[] = []
-      for (const transactionIds of categorizationPreviewPages(transactions)) {
-        const { data, error: previewError } = await supabase.functions.invoke('review-categorization', {
-          body: { action: 'preview', transaction_ids: transactionIds },
-        })
-        if (cancelled) return
-        if (previewError) {
-          setLoading(false)
-          setError(previewError.message || 'Could not generate categorisation suggestions.')
-          return
+      try {
+        for (const [pageIndex, transactionIds] of previewPages.entries()) {
+          const { data, error: previewError } = await supabase.functions.invoke('review-categorization', {
+            body: { action: 'preview', transaction_ids: transactionIds },
+          })
+          if (cancelled) return
+          if (previewError) {
+            setLoading(false)
+            setError(previewError.message || 'Could not generate categorisation suggestions.')
+            return
+          }
+          pages.push(data as CategorizationReviewResponse)
+          setCompletedPreviewPages(pageIndex + 1)
         }
-        pages.push(data as CategorizationReviewResponse)
+        if (cancelled) return
+        const next: CategorizationReviewResponse = {
+          rows: pages.flatMap((page) => page.rows),
+          stats: pages.reduce((total, page) => ({
+            requested: total.requested + page.stats.requested,
+            fromCache: total.fromCache + page.stats.fromCache,
+            fromBank: total.fromBank + page.stats.fromBank,
+            fromAi: total.fromAi + page.stats.fromAi,
+            geminiCalls: total.geminiCalls + page.stats.geminiCalls,
+            selected: total.selected + page.stats.selected,
+            eligible: total.eligible + page.stats.eligible,
+          }), { requested: 0, fromCache: 0, fromBank: 0, fromAi: 0, geminiCalls: 0, selected: 0, eligible: 0 }),
+        }
+        setLoading(false)
+        setResponse(next)
+        setAcceptedIds(suggestedReviewIds(next.rows))
+      } catch (previewError) {
+        if (cancelled) return
+        setLoading(false)
+        setError(previewError instanceof Error ? previewError.message : 'Could not generate categorisation suggestions.')
       }
-      if (cancelled) return
-      const next: CategorizationReviewResponse = {
-        rows: pages.flatMap((page) => page.rows),
-        stats: pages.reduce((total, page) => ({
-          requested: total.requested + page.stats.requested,
-          fromCache: total.fromCache + page.stats.fromCache,
-          fromBank: total.fromBank + page.stats.fromBank,
-          fromAi: total.fromAi + page.stats.fromAi,
-          geminiCalls: total.geminiCalls + page.stats.geminiCalls,
-          selected: total.selected + page.stats.selected,
-          eligible: total.eligible + page.stats.eligible,
-        }), { requested: 0, fromCache: 0, fromBank: 0, fromAi: 0, geminiCalls: 0, selected: 0, eligible: 0 }),
-      }
-      setLoading(false)
-      setResponse(next)
-      setAcceptedIds(suggestedReviewIds(next.rows))
     }
     void load()
     return () => { cancelled = true }
-  }, [transactionKey])
+  }, [transactionKey, retryToken])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape' && !saving) close() }
@@ -114,7 +127,7 @@ export default function CategorizationReviewDialog({
     if (!response) return
     const assignments = buildReviewAssignments(response.rows, acceptedIds)
     if (!assignments.length) return
-    setSaving(true); setError('')
+    setSavingAction('apply'); setError('')
     const { data, error: applyError } = await supabase.functions.invoke('review-categorization', {
       body: { action: 'apply', assignments },
     })
@@ -124,12 +137,12 @@ export default function CategorizationReviewDialog({
       setUpdated(data.updated)
       await onChanged()
     }
-    setSaving(false)
+    setSavingAction(null)
   }
 
   const undo = async () => {
     if (!operationId) return
-    setSaving(true); setError('')
+    setSavingAction('undo'); setError('')
     const { error: undoError } = await supabase.functions.invoke('update-transaction-category', {
       body: { action: 'undo_operation', operation_id: operationId },
     })
@@ -138,8 +151,31 @@ export default function CategorizationReviewDialog({
       setOperationId(null); setUpdated(null)
       await onChanged()
     }
-    setSaving(false)
+    setSavingAction(null)
   }
+
+  const retryPreview = () => {
+    if (loading) return
+    setResponse(null)
+    setAcceptedIds(new Set())
+    setError('')
+    setRetryToken((current) => current + 1)
+  }
+
+  const previewSteps = [
+    { id: 'prepare', label: 'Preparing a no-write preview', detail: 'No transaction changes are being made.', state: 'complete' as const },
+    {
+      id: 'review',
+      label: previewProgress.activePage === null
+        ? 'Combining completed merchant groups'
+        : `Reviewing merchant group ${previewProgress.activePage} of ${previewProgress.totalPages}`,
+      detail: previewProgress.completedPages === 0
+        ? 'Sending the first bounded preview request.'
+        : `${previewProgress.completedPages} group${previewProgress.completedPages === 1 ? '' : 's'} complete.`,
+      state: 'current' as const,
+    },
+    { id: 'combine', label: 'Preparing suggestions for review', state: 'upcoming' as const },
+  ]
 
   return createPortal(
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/35 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) close() }}>
@@ -150,11 +186,15 @@ export default function CategorizationReviewDialog({
             <h2 id="categorization-review-title" className="mt-1 font-display text-[24px] font-black text-ink">Review with categorisation engine</h2>
             <p className="mt-2 body-copy">Fresh suggestions are previews only. Manual corrections, user rules, bank classifications and reconciliation entries stay protected.</p>
           </div>
-          <button type="button" aria-label="Close categorisation review" disabled={saving} onClick={close} className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-[var(--hair)] disabled:opacity-40">×</button>
+          <button type="button" aria-label="Close preview" disabled={saving} onClick={close} className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-[var(--hair)] disabled:opacity-40">×</button>
         </header>
 
-        {loading && <p role="status" aria-live="polite" className="mt-6 rounded-xl border border-[var(--hair)] bg-[var(--input-bg)] p-5 body-copy">Asking the current engine for fresh suggestions…</p>}
-        {error && <p role="alert" className="mt-4 rounded-lg border border-[var(--color-neg)] p-4 text-[14px] leading-6 text-neg">{error}</p>}
+        {loading && <OperationStatusPanel className="mt-6" state="working" title="Preparing your review" description="Fresh suggestions are a preview only. No transaction changes are being made.">
+          <OperationSteps steps={previewSteps} label="Categorisation preview stages" />
+          {previewProgress.totalPages > 0 && <div className="mt-4"><OperationProgress label="Merchant groups reviewed" progress={{ kind: 'determinate', current: previewProgress.completedPages, total: previewProgress.totalPages }} detail={`${previewProgress.completedPages} of ${previewProgress.totalPages} bounded merchant groups complete.`} /></div>}
+        </OperationStatusPanel>}
+        {!loading && !response && error && <OperationStatusPanel className="mt-6" state="failed" title="Couldn’t prepare suggestions" description={<><span>No transaction changes were made. Check the connection and retry the complete preview.</span><span className="mt-2 block detail-copy">{error}</span></>} action={<Button className="!min-h-10" onClick={retryPreview}>Try preview again</Button>} />}
+        {response && error && <p role="alert" className="mt-4 rounded-lg border border-[var(--color-neg)] p-4 text-[14px] leading-6 text-neg">{error}</p>}
 
         {scopeTruncated && <p className="mt-4 rounded-xl border border-warn/40 bg-[var(--input-bg)] p-4 text-[14px] leading-6 text-ink2" role="status">
           This review contains the first {transactions.length} of {scopeCandidateCount ?? transactions.length} matching rows. The {transactions.length}-row limit keeps preview, apply and undo atomic. Select a different set when you are ready to review more.
@@ -212,12 +252,12 @@ export default function CategorizationReviewDialog({
           </div>
         </>}
 
-        {completed && <div className="mt-6 rounded-xl border border-[var(--color-pos)] bg-[var(--input-bg)] p-4"><p className="font-semibold text-pos">Applied {updated} accepted suggestion{updated === 1 ? '' : 's'}.</p><p className="mt-1 text-[12px] text-muted">The changes share one guarded undo operation. Closing clears the Ledger selection.</p></div>}
+        {completed && <OperationStatusPanel className="mt-6" state="succeeded" title={`Applied ${updated} accepted suggestion${updated === 1 ? '' : 's'}`} description="The changes share one guarded undo operation. Closing clears the Ledger selection." />}
 
         <div className="mt-5 flex flex-wrap gap-2">
-          {!completed && <Button onClick={() => void apply()} disabled={loading || saving || impact.accepted === 0}>{saving ? 'Applying…' : `Apply accepted (${impact.accepted})`}</Button>}
-          {operationId && <Button variant="ghost" onClick={() => void undo()} disabled={saving}>Undo review</Button>}
-          <Button variant="ghost" onClick={close} disabled={saving}>{completed ? 'Done and clear selection' : 'Cancel'}</Button>
+          {!completed && <Button onClick={() => void apply()} disabled={loading || saving || impact.accepted === 0}>{savingAction === 'apply' && <InlineActivity label="Applying accepted suggestions" size="compact" />}{savingAction === 'apply' ? 'Applying accepted suggestions…' : `Apply accepted (${impact.accepted})`}</Button>}
+          {operationId && <Button variant="ghost" onClick={() => void undo()} disabled={saving}>{savingAction === 'undo' && <InlineActivity label="Undoing categorisation review" size="compact" />}{savingAction === 'undo' ? 'Undoing review…' : 'Undo review'}</Button>}
+          <Button variant="ghost" onClick={close} disabled={saving}>{completed ? 'Done and clear selection' : 'Close preview'}</Button>
         </div>
       </section>
     </div>,

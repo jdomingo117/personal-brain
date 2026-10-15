@@ -5,6 +5,7 @@ import { useData } from '../contexts/DataContext'
 import { runCategorizePending } from '../lib/categorizePending'
 import { runDetectRecurrenceHints } from '../lib/detectRecurrenceHints'
 import { Account } from '../data'
+import { OperationStatusPanel } from './OperationStatus'
 
 type Props = {
   account: Account
@@ -74,6 +75,7 @@ export default function EditAccountModal({ account, isOpen, onClose }: Props) {
   const [connectionLoading, setConnectionLoading] = useState(false)
   const [syncBusy, setSyncBusy] = useState(false)
   const [syncMessage, setSyncMessage] = useState('')
+  const [syncCheckpoint, setSyncCheckpoint] = useState<{ pages_fetched: number; rows_inserted: number } | null>(null)
   const [confirmingDisconnect, setConfirmingDisconnect] = useState(false)
   const [keepTransactions, setKeepTransactions] = useState(true)
   const [disconnectBusy, setDisconnectBusy] = useState(false)
@@ -126,7 +128,7 @@ export default function EditAccountModal({ account, isOpen, onClose }: Props) {
 
   const syncNow = async () => {
     if (!connection) return
-    setSyncBusy(true); setSyncMessage('')
+    setSyncBusy(true); setSyncMessage(''); setSyncCheckpoint(null)
     try {
       // eslint-disable-next-line no-constant-condition
       while (true) {
@@ -136,6 +138,7 @@ export default function EditAccountModal({ account, isOpen, onClose }: Props) {
         if (fnErr) throw fnErr
         if (data?.error) { setSyncMessage(data.message || 'Sync failed.'); break }
         if (data?.alreadyRunning) { setSyncMessage('A sync is already running.'); break }
+        if (data?.progress) setSyncCheckpoint(data.progress)
         if (data?.done) { setSyncMessage('Up to date.'); break }
       }
       dirtyRef.current = true
@@ -364,7 +367,10 @@ export default function EditAccountModal({ account, isOpen, onClose }: Props) {
                       </p>
                     )}
 
-                    {syncMessage && <p className="mt-2 text-[12px] text-muted">{syncMessage}</p>}
+                    {syncBusy && <OperationStatusPanel className="mt-3 !p-4" state="working" title="Syncing account activity" description={syncCheckpoint
+                      ? `${syncCheckpoint.pages_fetched} provider page${syncCheckpoint.pages_fetched === 1 ? '' : 's'} fetched · ${syncCheckpoint.rows_inserted} transaction${syncCheckpoint.rows_inserted === 1 ? '' : 's'} imported so far.`
+                      : 'Starting the resumable provider sync. Progress appears after the first saved checkpoint.'} />}
+                    {syncMessage && <p className="mt-2 text-[12px] text-muted" role="status">{syncMessage}</p>}
 
                     {!confirmingDisconnect ? (
                       <div className="mt-3 flex items-center gap-2">

@@ -5,6 +5,7 @@ import Tile from './Tile'
 import { useData } from '../contexts/DataContext'
 import Area from './charts/Area'
 import InvestmentTaxAwareness from './InvestmentTaxAwareness'
+import { InlineActivity } from './OperationStatus'
 
 interface Summary {
   holding_id: string
@@ -97,7 +98,7 @@ export default function InvestmentAccountActivity({ accountId }: { accountId: st
     }
   }
 
-  if (loading) return <Tile title="Investment holding"><p className="py-5 text-[13px] text-muted">Loading investment activity…</p></Tile>
+  if (loading) return <Tile title="Investment holding"><div className="flex min-h-20 items-center gap-2 py-5 text-[13px] text-muted" role="status"><InlineActivity label="Loading investment activity" size="compact" />Loading investment activity…</div></Tile>
   if (error) return <Tile title="Investment holding"><p role="alert" className="py-5 text-[13px] text-neg">{error}</p></Tile>
   if (!summary) return <Tile title="Investment holding"><div className="py-6 text-center"><p className="text-[13px] text-muted">No investment activity has been imported yet.</p><p className="mt-1 text-[12px] text-muted">Open Ingestion and upload a supported investment transaction export.</p></div></Tile>
 
@@ -109,7 +110,7 @@ export default function InvestmentAccountActivity({ accountId }: { accountId: st
   return <Tile title={summary.instrument_name} tag={`${summary.identifier} · ${summary.reconciliation_status}`}>
     <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-[10px] border border-[var(--hair)] bg-black/[0.02] px-3 py-2">
       <p className="text-[12.5px] text-muted">Daily managed-fund NAV is refreshed from Vanguard and retains its real publication date. {summary.price_date && (Date.now() - new Date(`${summary.price_date}T00:00:00Z`).getTime() > 4 * 86400_000) ? <strong className="text-warn">Price may be stale.</strong> : null}</p>
-      <button type="button" onClick={refreshPrice} disabled={refreshing} className="micro rounded-lg border border-[var(--hair)] px-3 py-1.5 text-ink transition hover:bg-black/[0.04] disabled:opacity-50">{refreshing ? 'Refreshing…' : 'Refresh price'}</button>
+      <button type="button" onClick={refreshPrice} disabled={refreshing} className="micro inline-flex items-center gap-2 rounded-lg border border-[var(--hair)] px-3 py-1.5 text-ink transition hover:bg-black/[0.04] disabled:opacity-50">{refreshing && <InlineActivity label="Refreshing price" size="compact" />}{refreshing ? 'Refreshing price…' : 'Refresh price'}</button>
     </div>
     <div className="grid grid-cols-2 gap-3 border-b border-[var(--hair-soft)] pb-5 sm:grid-cols-3 xl:grid-cols-6">
       <Metric label="Current value" value={summary.value_cents === null ? 'Awaiting price' : fmtCents(summary.value_cents)} />

@@ -12,6 +12,7 @@ export type View =
   | 'ingestion'
   | 'transfers'
   | 'settings'
+  | 'operation-status'
 
 export const NAV: { id: View; n: string; label: string }[] = [
   { id: 'landing', n: '00', label: 'Landing' },
@@ -41,6 +42,7 @@ export const VIEW_PATHS: Record<View, string> = {
   ingestion: '/ingestion',
   transfers: '/transfers',
   settings: '/settings',
+  'operation-status': '/concept/operation-status',
 }
 
 const PATH_VIEWS: Record<string, View> = Object.fromEntries(

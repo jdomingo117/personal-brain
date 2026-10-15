@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabaseClient'
 import { useData } from '../contexts/DataContext'
 import { Button } from './Controls'
+import { InlineActivity } from './OperationStatus'
 
 type Props = {
   isOpen: boolean
@@ -205,7 +206,7 @@ export default function AddAccountModal({ isOpen, onClose }: Props) {
                     Cancel
                   </button>
                   <Button type="submit" disabled={loading || !name.trim()}>
-                    {loading ? 'Adding...' : 'Add Account'}
+                    {loading && <InlineActivity label="Adding account" size="compact" />} {loading ? 'Adding account…' : 'Add account'}
                   </Button>
                 </div>
               </form>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fmtCents } from '../data'
 import { supabase } from '../lib/supabaseClient'
+import { InlineActivity } from './OperationStatus'
 
 type AmmaStatus = 'awaiting' | 'received' | 'reviewed' | 'not_required'
 
@@ -100,7 +101,7 @@ export default function InvestmentTaxAwareness({ accountId }: { accountId: strin
       <button type="button" onClick={downloadSummary} disabled={loading || summaries.length === 0} className="micro rounded-lg border border-[var(--hair)] px-3 py-1.5 text-ink transition hover:bg-black/[0.04] disabled:opacity-50">Download summary</button>
     </div>
     {error && <p role="alert" className="mt-3 text-[12px] text-neg">{error}</p>}
-    {loading ? <p className="py-4 text-[12px] text-muted">Loading financial-year records…</p> : summaries.length === 0 ? <p className="py-4 text-[12px] text-muted">No activity is available to summarise.</p> : <div className="mt-4 overflow-x-auto">
+    {loading ? <div className="flex min-h-14 items-center gap-2 py-4 text-[12px] text-muted" role="status"><InlineActivity label="Loading financial-year records" size="compact" />Loading financial-year records…</div> : summaries.length === 0 ? <p className="py-4 text-[12px] text-muted">No activity is available to summarise.</p> : <div className="mt-4 overflow-x-auto">
       <table className="w-full min-w-[760px] text-left text-[12px]">
         <thead className="text-muted"><tr><th className="pb-2">Financial year</th><th>Purchases</th><th>Distributions</th><th>Disposals</th><th>Fees + brokerage</th><th>AMMA statement</th></tr></thead>
         <tbody>{summaries.map((summary) => {

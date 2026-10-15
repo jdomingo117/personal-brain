@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient'
 import { useData } from '../contexts/DataContext'
 import { fmtCents } from '../data'
 import { Button } from './Controls'
+import { OperationStatusPanel } from './OperationStatus'
 
 interface CashLink {
   id: string
@@ -56,7 +57,7 @@ export default function InvestmentCashLinker({ refreshKey = 0 }: { refreshKey?: 
     }
   }
 
-  if (loading) return <p className="text-[12.5px] text-muted">Checking investment funding…</p>
+  if (loading) return <OperationStatusPanel state="working" title="Checking investment funding" description="Fetching the current bounded funding review. No funding decision is being changed." />
   const suggested = links.filter((link) => link.state === 'suggested')
   const auto = links.filter((link) => link.state === 'auto')
   if (links.length === 0 && !error) return null

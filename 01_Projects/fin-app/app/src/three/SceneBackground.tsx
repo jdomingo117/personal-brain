@@ -22,6 +22,7 @@ const VIEW_SHIFT: Record<View, number> = {
   ingestion: -8,
   transfers: 8,
   settings: 12,
+  'operation-status': 0,
   login: 0,
   onboarding: 5,
 }

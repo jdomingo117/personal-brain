@@ -486,6 +486,47 @@ use `data-table-wrap` and `data-table` so a narrow display scrolls a semanticall
 than shrinking essential copy. The required breakpoint/theme/accessibility review checklist lives in
 [`DESIGN_REVIEW_CHECKLIST.md`](DESIGN_REVIEW_CHECKLIST.md).
 
+### 8.13c Operation status and progress feedback (contract)
+
+Waiting feedback describes real work, not a generic “AI is thinking” state. It has four semantic
+states: `idle`, `working`, `succeeded` and `failed`. `working` is either **indeterminate activity**
+when no trustworthy denominator exists, or **determinate progress** when the client or service
+exposes a real completed/current unit. A visual percentage, elapsed-time promise or remaining-time
+estimate must never be invented.
+
+| Observed wait | Required presentation |
+| --- | --- |
+| Under ~400 ms | Immediate pressed/disabled initiating control; no extra surface |
+| ~400 ms–2 s | `InlineActivity` in the initiating control or local row |
+| 2–10 s, or unknown duration | `OperationStatusPanel` with one activity cue and a named current stage |
+| Over ~10 s or countable work | Named stages plus an actual count or percentage through `OperationProgress` |
+| Safe work that may outlive its view | One `BackgroundOperationNotice`, a real checkpoint and a durable outcome/history |
+
+The shared primitives are `InlineActivity`, `OperationStatusPanel`, `OperationSteps`,
+`OperationProgress` and `BackgroundOperationNotice`. They use existing semantic tokens only:
+mint for active/safe completion, muted ink for queued detail, amber for actionable delay and red
+for failure. `outcome-panel` is the structural baseline. Supporting copy remains 14–15px; stage
+labels are readable content, never micro metadata. Use one compact ring or indeterminate line at a
+time—no particle fields, thinking dots, neural imagery or simulated progress.
+
+Status copy names the actual operation and the data-safety boundary: “Preparing your review”,
+“Reviewing merchant group 1 of 3”, “Suggestions ready — no transactions were changed”, or
+“Couldn’t prepare suggestions — no transaction changes were made.” A dismiss control says
+**Close** when it only closes the interface; it says **Cancel** only when it can safely stop the
+operation. Success and errors state whether a write occurred and offer retry only when retry is
+safe.
+
+Keep focus on the initiating control or dialog container. Mark the changing region
+`aria-busy="true"`, reset it on result/error, and announce only meaningful stage and outcome changes
+through a polite status region. Native `<progress>` or `role="progressbar"` exposes a known value;
+unknown-duration activity omits `aria-valuenow`. Errors use `role="alert"`. The global
+reduced-motion rule replaces movement with a static activity icon plus text, never removing the
+status meaning. The authoritative workflow inventory and rollout are in
+[`OPERATION_STATUS_PLAN.md`](OPERATION_STATUS_PLAN.md); `/concept/operation-status` is a
+review-only reference, not a navigation destination. The first and only persistent production
+use is provider sync: `ProviderSyncNotice` aggregates running durable `sync_runs` records; the
+account connection card retains the durable sync-run outcome/history after a run completes.
+
 ### 8.14 Income analyzer (header toolbar + tile layout)
 Filters are **chrome, not content**, so they live in the page header (a global element, no glass
 container) rather than a tile: a **`DateRangePicker`** (period) + **`MultiSelect`** (linked accounts)
@@ -849,7 +890,9 @@ The `H` monogram is the brand mark. No emoji, no filled/novelty icons.
 - **Semantics:** nav items use `aria-current="page"`; switches are real buttons with
   `aria-checked`; the toast mount is an `aria-live` region. Workflow tables have captions, filter
   toggles use `aria-pressed`, disclosures publish `aria-expanded`, and async/error copy uses
-  status/alert regions.
+  status/alert regions. Operation status marks changing regions `aria-busy`, announces meaningful
+  stages/outcomes politely rather than every tick, and never assigns a numeric progress value where
+  the application does not have one.
 - **Responsive:** below `md` the rail collapses to a 52px icon gutter (labels hidden) and the
   hero card hides on the landing; grids reflow to fewer columns.
 

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ALL_CATEGORIES, FULL_TAXONOMY, fmtCents, type Txn } from '../data'
 import { supabase } from '../lib/supabaseClient'
 import { Button, Select, Switch } from './Controls'
+import { InlineActivity } from './OperationStatus'
 import { KIND_LABELS, TRANSACTION_KINDS, type SpendingNature, type TransactionKind } from '../lib/classification'
 import { useData } from '../contexts/DataContext'
 import TransactionSplitEditor from './TransactionSplitEditor'
@@ -360,8 +361,8 @@ export default function TransactionCategoryDrawer({
               </div>}
 
               <div className="mt-4 flex flex-wrap items-center gap-2">
-                {!isReconciliation && <Button onClick={() => void save()} disabled={saving || previewing || (scope === 'transaction' && unchanged)}>{saving ? 'Saving…' : scope === 'merchant_rule' ? 'Create rule and apply' : 'Save correction'}</Button>}
-                {scope === 'transaction' && (lastEditId || latestUndoable) && <Button variant="ghost" onClick={() => void undo()} disabled={saving}>Undo latest change</Button>}
+                {!isReconciliation && <Button onClick={() => void save()} disabled={saving || previewing || (scope === 'transaction' && unchanged)}>{saving && <InlineActivity label="Saving correction" size="compact" />} {saving ? 'Saving correction…' : scope === 'merchant_rule' ? 'Create rule and apply' : 'Save correction'}</Button>}
+                {scope === 'transaction' && (lastEditId || latestUndoable) && <Button variant="ghost" onClick={() => void undo()} disabled={saving}>{saving && <InlineActivity label="Undoing latest change" size="compact" />} {saving ? 'Undoing change…' : 'Undo latest change'}</Button>}
               </div>
               {scope === 'merchant_rule' && (
                 <p className="mt-3 rounded-lg border border-[var(--hair)] bg-[var(--input-bg)] p-3 text-[12px] leading-relaxed text-ink2" aria-live="polite">

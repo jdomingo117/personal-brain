@@ -127,6 +127,19 @@ export function categorizationPreviewPages(
   return pages
 }
 
+/** Progress is defined by fully resolved bounded preview requests, never by
+ * rows guessed to be underway. A failed later request therefore leaves the
+ * caller with an honest partial count but no usable partial review result. */
+export function categorizationPreviewProgress(totalPages: number, completedPages: number): {
+  totalPages: number
+  completedPages: number
+  activePage: number | null
+} {
+  const total = Number.isFinite(totalPages) ? Math.max(0, Math.floor(totalPages)) : 0
+  const completed = Number.isFinite(completedPages) ? Math.min(total, Math.max(0, Math.floor(completedPages))) : 0
+  return { totalPages: total, completedPages: completed, activePage: completed < total ? completed + 1 : null }
+}
+
 export function suggestedReviewIds(rows: CategorizationReviewRow[]): Set<string> {
   return new Set(rows.filter((row) => row.status === 'suggested' && row.proposed).map((row) => row.transaction_id))
 }
