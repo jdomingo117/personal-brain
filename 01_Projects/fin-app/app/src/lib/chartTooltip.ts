@@ -27,8 +27,8 @@ export function sharedTooltipLayout({
   top: number
   bottom: number
 }): SharedTooltipLayout {
-  const width = 132
-  const height = 20 + Math.max(itemCount, 1) * 14 + 4
+  const width = 160
+  const height = 28 + Math.max(itemCount, 1) * 18 + 4
   const edge = 4
   const x = Math.max(left + edge, Math.min(right - width - edge, anchorX - width / 2))
   const highest = Math.min(...pointYs)

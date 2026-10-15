@@ -33,18 +33,18 @@ export default function SharedChartTooltip({
         strokeWidth={1}
         style={{ filter: 'drop-shadow(0 4px 10px rgba(0, 0, 0, 0.12))' }}
       />
-      <text x={8} y={13} fill="var(--color-muted)" fontSize={9} fontWeight={600}>
+      <text x={8} y={17} fill="var(--color-muted)" fontSize={11} fontWeight={600}>
         {label}
       </text>
       {items.map((item, index) => {
-        const y = 27 + index * 14
+        const y = 35 + index * 18
         return (
           <g key={item.label}>
             <circle cx={10} cy={y - 3} r={2.5} fill={item.color} />
-            <text x={17} y={y} fill="var(--color-ink2)" fontSize={9}>
+            <text x={17} y={y} fill="var(--color-ink2)" fontSize={12}>
               {item.label}
             </text>
-            <text x={layout.width - 8} y={y} fill="var(--color-ink)" fontSize={9} fontWeight={600} textAnchor="end" className="tabular-nums">
+            <text x={layout.width - 8} y={y} fill="var(--color-ink)" fontSize={12} fontWeight={600} textAnchor="end" className="tabular-nums">
               {item.value}
             </text>
           </g>

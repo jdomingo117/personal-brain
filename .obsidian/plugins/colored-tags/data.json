@@ -10,6 +10,7 @@
     "highTextContrast": false
   },
   "knownTags": {
+    "accessibility": 22,
     "architecture": 11,
     "data-safety": 18,
     "design-system": 8,
@@ -19,15 +20,19 @@
     "ingestion": 20,
     "investments": 12,
     "ledger": 13,
+    "onboarding": 23,
     "operations": 19,
     "papaparse": 10,
+    "planning": 24,
     "playwright-test-generator": 14,
     "playwright-test-healer": 15,
     "playwright-test-planner": 16,
     "projects": 3,
     "quality": 21,
+    "roadmap": 25,
     "taxonomy": 17,
     "typescript": 7,
+    "ux": 26,
     "projects/fin-app": 1
   },
   "tagColors": {},

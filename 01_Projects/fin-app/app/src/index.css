@@ -18,8 +18,8 @@
   --color-surface: #eceef1;
   --color-ink: #15181c;
   --color-ink2: #3b424a;
-  --color-muted: #5f6872;
-  --color-faint: #646d77;
+  --color-muted: #56616b;
+  --color-faint: #5d6873;
 
   /* accent (mint) */
   --color-accent: #11b596;
@@ -73,8 +73,8 @@
   --color-surface: #181c22;   /* warm charcoal workspace */
   --color-ink: #eef1f4;
   --color-ink2: #b2bac4;
-  --color-muted: #a5aeb8;
-  --color-faint: #98a2ad;
+  --color-muted: #b8c1cb;
+  --color-faint: #a7b0bb;
   --color-bar: #0b0e12;       /* darker than the workspace → frame still reads */
   --color-accent: #16c7a4;    /* luminous mint */
   --color-accent-ink: #3ad9bd;
@@ -84,8 +84,8 @@
 
   --hair: rgba(255, 255, 255, 0.12);
   --hair-soft: rgba(255, 255, 255, 0.07);
-  --glass-fill: rgba(255, 255, 255, 0.05);
-  --glass-bd: rgba(255, 255, 255, 0.09);
+  --glass-fill: rgba(255, 255, 255, 0.075);
+  --glass-bd: rgba(255, 255, 255, 0.11);
   --accent-wash: rgba(22, 199, 164, 0.16);
   --track: rgba(255, 255, 255, 0.09);
   --toast-bg: rgba(28, 33, 40, 0.92);
@@ -154,6 +154,15 @@ body {
     letter-spacing: 0.14em;
     text-transform: uppercase;
   }
+  /* Semantic reading roles. Keep explanatory copy readable rather than
+     shrinking it to fit dense panels. */
+  .body-copy { font-size: 15px; line-height: 1.65; color: var(--color-ink2); }
+  .detail-copy { font-size: 13px; line-height: 1.5; color: var(--color-muted); }
+  .field-label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-muted); }
+  .control-label { font-size: 14px; line-height: 1.35; font-weight: 700; color: var(--color-ink); }
+  .outcome-panel { border: 1px solid var(--hair); border-radius: 12px; background: var(--input-bg); padding: 20px; }
+  .data-table-wrap { overflow-x: auto; border: 1px solid var(--hair); border-radius: 12px; }
+  .data-table { min-width: 720px; width: 100%; font-size: 13px; line-height: 1.45; }
   .workflow-surface {
     background: color-mix(in srgb, var(--color-surface) 90%, transparent);
     border-color: color-mix(in srgb, var(--color-ink) 22%, transparent);

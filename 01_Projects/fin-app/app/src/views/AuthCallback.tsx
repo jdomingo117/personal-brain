@@ -73,13 +73,13 @@ export default function AuthCallback() {
         <Tile title={error ? 'Sign-in failed' : 'Completing sign-in'}>
           {error ? (
             <div className="mt-4 grid gap-4">
-              <p className="text-[13px] text-muted">{error}</p>
+              <p className="body-copy">{error}</p>
               <Button onClick={() => navigate('/login', { replace: true })} className="w-full justify-center">
                 Back to sign in
               </Button>
             </div>
           ) : (
-            <p className="mt-4 text-[13px] text-muted">Verifying your link…</p>
+            <p className="mt-4 body-copy">Verifying your link…</p>
           )}
         </Tile>
       </div>

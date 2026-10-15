@@ -15,6 +15,13 @@ export interface ResponsiveChartSizeOptions {
   minHeight?: number
   /** Prevent a wide desktop card from consuming excessive vertical space. */
   maxHeight?: number
+  /**
+   * Allows a primary chart to use the vertical space assigned by a taller
+   * neighbouring panel, while keeping its SVG coordinate system undistorted.
+   */
+  fillAvailableHeight?: boolean
+  /** Measured container height, supplied internally by the hook. */
+  availableHeight?: number
 }
 
 export interface ResponsiveChartSize {
@@ -43,7 +50,8 @@ export function resolveResponsiveChartSize(
   const aspectRatio = positive(options.aspectRatio, DEFAULT_CHART_ASPECT_RATIO)
   const minHeight = positive(options.minHeight, DEFAULT_CHART_MIN_HEIGHT)
   const maxHeight = Math.max(minHeight, positive(options.maxHeight, DEFAULT_CHART_MAX_HEIGHT))
-  const height = Math.round(Math.min(maxHeight, Math.max(minHeight, width / aspectRatio)))
+  const availableHeight = options.fillAvailableHeight ? positive(options.availableHeight, 0) : 0
+  const height = Math.round(Math.min(maxHeight, Math.max(minHeight, width / aspectRatio, availableHeight)))
 
   return { width, height, ready: true }
 }
@@ -59,6 +67,7 @@ export function useResponsiveChartSize<T extends Element = HTMLDivElement>(
   const aspectRatio = positive(options.aspectRatio, DEFAULT_CHART_ASPECT_RATIO)
   const minHeight = positive(options.minHeight, DEFAULT_CHART_MIN_HEIGHT)
   const maxHeight = Math.max(minHeight, positive(options.maxHeight, DEFAULT_CHART_MAX_HEIGHT))
+  const fillAvailableHeight = options.fillAvailableHeight ?? false
   const [element, setElement] = useState<T | null>(null)
   const [size, setSize] = useState<ResponsiveChartSize>({ width: 0, height: 0, ready: false })
 
@@ -68,10 +77,13 @@ export function useResponsiveChartSize<T extends Element = HTMLDivElement>(
     if (!element) return
 
     const measure = () => {
-      const next = resolveResponsiveChartSize(element.getBoundingClientRect().width, {
+      const bounds = element.getBoundingClientRect()
+      const next = resolveResponsiveChartSize(bounds.width, {
         aspectRatio,
         minHeight,
         maxHeight,
+        fillAvailableHeight,
+        availableHeight: bounds.height,
       })
       setSize((current) =>
         current.width === next.width && current.height === next.height && current.ready === next.ready
@@ -89,7 +101,7 @@ export function useResponsiveChartSize<T extends Element = HTMLDivElement>(
     const observer = new ResizeObserver(measure)
     observer.observe(element)
     return () => observer.disconnect()
-  }, [aspectRatio, element, maxHeight, minHeight])
+  }, [aspectRatio, element, fillAvailableHeight, maxHeight, minHeight])
 
   return { ref, ...size }
 }

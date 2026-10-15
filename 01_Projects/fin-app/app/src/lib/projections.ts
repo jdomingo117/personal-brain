@@ -7,6 +7,18 @@ export interface ProjectionPoint {
   value: number
 }
 
+/** A saved planning input, never a future bank transaction. `once` contributes
+ * in its start month; `monthly` contributes inclusively through its optional
+ * end month. Amounts are signed cents. */
+export interface ProjectionEvent {
+  id: string
+  name: string
+  amountCents: number
+  cadence: 'once' | 'monthly'
+  startDate: string
+  endDate?: string | null
+}
+
 export interface ProjectionInputs {
   metric: ProjectionMetric
   currentValue: number
@@ -19,6 +31,18 @@ export interface ProjectionInputs {
   adjustmentStartMonth?: number
   months: number
   startDate?: Date
+  events?: ProjectionEvent[]
+}
+
+export interface ProjectionMonthBreakdown {
+  date: string
+  openingValue: number
+  observedRunRate: number
+  adjustment: number
+  plannedEvents: ProjectionEvent[]
+  plannedMovement: number
+  investmentGrowth: number
+  closingValue: number
 }
 
 const monthKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
@@ -103,14 +127,20 @@ export function monthsBetween(start: Date, targetIso: string): number {
   return Math.max(1, (target.getFullYear() - start.getFullYear()) * 12 + target.getMonth() - start.getMonth())
 }
 
-export function buildProjection(inputs: ProjectionInputs): ProjectionPoint[] {
+/**
+ * The inspectable counterpart to `buildProjection`. Values shown in a row are
+ * rounded so their visible parts reconcile exactly to the visible closing
+ * value, while the internal investment balance retains its calculation
+ * precision for subsequent months.
+ */
+export function buildProjectionBreakdown(inputs: ProjectionInputs): ProjectionMonthBreakdown[] {
   const start = inputs.startDate ?? new Date()
   const monthlyReturn = Math.pow(1 + Math.max(inputs.annualReturnPct, -99) / 100, 1 / 12) - 1
   const adjustment = inputs.monthlyAdjustment ?? 0
   const adjustmentStartMonth = Math.max(1, inputs.adjustmentStartMonth ?? 1)
   let total = inputs.currentValue
   let investments = inputs.investmentBalance
-  const points: ProjectionPoint[] = [{ date: monthKey(start), value: Math.round(total) }]
+  const months: ProjectionMonthBreakdown[] = []
 
   for (let i = 1; i <= inputs.months; i += 1) {
     let growth = 0
@@ -119,11 +149,40 @@ export function buildProjection(inputs: ProjectionInputs): ProjectionPoint[] {
       investments = investments + inputs.monthlyInvestmentContribution + growth
     }
     const activeAdjustment = i >= adjustmentStartMonth ? adjustment : 0
-    total = total + inputs.monthlyFlow + activeAdjustment + growth
     const date = new Date(start.getFullYear(), start.getMonth() + i, 1)
-    points.push({ date: monthKey(date), value: Math.round(total) })
+    const key = monthKey(date)
+    const plannedEvents = (inputs.events ?? []).filter((event) => {
+      const startKey = event.startDate.slice(0, 7)
+      const endKey = event.endDate?.slice(0, 7)
+      return event.cadence === 'once'
+        ? startKey === key
+        : key >= startKey && (!endKey || key <= endKey)
+    })
+    const plannedMovement = plannedEvents.reduce((sum, event) => sum + event.amountCents, 0)
+    const openingValue = Math.round(total)
+    total = total + inputs.monthlyFlow + activeAdjustment + plannedMovement + growth
+    const closingValue = Math.round(total)
+    months.push({
+      date: key,
+      openingValue,
+      observedRunRate: inputs.monthlyFlow,
+      adjustment: activeAdjustment,
+      plannedEvents,
+      plannedMovement,
+      // Use the rounded residual so every rendered row reconciles exactly.
+      investmentGrowth: closingValue - openingValue - inputs.monthlyFlow - activeAdjustment - plannedMovement,
+      closingValue,
+    })
   }
-  return points
+  return months
+}
+
+export function buildProjection(inputs: ProjectionInputs): ProjectionPoint[] {
+  const start = inputs.startDate ?? new Date()
+  return [
+    { date: monthKey(start), value: Math.round(inputs.currentValue) },
+    ...buildProjectionBreakdown(inputs).map(({ date, closingValue }) => ({ date, value: closingValue })),
+  ]
 }
 
 export function firstTargetPoint(points: ProjectionPoint[], target: number): ProjectionPoint | null {

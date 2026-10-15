@@ -1,5 +1,6 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useLocation } from 'react-router-dom'
 import { Screen, ViewHeader, Grid } from '../components/Screen'
 import TransactionsPanel from '../components/TransactionsPanel'
 import ExpenseTrendCard from '../components/ExpenseTrendCard'
@@ -41,6 +42,8 @@ export default function Expenses() {
   const [view, setView] = useState('analytics')
   const { preset, from, to, applyPreset, changeFrom, changeTo } = usePeriodRange()
   const { accounts: dbAccounts, reportingTransactions: transactions } = useData()
+  const location = useLocation()
+  const dashboardFocus = location.state as { source?: string; category?: string; from?: string; to?: string } | null
 
   const OUTFLOW_ACCOUNTS = useMemo(() => {
     if (!dbAccounts || dbAccounts.length === 0) return []
@@ -61,6 +64,18 @@ export default function Expenses() {
       setAccounts(dbAccounts.map(a => a.id))
     }
   }, [dbAccounts])
+
+  // Dashboard insight links carry an intentional, one-off investigation
+  // context. Apply it only for this history entry; changing the filter bar
+  // afterward remains wholly under the person's control.
+  useEffect(() => {
+    if (dashboardFocus?.source !== 'dashboard-insight') return
+    if (dashboardFocus.from) changeFrom(dashboardFocus.from)
+    if (dashboardFocus.to) changeTo(dashboardFocus.to)
+  // `location.key` identifies a new navigation entry. The range setters are
+  // intentionally excluded: this must not reapply the focus after user edits.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key])
 
   return (
     <Screen>
@@ -99,7 +114,13 @@ export default function Expenses() {
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.25 }}
           >
-            <ExpenseAnalytics from={from} to={to} accounts={accounts} />
+            <ExpenseAnalytics
+              from={from}
+              to={to}
+              accounts={accounts}
+              initialCategory={dashboardFocus?.source === 'dashboard-insight' ? dashboardFocus.category ?? null : null}
+              navigationKey={location.key}
+            />
           </motion.div>
         ) : (
           <motion.div
@@ -138,14 +159,46 @@ const topBy = (xs: Txn[], key: (t: Txn) => string) => {
   return top
 }
 
-function ExpenseAnalytics({ from, to, accounts }: { from: string; to: string; accounts: string[] }) {
+function ExpenseAnalytics({
+  from,
+  to,
+  accounts,
+  initialCategory,
+  navigationKey,
+}: {
+  from: string
+  to: string
+  accounts: string[]
+  initialCategory: string | null
+  navigationKey: string
+}) {
   const [sel, setSel] = useState<CatSelection>(EMPTY_SELECTION)
   const [timeFocus, setTimeFocus] = useState<{ from: string; to: string; label: string } | null>(null)
+  const [changesExpanded, setChangesExpanded] = useState(false)
+  const changesRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (initialCategory) setSel({ categories: [initialCategory], subcats: [] })
+  }, [initialCategory, navigationKey])
 
   // Reset timeFocus if the base date range changes
   useEffect(() => {
     setTimeFocus(null)
+    setChangesExpanded(false)
   }, [from, to])
+
+  useEffect(() => {
+    setChangesExpanded(false)
+  }, [timeFocus?.from, timeFocus?.to])
+
+  useEffect(() => {
+    setChangesExpanded(false)
+  }, [accounts])
+
+  const showDetailedChanges = () => {
+    setChangesExpanded(true)
+    window.requestAnimationFrame(() => changesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }
 
   // The expensive pass: scans of `data.transactions`, keyed to the period and
   // account filters only — so clicking a category never re-runs them.
@@ -253,8 +306,13 @@ function ExpenseAnalytics({ from, to, accounts }: { from: string; to: string; ac
 
   const categoryFlowHeight = useMemo(() => {
     const categoryCount = new Set(timeFilteredBaseOutflows.map((transaction) => transaction.cat)).size
-    return Math.max(360, Math.min(540, categoryCount * 48 + 70))
+    // The flow uses 18px card labels. Give each category enough vertical room
+    // to remain individually legible instead of forcing cards to overlap.
+    return Math.max(420, Math.min(720, categoryCount * 72 + 112))
   }, [timeFilteredBaseOutflows])
+  // Time-series charts remain compact and comparable across date ranges. They
+  // deliberately do not inherit the category-flow diagram's variable height.
+  const trendHeight = 420
 
   if (accounts.length === 0) {
     return (
@@ -266,7 +324,7 @@ function ExpenseAnalytics({ from, to, accounts }: { from: string; to: string; ac
             <path d="M6 12h.01M18 12h.01" />
           </svg>
           <div className="font-display text-[16px] font-bold text-ink">No spending accounts selected</div>
-          <p className="max-w-[440px] text-[13px] leading-relaxed text-muted">
+          <p className="max-w-[440px] body-copy">
             Please select at least one outflow account from the filter bar above to analyze transaction history, category changes, and category outflow.
           </p>
         </div>
@@ -330,19 +388,30 @@ function ExpenseAnalytics({ from, to, accounts }: { from: string; to: string; ac
         />
       </div>
 
-      {/* Row 2 — spending-over-time (left) + category-outflow flow (right), ~55/45.
-          A nested grid so the split isn't limited to the 3-col grid's 33/67. */}
-      <div className="grid grid-cols-1 gap-3.5 md:col-span-2 xl:col-span-3 xl:grid-cols-[1.15fr_1fr]">
-        <ExpenseTrendCard
-          outflows={m.catOutflows}
-          from={from}
-          to={to}
-          scopeLabel={focused ? focusLabel : undefined}
-          timeFocus={timeFocus}
-          onTimeFocus={setTimeFocus}
-          height={categoryFlowHeight}
-        />
-        {/* a selection *source*: takes the unfiltered set and highlights */}
+      {/* Row 2 — a deliberately asymmetric analytics composition. The flow keeps
+          its readable height on the right; trend + a concise change summary fill
+          the left rail, avoiding a stretched chart or a blank area. */}
+      <div className="grid grid-cols-1 gap-3.5 md:col-span-2 xl:col-span-3 xl:grid-cols-[1fr_1.13fr] xl:items-stretch">
+        <div className="flex h-full flex-col gap-3.5">
+          <ExpenseTrendCard
+            outflows={m.catOutflows}
+            from={from}
+            to={to}
+            scopeLabel={focused ? focusLabel : undefined}
+            timeFocus={timeFocus}
+            onTimeFocus={setTimeFocus}
+            height={trendHeight}
+          />
+          <ExpenseChangesCard
+            variant="summary"
+            outflows={timeFilteredBaseOutflows}
+            previousOutflows={priorBaseOutflows}
+            selection={sel}
+            onToggleCategory={onToggleCategory}
+            onViewDetail={showDetailedChanges}
+          />
+        </div>
+        {/* a selection source: takes the unfiltered set and highlights */}
         <ExpenseFlowCard
           outflows={timeFilteredBaseOutflows}
           selection={sel}
@@ -353,12 +422,16 @@ function ExpenseAnalytics({ from, to, accounts }: { from: string; to: string; ac
       </div>
       {/* Row 3 — a direct current-versus-prior category comparison. It is a
           selection source, but deliberately never filters itself. */}
-      <ExpenseChangesCard
-        outflows={timeFilteredBaseOutflows}
-        previousOutflows={priorBaseOutflows}
-        selection={sel}
-        onToggleCategory={onToggleCategory}
-      />
+      <div ref={changesRef} className="md:col-span-2 xl:col-span-3">
+        <ExpenseChangesCard
+          outflows={timeFilteredBaseOutflows}
+          previousOutflows={priorBaseOutflows}
+          selection={sel}
+          onToggleCategory={onToggleCategory}
+          expanded={changesExpanded}
+          onExpandedChange={setChangesExpanded}
+        />
+      </div>
       {/* Row 4 — transactions. `rows` stays UNFILTERED: this panel is the filterer,
           it just sources its category state from the shared focus now. Pre-filtering
           would zero out the popover's per-category counts. */}

@@ -28,7 +28,7 @@ export default function ExpenseTrendCard({
   scopeLabel,
   timeFocus,
   onTimeFocus,
-  height = 330,
+  height = 420,
 }: {
   outflows: Txn[]
   from: string
@@ -38,7 +38,8 @@ export default function ExpenseTrendCard({
   scopeLabel?: string
   timeFocus: { from: string; to: string; label: string } | null
   onTimeFocus: (focus: { from: string; to: string; label: string } | null) => void
-  /** Kept in step with the adjacent category-flow panel when it expands. */
+  /** The trend has a stable visual rhythm; it does not inherit the height of
+   *  the adjacent category-flow diagram. */
   height?: number
 }) {
   const [tab, setTab] = useState('cumulative')
@@ -142,10 +143,10 @@ export default function ExpenseTrendCard({
     <Tile className="flex flex-col">
       <header className="mb-3.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-baseline gap-2.5">
-          <h3 className="font-display text-[14px] font-bold text-ink">
+          <h3 className="font-display text-[16px] font-bold text-ink">
             {scopeLabel ? `${scopeLabel} over time` : 'Spending over time'}
           </h3>
-          <span className="text-[11px] uppercase tracking-[0.06em] text-muted">
+          <span className="text-[13px] uppercase tracking-[0.06em] text-muted">
             {gran} · {tab === 'cumulative' ? 'cumulative' : 'per period'}
           </span>
         </div>

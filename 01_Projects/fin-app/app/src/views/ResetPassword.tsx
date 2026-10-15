@@ -80,13 +80,13 @@ export default function ResetPassword() {
         <Tile title="Choose a new password">
           {error ? (
             <div className="mt-4 grid gap-4">
-              <p className="text-[13px] text-muted">{error}</p>
+              <p className="body-copy">{error}</p>
               <Button onClick={() => navigate('/login', { replace: true })} className="w-full justify-center">
                 Back to sign in
               </Button>
             </div>
           ) : !ready ? (
-            <p className="mt-4 text-[13px] text-muted">Verifying your link…</p>
+            <p className="mt-4 body-copy">Verifying your link…</p>
           ) : (
             <form onSubmit={submit} className="mt-4 grid gap-4">
               <label className="grid gap-1.5">

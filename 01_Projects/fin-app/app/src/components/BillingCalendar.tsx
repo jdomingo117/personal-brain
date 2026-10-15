@@ -46,7 +46,7 @@ export default function BillingCalendar({
 }) {
   const [hoveredDayIso, setHoveredDayIso] = useState<string | null>(null)
 
-  const { cells, leading, total, count, max } = useMemo(() => {
+  const { cells, leading, total, count, max, nextWeekTotal, nextWeekCount } = useMemo(() => {
     const byDay = new Map<string, { label: string; amount: number; seriesId: string }[]>()
     series.forEach((s) => {
       upcomingCharges(s, horizon.from, horizon.to).forEach((c) => {
@@ -71,6 +71,8 @@ export default function BillingCalendar({
       total: values.reduce((a, b) => a + b, 0),
       count: [...byDay.values()].reduce((a, l) => a + l.length, 0),
       max: Math.max(...values),
+      nextWeekTotal: days.slice(0, 7).reduce((sum, day) => sum + day.value, 0),
+      nextWeekCount: days.slice(0, 7).reduce((sum, day) => sum + day.charges.length, 0),
     }
   }, [series, horizon.from, horizon.to])
 
@@ -88,9 +90,15 @@ export default function BillingCalendar({
 
   return (
     <Tile title="Billing calendar" tag={rangeLabel} className="flex flex-col">
+      <div className="mb-3 rounded-lg border border-[var(--hair-soft)] bg-[var(--input-bg)] px-3 py-2">
+        <span className="text-[14px] font-semibold text-ink">Next 7 days</span>
+        <span className="ml-2 text-[13px] tabular-nums text-muted">
+          {nextWeekCount === 0 ? 'No charges due' : `${nextWeekCount} charge${nextWeekCount === 1 ? '' : 's'} · ${fmt(nextWeekTotal)} due`}
+        </span>
+      </div>
       <div className="mb-1.5 grid grid-cols-7 gap-1.5 select-none">
         {DOW.map((d, i) => (
-          <div key={i} className="text-center text-[10px] font-semibold uppercase tracking-[0.06em] text-faint">
+          <div key={i} className="text-center text-[12px] font-semibold uppercase tracking-[0.06em] text-faint">
             {d}
           </div>
         ))}
@@ -150,7 +158,7 @@ export default function BillingCalendar({
                 />
               )}
               <span
-                className={`absolute left-1 top-0.5 text-[10px] tabular-nums select-none ${
+                className={`absolute left-1 top-0.5 text-[12px] tabular-nums select-none ${
                   hit ? 'font-semibold text-ink' : 'text-faint'
                 }`}
               >
@@ -177,24 +185,24 @@ export default function BillingCalendar({
                       isFirstTwoRows ? 'top-full mt-2' : 'bottom-full mb-2'
                     } left-1/2 -translate-x-1/2 w-48 p-3.5 rounded-xl border border-[var(--glass-bd)] bg-[var(--toast-bg)] shadow-lg -webkit-backdrop-filter blur(16px) backdrop-filter blur(16px) select-none`}
                   >
-                    <div className="text-[10px] font-bold text-muted uppercase tracking-[0.06em] border-b border-[var(--hair-soft)] pb-1 mb-2">
+                    <div className="text-[12px] font-bold text-muted uppercase tracking-[0.06em] border-b border-[var(--hair-soft)] pb-1 mb-2">
                       {dayLabel(c.iso)}
                     </div>
                     {c.value > 0 ? (
                       <div className="space-y-2">
                         {c.charges.map((ch, idx) => (
-                          <div key={idx} className="flex flex-col text-[11px] leading-tight">
+                          <div key={idx} className="flex flex-col text-[13px] leading-tight">
                             <span className="font-semibold text-ink">{ch.label}</span>
                             <span className="text-accent-ink font-bold tabular-nums mt-0.5">{fmt(ch.amount)}</span>
                           </div>
                         ))}
-                        <div className="flex justify-between border-t border-[var(--hair-soft)] pt-1.5 text-[11px] font-bold">
+                        <div className="flex justify-between border-t border-[var(--hair-soft)] pt-1.5 text-[13px] font-bold">
                           <span className="text-ink2">Total due</span>
                           <span className="text-ink tabular-nums">{fmt(c.value)}</span>
                         </div>
                       </div>
                     ) : (
-                      <div className="text-[11px] text-muted italic">No charges due</div>
+                      <div className="text-[13px] text-muted italic">No charges due</div>
                     )}
                   </motion.div>
                 )}
@@ -205,10 +213,10 @@ export default function BillingCalendar({
       </motion.div>
 
       <div className="mt-3 flex items-center justify-between gap-3 border-t border-[var(--hair)] pt-3 select-none">
-        <span className="text-[12px] font-semibold text-ink">
+        <span className="text-[14px] font-semibold text-ink">
           {count} charge{count === 1 ? '' : 's'} · {fmt(total)} due
         </span>
-        <span className="flex items-center gap-1 text-[10px] text-faint">
+        <span className="flex items-center gap-1 text-[12px] text-faint">
           less
           {[0.12, 0.28, 0.45, 0.62].map((a) => (
             <span

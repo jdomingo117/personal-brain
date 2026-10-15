@@ -145,13 +145,13 @@ than a single mandatory sequence.
    after changes to migrations, ingestion, transfer review or categorisation.
    It now provides the repeatable confidence check that was previously missing.
 2. **Classification review workflow — Gates 1 and 2 complete.** The Ledger
-   now previews and applies fresh suggestions for an intentional selection of
-   up to 500 rows, with protected decisions, impact preview, atomic application
-   and guarded undo. Its isolated migration/API/browser gate and original five-file,
-   793-row representative CSV quality gate are green. Remaining product scope
-   is the safe unresolved default, an
-   all-eligible runner, and durable/resumable review runs only if their usage
-   justifies persistence. The contract is in
+   now previews and applies fresh suggestions for an intentional selected set,
+   safe unresolved rows, or the first bounded all-eligible batch (each at most
+   500 rows), with protected decisions, impact preview, atomic application and
+   guarded undo. Its isolated migration/API/browser gate and original five-file,
+   793-row representative CSV quality gate are green. Durable/resumable review
+   runs remain deliberately deferred unless repeated bounded-batch usage
+   justifies a new persistence contract. The contract is in
    [TAXONOMY_AND_LEDGER_PLAN.md](TAXONOMY_AND_LEDGER_PLAN.md).
 3. **Ingestion hardening is complete.** A 5,000
    physical-source-row cap fails closed before browser staging, in the Edge
@@ -175,9 +175,34 @@ than a single mandatory sequence.
    another provider/instrument adapter. The Vanguard vertical slice is designed
    as an adapter boundary, so this extends an existing model rather than starts
    a parallel one.
-5. **Product polish.** Continue the deferred planning experience: recurring
-   write-back (edit/cancel/remind), multi-year cadence detection, or the
-   projections/insights work described in [MVP_SCOPE.md](MVP_SCOPE.md).
+5. **Product polish.** Recurring write-back is now live as durable
+   account-scoped schedule overlays, stop/resume tracking, guarded undo and
+   in-app reminder states. Annual multi-year cadence detection is now live
+   through a bounded Annual-only evidence window; two matching renewals remain
+   excluded early signals until a third confirms them. Remaining related scope
+   is, only if needed, separately designed email/push notification delivery.
+6. **Planning experience.** The deterministic Strategic Projections calculator
+   is already shipped in Income (cash/net-worth trajectories, dated goals and
+   temporary what-if comparisons). Phase 1 of its durable follow-up is now
+   live: account-scoped, persisted goals with audited service-only mutation,
+   archive/pause state and guarded undo. Phase 2 is now also live: each goal
+   gets a durable baseline, with isolated saved comparison scenarios,
+   one-off/bounded-monthly planning events, scenario archive/restore/duplicate,
+   guarded undo and an opt-in active-recurring forecast input that avoids
+   historical double counting. Phase 3 is now live: saved baseline-versus-
+   comparison forecasting, monthly opening-to-closing reconciliations,
+   accessible table fallback, and clear completeness warnings. A Dashboard
+   goal summary remains intentionally deferred. Phase 4 is now live: the
+   workspace reconciles the most recent completed, account-scoped month to
+   its saved plan and supports a no-write keep-plan choice, an auditable
+   baseline version/guarded undo, or a copied actual-review scenario. Its
+   bounded delivery plan is
+   [PLANNING_EXPERIENCE_PLAN.md](PLANNING_EXPERIENCE_PLAN.md).
+7. **Legibility and density.** The planning screens revealed system-wide small-body-text and
+   compressed-form issues. The staged shared-primitive, typography, spacing, responsive-audit and
+   visual-regression remediation is documented in
+   [LEGIBILITY_AND_DENSITY_PLAN.md](LEGIBILITY_AND_DENSITY_PLAN.md); it should be implemented as a
+   cross-application design-system pass rather than incremental per-panel adjustments.
 
 ## First commands when resuming
 

@@ -29,7 +29,7 @@ export default function SegmentedTabs({
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(t.id)}
-            className={`relative rounded-[9px] px-3.5 py-1.5 text-[12px] font-semibold transition-colors ${
+            className={`relative rounded-[9px] px-3.5 py-1.5 text-[14px] font-semibold transition-colors ${
               isActive ? 'text-accent-ink' : 'text-ink2 hover:text-ink'
             }`}
           >

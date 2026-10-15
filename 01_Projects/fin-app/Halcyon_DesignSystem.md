@@ -461,6 +461,31 @@ A mutually-exclusive view switcher: a `hair`-bordered glass track of options wit
 Roled `tablist`/`tab`. Drives the Income view's **Income analyzer / Strategic projections** switch
 (top-right of the header); the two panels cross-fade via `AnimatePresence`.
 
+### 8.13a Planning forecast explanation (`StrategicProjections.tsx`)
+
+Planning charts must never be the sole source of forecast meaning. The trajectory uses a solid
+accent baseline, a dashed blue saved comparison (or temporary what-if while viewing the baseline),
+and a dashed warning target. Hover exposes a date-headed tooltip with both values; the same
+information is available without pointer input through the native, keyboard-operable **Explain the
+next months** disclosure and its horizontally scrollable semantic table.
+
+Each table row reconciles opening value, observed completed-month run rate, named planned/recurring
+inputs, investment growth where applicable, and closing forecast value. Inputs retain their source
+labels: recurring projections begin `Recurring ·`; temporary controls begin `Temporary what-if`.
+Warnings use the warning wash and plain language rather than a simulated precision state. The table
+is the responsive fallback: it may scroll horizontally on narrow screens but retains table headers,
+row headers and tabular numbers. All disclosure controls use native focus states; chart decoration
+does not rely on animation, and respects the global reduced-motion preference.
+
+### 8.13b Legibility primitives and visual governance
+
+`body-copy` is the default readable explanation role (15px with relaxed leading); `detail-copy` is
+for concise secondary information (13px); `field-label` and `control-label` separate field metadata
+from interactive choices; and `outcome-panel` presents the consequence of a decision. Data tables
+use `data-table-wrap` and `data-table` so a narrow display scrolls a semantically intact table rather
+than shrinking essential copy. The required breakpoint/theme/accessibility review checklist lives in
+[`DESIGN_REVIEW_CHECKLIST.md`](DESIGN_REVIEW_CHECKLIST.md).
+
 ### 8.14 Income analyzer (header toolbar + tile layout)
 Filters are **chrome, not content**, so they live in the page header (a global element, no glass
 container) rather than a tile: a **`DateRangePicker`** (period) + **`MultiSelect`** (linked accounts)
@@ -559,20 +584,24 @@ Dimming defaults to `opacity: 0.42` (flow nodes), `opacity-40` (pacing rows), an
 
 ### 8.17 Recurring hub (`RecurringHub.tsx`, `RecurringDirectory.tsx`, `BillingCalendar.tsx`, `lib/recurring.ts`)
 The Expenses view's second tab. Answers **"what am I committed to?"**, where the analyzer answers
-"what did I spend?". Read-only detection over `data.transactions` — nothing in the ledger says a
-charge is recurring, so it's inferred, exactly as it would be from a real bank feed.
+"what did I spend?". Detection is read-only over `data.transactions` — nothing in the ledger says a
+charge is recurring, so it's inferred, exactly as it would be from a real bank feed. A managed
+series may layer durable user schedule overrides on that detection; those overrides never rewrite
+statement history or cancel the real merchant subscription/direct debit.
 
 **Anchored to today; no period filter.** Every question here is present-tense (what do I owe monthly,
 what charges next, how much of my outflow is locked) and none sharpen under a date range — an
 annualized run-rate actively fights one. `AnalyzerFilters` stays `view === 'analytics'`-only, and the
 hub is outside the §8.16 cross-filter system entirely.
 
-**Three windows are in play, and each is named where it's used** — the §8.15 "name the window you
-actually measure" principle, which matters more here because there are three of them:
+**Four windows are in play, and each is named where it's used** — the §8.15 "name the window you
+actually measure" principle, which matters more here because the annual-evidence look-back must not
+leak into ordinary reporting:
 
 | Window | Span | Drives |
 | --- | --- | --- |
-| Detection | trailing 12 months | the directory; stated in the header strip |
+| Detection / reporting | trailing 12 months | ordinary cadence detection, the directory and `trailingActual`; stated in the header strip |
+| Annual evidence | up to trailing 3 years | Annual-only confirmation; never a reporting or pressure window |
 | Pressure | trailing 30 days (`[today−29, today]`) | hero card 3; stated in its sub-line |
 | Horizon | next 30 days (`[today, today+29]`) | the calendar; stated in its tile `tag` |
 
@@ -584,8 +613,10 @@ engine, so a forward window isn't a different choice, it's uncomputable.
 keys cat → subcat and buckets by whole calendar month, and month grain can't tell Quarterly from
 irregular (a quarterly charge is "present in 4 of 12 months" — identical to four one-offs) nor
 express a *day*, which is the directory's whole row metadata and the calendar's only input. Grouping
-is `merchant + cat + subcat` — the **full** merchant, since ` // ` is a display convention and
-splitting it would merge `Habitat // Rent Transfer` with a hypothetical `Habitat // Storage`.
+is `account + normalized merchant` — a commitment charged to two cards must not become one
+manageable object. The full merchant remains the display value; normalized merchant identity is only
+the durable overlay key. Category/subcategory are presentation/classification values, deliberately not
+identity, so correcting taxonomy cannot orphan a managed commitment.
 
 Gates, in order — a series must clear all four:
 
@@ -598,6 +629,16 @@ Gates, in order — a series must clear all four:
 
 That last gate is the one that isn't obvious, and it is load-bearing — it is the only thing
 separating "I shop here regularly" from "I am billed here regularly".
+
+**Annual detection is a deliberately isolated second pass.** A normal trailing-year group cannot
+prove annual cadence. `buildRecurring` therefore retains the ordinary 12-month boundary for every
+other cadence and aggregates, then permits only `Annual` from a bounded three-year evidence window.
+Three stable annual charges (two agreeing annual gaps) create a cautious, medium-confidence series;
+its `trailingTotal` still includes only the most recent reporting year, so historical renewals cannot
+inflate the hero's actual-spend comparison. Two stable, annual-sized charges are a visibly labelled
+early signal, not a series: they do not enter commitments, annual burn, pressure, calendar or totals,
+and one more matching renewal is required. Pending, transfers, erratic amounts and stale pairs remain
+excluded by the same gates/dormancy rule.
 
 **`STEADY_CV = 0.12` is shared with §8.15 via `lib/stats.ts` — one definition of "fixed cost", not
 two.** Under it a series is `fixed`, over it `variable`. Rent reads cv 1.2%, power 14.9%, water 17.5%.
@@ -672,9 +713,9 @@ variant tree** — every `Tile` in the `Grid` stays at `opacity: 0`, with no con
   codebase says so in three places and gates all-or-nothing *because* of it. Hashing merchant →
   account would be inventing data, and worse here than elsewhere, because the analyzer's account
   filter would contradict the column on the same page. Unblocks when the data model gains `accountId`.
-- **Annual cadence can't fire** from a 12-month ledger: one observation, zero gaps. An
-  information-theoretic limit, not a bug. It stays in the tables; it needs ~2 years of history.
-  Quarterly is the longest honestly-detectable cadence today.
+- **Annual cadence uses its own bounded three-year evidence pass.** It needs three stable renewals
+  (two agreeing gaps) to confirm; two are presented only as an excluded possible annual commitment.
+  Ordinary detection and every monetary report remain trailing-year measures.
 - **Weekly/Biweekly ship unexercised.** The realistic candidates fail on principle: a weekly grocery
   shop is regular but isn't an *obligation*. The cadence remains supported but requires an honest
   recurring-obligation fixture before it can be presented as exercised.

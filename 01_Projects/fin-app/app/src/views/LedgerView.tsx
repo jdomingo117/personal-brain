@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Screen, ViewHeader } from '../components/Screen'
 import Tile from '../components/Tile'
 import { Button, Chip, SearchInput, Select } from '../components/Controls'
@@ -12,9 +13,11 @@ import {
   selectAllMatchingLedgerTransactions, summarizeLedgerSelection, toggleLedgerPageSelection,
   type LedgerReviewFilter,
 } from '../lib/ledger'
+import { reviewScopeTransactions, type CategorizationReviewScope } from '../lib/categorizationReview'
 import { KIND_LABELS, TRANSACTION_KINDS, type TransactionKind } from '../lib/classification'
 import ClassificationRulesDialog from '../components/ClassificationRulesDialog'
 import CategorizationReviewDialog from '../components/CategorizationReviewDialog'
+import { dayLabel } from '../lib/period'
 
 const PAGE_SIZE = 50
 const REVIEW_FILTERS: { id: LedgerReviewFilter; label: string }[] = [
@@ -35,8 +38,18 @@ function sourceName(source: Txn['categorySource']) {
   return source === 'user' ? 'Manual' : source === 'bank' ? 'Bank' : source === 'ai' ? 'AI' : source === 'seed' ? 'System' : 'Unknown'
 }
 
+type IncomeSourceScope = {
+  source: 'income-source'
+  category: string
+  accountIds: string[]
+  from: string
+  to: string
+  incomeOnly: boolean
+}
+
 export default function LedgerView() {
   const { accounts, transactions, refreshData } = useData()
+  const location = useLocation()
   const [query, setQuery] = useState('')
   const [accountId, setAccountId] = useState('')
   const [category, setCategory] = useState('')
@@ -49,8 +62,44 @@ export default function LedgerView() {
   const [bulkClassificationOpen, setBulkClassificationOpen] = useState(false)
   const [rulesOpen, setRulesOpen] = useState(false)
   const [categorizationReviewOpen, setCategorizationReviewOpen] = useState(false)
+  const [categorizationReviewScope, setCategorizationReviewScope] = useState<CategorizationReviewScope>('selected')
+  const [incomeSourceScope, setIncomeSourceScope] = useState<IncomeSourceScope | null>(null)
 
-  const filtered = useMemo(() => filterLedger(transactions, { query, accountId, category, kind, review }), [transactions, query, accountId, category, kind, review])
+  useEffect(() => {
+    const navigationState = location.state as ({ source?: string; review?: LedgerReviewFilter } & Partial<IncomeSourceScope>) | null
+    if (navigationState?.source === 'dashboard-insight' && navigationState.review) {
+      setReview(navigationState.review)
+      setIncomeSourceScope(null)
+    }
+    if (navigationState?.source === 'income-source' && navigationState.category && navigationState.from && navigationState.to) {
+      setQuery('')
+      setAccountId('')
+      setCategory(navigationState.category)
+      setKind('')
+      setReview('all')
+      setSelectedIds(new Set())
+      setIncomeSourceScope({
+        source: 'income-source',
+        category: navigationState.category,
+        accountIds: navigationState.accountIds ?? [],
+        from: navigationState.from,
+        to: navigationState.to,
+        incomeOnly: navigationState.incomeOnly ?? true,
+      })
+    }
+  }, [location.key, location.state])
+
+  const filtered = useMemo(() => filterLedger(transactions, {
+    query,
+    accountId,
+    category,
+    kind,
+    review,
+    accountIds: incomeSourceScope?.accountIds,
+    from: incomeSourceScope?.from,
+    to: incomeSourceScope?.to,
+    incomeOnly: incomeSourceScope?.incomeOnly,
+  }), [transactions, query, accountId, category, kind, review, incomeSourceScope])
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const selected = selectedId ? transactions.find((transaction) => transaction.id === selectedId) ?? null : null
@@ -61,6 +110,18 @@ export default function LedgerView() {
   const pageIsFullySelected = visible.length > 0 && visibleSelected === visible.length
   const clearPartialPageAtLimit = selection.total >= MAX_BULK_SELECTION && visibleSelected > 0
   const allSelectableMatchesSelected = isExactMatchingLedgerSelection(selectedIds, filtered)
+  const unresolvedReview = useMemo(() => reviewScopeTransactions(transactions, 'unresolved'), [transactions])
+  const eligibleReview = useMemo(() => reviewScopeTransactions(transactions, 'eligible'), [transactions])
+  const categorizationReviewTransactions = categorizationReviewScope === 'selected'
+    ? selectedTransactions
+    : categorizationReviewScope === 'unresolved'
+      ? unresolvedReview.selected
+      : eligibleReview.selected
+
+  const openCategorizationReview = (scope: CategorizationReviewScope) => {
+    setCategorizationReviewScope(scope)
+    setCategorizationReviewOpen(true)
+  }
 
   useEffect(() => setPage(1), [query, accountId, category, kind, review])
   useEffect(() => { if (page > pages) setPage(pages) }, [page, pages])
@@ -90,28 +151,43 @@ export default function LedgerView() {
       </div>
 
       <Tile span={3} className="mt-5">
+        {incomeSourceScope && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--accent-border)] bg-[var(--accent-wash)] px-4 py-3 text-[13px]">
+            <p className="text-ink2">
+              <span className="font-semibold text-ink">Income explorer</span>
+              <span className="text-muted"> · {incomeSourceScope.category} · {dayLabel(incomeSourceScope.from)} – {dayLabel(incomeSourceScope.to)} · {incomeSourceScope.accountIds.length || accounts.length} account{(incomeSourceScope.accountIds.length || accounts.length) === 1 ? '' : 's'}</span>
+            </p>
+            <button
+              type="button"
+              onClick={() => { setIncomeSourceScope(null); setCategory('') }}
+              className="font-semibold text-accent-ink transition hover:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+            >
+              Clear income scope
+            </button>
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           {REVIEW_FILTERS.map((filter) => (
-            <Chip key={filter.id} active={review === filter.id} onClick={() => setReview(filter.id)}>{filter.label}</Chip>
+            <Chip key={filter.id} active={review === filter.id} onClick={() => setReview(filter.id)} className="px-4 py-2.5 text-[13px]">{filter.label}</Chip>
           ))}
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-[minmax(220px,1fr)_180px_180px_180px]">
-          <SearchInput value={query} onChange={setQuery} placeholder="Search merchant or description" ariaLabel="Search ledger" />
-          <Select value={accountId} onChange={setAccountId} ariaLabel="Filter ledger by account">
+        <div className="mt-4 grid gap-3 md:grid-cols-[minmax(220px,1fr)_190px_190px_190px]">
+          <SearchInput value={query} onChange={setQuery} placeholder="Search merchant or description" ariaLabel="Search ledger" inputClassName="py-3 text-[14px]" />
+          <Select value={accountId} onChange={setAccountId} ariaLabel="Filter ledger by account" inputClassName="py-3 text-[14px]">
             <option value="">All accounts</option>
             {accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}
           </Select>
-          <Select value={category} onChange={setCategory} ariaLabel="Filter ledger by category">
+          <Select value={category} onChange={setCategory} ariaLabel="Filter ledger by category" inputClassName="py-3 text-[14px]">
             <option value="">All categories</option>
             {ALL_CATEGORIES.map((candidate) => <option key={candidate} value={candidate}>{candidate}</option>)}
           </Select>
-          <Select value={kind} onChange={setKind} ariaLabel="Filter ledger by transaction kind">
+          <Select value={kind} onChange={setKind} ariaLabel="Filter ledger by transaction kind" inputClassName="py-3 text-[14px]">
             <option value="">All kinds</option>
             {TRANSACTION_KINDS.map((candidate) => <option key={candidate} value={candidate}>{KIND_LABELS[candidate]}</option>)}
           </Select>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--hair)] pb-2 text-[10.5px] uppercase tracking-[0.1em] text-muted">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--hair)] pb-3 text-[12px] uppercase tracking-[0.1em] text-muted">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span>{filtered.length} transaction{filtered.length === 1 ? '' : 's'}</span>
             {selection.total > 0 && <span role="status" aria-live="polite" className="normal-case tracking-normal text-accent-ink">
@@ -120,10 +196,10 @@ export default function LedgerView() {
             <span id="ledger-bulk-selection-limit" className="normal-case tracking-normal">Bulk limit: {MAX_BULK_SELECTION} rows per correction.</span>
           </div>
           <div className="flex flex-wrap items-center gap-2 normal-case tracking-normal">
-            <button type="button" data-dialog-focus-fallback onClick={toggleVisible} disabled={visible.length === 0 || (selection.total >= MAX_BULK_SELECTION && visibleSelected === 0)} aria-describedby="ledger-bulk-selection-limit" className="min-h-11 rounded-lg border border-[var(--hair)] px-3 text-[11px] font-semibold text-ink2 disabled:cursor-not-allowed disabled:opacity-40">
+            <button type="button" data-dialog-focus-fallback onClick={toggleVisible} disabled={visible.length === 0 || (selection.total >= MAX_BULK_SELECTION && visibleSelected === 0)} aria-describedby="ledger-bulk-selection-limit" className="min-h-11 rounded-lg border border-[var(--hair)] px-3 text-[12px] font-semibold text-ink2 disabled:cursor-not-allowed disabled:opacity-40">
               {pageIsFullySelected ? `Clear page (${visible.length})` : clearPartialPageAtLimit ? `Clear selected on page (${visibleSelected})` : `Select page (${visible.length})`}
             </button>
-            <button type="button" onClick={selectAllMatching} disabled={filtered.length === 0 || allSelectableMatchesSelected} aria-describedby="ledger-bulk-selection-limit" className="min-h-11 rounded-lg border border-[var(--hair)] px-3 text-[11px] font-semibold text-ink2 disabled:cursor-not-allowed disabled:opacity-40">
+            <button type="button" onClick={selectAllMatching} disabled={filtered.length === 0 || allSelectableMatchesSelected} aria-describedby="ledger-bulk-selection-limit" className="min-h-11 rounded-lg border border-[var(--hair)] px-3 text-[12px] font-semibold text-ink2 disabled:cursor-not-allowed disabled:opacity-40">
               {allSelectableMatchesSelected
                 ? filtered.length > MAX_BULK_SELECTION
                   ? `First ${MAX_BULK_SELECTION} of ${filtered.length} matching selected`
@@ -133,15 +209,26 @@ export default function LedgerView() {
                   : `Select all matching (${filtered.length})`}
             </button>
             {selection.total > 0 && <Button onClick={() => setBulkOpen(true)}>Correct categories ({selection.total})</Button>}
-            {selection.total > 0 && <Button variant="ghost" onClick={() => setCategorizationReviewOpen(true)}>Review with engine ({selection.total})</Button>}
+            {selection.total > 0 && <Button variant="ghost" onClick={() => openCategorizationReview('selected')}>Review selected ({selection.total})</Button>}
             {selection.total > 0 && <Button variant="ghost" onClick={() => setBulkClassificationOpen(true)}>Edit attributes ({selection.total})</Button>}
-            {selection.total > 0 && <button type="button" onClick={() => setSelectedIds(new Set())} className="min-h-11 px-2 text-[11px] font-semibold text-muted">Clear all ({selection.total})</button>}
+            {selection.total > 0 && <button type="button" onClick={() => setSelectedIds(new Set())} className="min-h-11 px-2 text-[12px] font-semibold text-muted">Clear all ({selection.total})</button>}
           </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-[12px] text-muted">
+          <span className="mr-1 font-medium text-ink2">Engine review:</span>
+          <button type="button" onClick={() => openCategorizationReview('unresolved')} disabled={unresolvedReview.selected.length === 0} className="min-h-11 rounded-lg border border-[var(--hair)] px-3 font-semibold text-accent-ink disabled:cursor-not-allowed disabled:opacity-40">
+            Review unresolved ({unresolvedReview.candidates.length})
+          </button>
+          <button type="button" onClick={() => openCategorizationReview('eligible')} disabled={eligibleReview.selected.length === 0} className="min-h-11 rounded-lg border border-[var(--hair)] px-3 font-semibold text-ink2 disabled:cursor-not-allowed disabled:opacity-40">
+            {eligibleReview.truncated ? `Review eligible batch (first ${eligibleReview.selected.length} of ${eligibleReview.candidates.length})` : `Review all eligible (${eligibleReview.candidates.length})`}
+          </button>
+          <span>Manual, bank and system rows remain protected by the server.</span>
         </div>
 
         {visible.length === 0 ? (
           <div className="grid place-items-center py-16 text-center">
-            <p className="text-[13px] text-muted">No transactions match this ledger view.</p>
+            <p className="body-copy">No transactions match this ledger view.</p>
           </div>
         ) : (
           <div className="divide-y divide-[var(--hair-soft)]">
@@ -153,28 +240,28 @@ export default function LedgerView() {
                 <button
                   type="button"
                   onClick={() => setSelectedId(transaction.id)}
-                  className="grid min-h-[64px] min-w-0 flex-1 grid-cols-[72px_minmax(0,1fr)_104px] items-center gap-3 py-3 text-left transition hover:bg-[var(--hair-soft)] focus-visible:bg-[var(--accent-wash)] md:grid-cols-[88px_minmax(0,1.4fr)_minmax(100px,0.65fr)_minmax(120px,0.8fr)_100px_96px]"
+                  className="grid min-h-[72px] min-w-0 flex-1 grid-cols-[80px_minmax(0,1fr)_112px] items-center gap-4 py-3.5 text-left transition hover:bg-[var(--hair-soft)] focus-visible:bg-[var(--accent-wash)] md:grid-cols-[96px_minmax(0,1.4fr)_minmax(120px,0.7fr)_minmax(132px,0.85fr)_108px_106px]"
                 >
-                <span className="text-[12px] tabular-nums text-muted">{transaction.date}</span>
+                <span className="text-[14px] tabular-nums text-muted">{transaction.date}</span>
                 <span className="min-w-0">
-                  <span className="block truncate text-[13px] font-semibold text-ink">{transaction.merchant}</span>
-                  {!!transaction.allocations?.length && <span className="mr-1 inline-flex rounded-full border border-accent px-1.5 py-0.5 text-[9px] font-semibold uppercase text-accent-ink">Split {transaction.allocations.length}</span>}
-                  <span className="block truncate text-[11px] text-muted md:hidden">{transaction.account} · {transaction.cat}{transaction.subcat ? ` · ${transaction.subcat}` : ''}</span>
-                  <span className="hidden truncate text-[11px] text-muted md:block">{transaction.originalDescription || transaction.merchant}</span>
+                  <span className="block truncate text-[15px] font-semibold text-ink">{transaction.merchant}</span>
+                  {!!transaction.allocations?.length && <span className="mr-1 inline-flex rounded-full border border-accent px-1.5 py-0.5 text-[10px] font-semibold uppercase text-accent-ink">Split {transaction.allocations.length}</span>}
+                  <span className="block truncate text-[12.5px] text-muted md:hidden">{transaction.account} · {transaction.cat}{transaction.subcat ? ` · ${transaction.subcat}` : ''}</span>
+                  <span className="hidden truncate text-[12.5px] text-muted md:block">{transaction.originalDescription || transaction.merchant}</span>
                 </span>
                 <span className="hidden min-w-0 md:block">
-                  <span className="block truncate text-[12px] font-medium text-ink2">{transaction.account}</span>
-                  <span className="block truncate text-[11px] text-muted">{KIND_LABELS[transaction.kind as TransactionKind]}</span>
+                  <span className="block truncate text-[14px] font-medium text-ink2">{transaction.account}</span>
+                  <span className="block truncate text-[12.5px] text-muted">{KIND_LABELS[transaction.kind as TransactionKind]}</span>
                 </span>
                 <span className="hidden min-w-0 md:block">
-                  <span className="block truncate text-[12px] font-medium text-ink2">{transaction.cat}</span>
-                  <span className="block truncate text-[11px] text-muted">{transaction.subcat || 'No subcategory'}</span>
+                  <span className="block truncate text-[14px] font-medium text-ink2">{transaction.cat}</span>
+                  <span className="block truncate text-[12.5px] text-muted">{transaction.subcat || 'No subcategory'}</span>
                 </span>
                 <span className="hidden md:block">
-                  <span className="inline-flex rounded-full border border-[var(--hair)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">{sourceName(transaction.categorySource)}</span>
-                  {(transaction.needsReview || transaction.cat === 'Uncategorized') && <span className="mt-1 block text-[10px] font-semibold uppercase text-warn">Review</span>}
+                  <span className="inline-flex rounded-full border border-[var(--hair)] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">{sourceName(transaction.categorySource)}</span>
+                  {(transaction.needsReview || transaction.cat === 'Uncategorized') && <span className="mt-1 block text-[11px] font-semibold uppercase text-warn">Review</span>}
                 </span>
-                <span className={`text-right text-[13px] font-bold tabular-nums ${transaction.amount > 0 ? 'text-pos' : 'text-ink'}`}>{fmtCents(transaction.amount)}</span>
+                <span className={`text-right text-[15px] font-bold tabular-nums ${transaction.amount > 0 ? 'text-pos' : 'text-ink'}`}>{fmtCents(transaction.amount)}</span>
                 </button>
               </div>
             ))}
@@ -183,9 +270,9 @@ export default function LedgerView() {
 
         {pages > 1 && (
           <div className="mt-4 flex items-center justify-between border-t border-[var(--hair)] pt-4">
-            <button type="button" disabled={page === 1} onClick={() => setPage((value) => value - 1)} className="min-h-11 rounded-lg border border-[var(--hair)] px-4 text-[12px] font-semibold disabled:opacity-40">Previous</button>
-            <span className="text-[12px] tabular-nums text-muted">Page {page} of {pages}</span>
-            <button type="button" disabled={page === pages} onClick={() => setPage((value) => value + 1)} className="min-h-11 rounded-lg border border-[var(--hair)] px-4 text-[12px] font-semibold disabled:opacity-40">Next</button>
+            <button type="button" disabled={page === 1} onClick={() => setPage((value) => value - 1)} className="min-h-11 rounded-lg border border-[var(--hair)] px-4 text-[13px] font-semibold disabled:opacity-40">Previous</button>
+            <span className="text-[13px] tabular-nums text-muted">Page {page} of {pages}</span>
+            <button type="button" disabled={page === pages} onClick={() => setPage((value) => value + 1)} className="min-h-11 rounded-lg border border-[var(--hair)] px-4 text-[13px] font-semibold disabled:opacity-40">Next</button>
           </div>
         )}
       </Tile>
@@ -199,9 +286,22 @@ export default function LedgerView() {
         setBulkClassificationOpen(false)
         if (clearSelection) setSelectedIds(new Set())
       }} onChanged={refreshData} />}
-      {categorizationReviewOpen && <CategorizationReviewDialog transactions={selectedTransactions} onClose={(clearSelection) => {
+      {categorizationReviewOpen && <CategorizationReviewDialog
+        transactions={categorizationReviewTransactions}
+        scope={categorizationReviewScope}
+        scopeCandidateCount={categorizationReviewScope === 'unresolved'
+          ? unresolvedReview.candidates.length
+          : categorizationReviewScope === 'eligible'
+            ? eligibleReview.candidates.length
+            : selectedTransactions.length}
+        scopeTruncated={categorizationReviewScope === 'unresolved'
+          ? unresolvedReview.truncated
+          : categorizationReviewScope === 'eligible'
+            ? eligibleReview.truncated
+            : false}
+        onClose={(clearSelection) => {
         setCategorizationReviewOpen(false)
-        if (clearSelection) setSelectedIds(new Set())
+        if (clearSelection && categorizationReviewScope === 'selected') setSelectedIds(new Set())
       }} onChanged={refreshData} />}
       {rulesOpen && <ClassificationRulesDialog onClose={() => setRulesOpen(false)} onChanged={refreshData} />}
     </Screen>

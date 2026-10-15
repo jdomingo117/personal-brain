@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Tile from './Tile'
 import Ledger from './Ledger'
 import FiltersPopover from './FiltersPopover'
@@ -6,6 +6,12 @@ import { SearchInput, RemovableChip } from './Controls'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import { matchesSelection } from '../lib/expenseSelection'
 import { CATEGORY_TAXONOMY, EXPENSE_CATEGORIES, type Txn } from '../data'
+import TransactionCategoryDrawer from './TransactionCategoryDrawer'
+import { useData } from '../contexts/DataContext'
+import { useView } from '../router'
+
+const INITIAL_VISIBLE_ROWS = 15
+const LOAD_MORE_ROWS = 25
 
 /** Full-width transactions panel with list-level filters — free-text search
  *  (merchant), cascading category / sub-category multi-selects, and an amount
@@ -36,7 +42,11 @@ export default function TransactionsPanel({
   const [query, setQuery] = useState('')
   const [amountMin, setAmountMin] = useState('')
   const [amountMax, setAmountMax] = useState('')
+  const [visibleRows, setVisibleRows] = useState(INITIAL_VISIBLE_ROWS)
+  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null)
   const debouncedQuery = useDebouncedValue(query, 180)
+  const { refreshData } = useData()
+  const { toast } = useView()
 
   // Category options (stable set) with per-category counts over the scoped rows.
   const categoryOptions = useMemo(() => {
@@ -82,11 +92,20 @@ export default function TransactionsPanel({
     })
   }, [rows, debouncedQuery, categories, subcats, amountMin, amountMax])
 
+  // A changed filter starts a fresh, scannable ledger rather than preserving a
+  // prior “show all” choice that could drop a large list into the page.
+  useEffect(() => {
+    setVisibleRows(INITIAL_VISIBLE_ROWS)
+  }, [rows, debouncedQuery, categories, subcats, amountMin, amountMax])
+
   const amountActive = Boolean(amountMin || amountMax)
   const activeCount = categories.length + subcats.length + (amountActive ? 1 : 0)
   const anyChip = categories.length > 0 || subcats.length > 0 || amountActive
   const anyActive = anyChip || query.length > 0
   const amountLabel = amountMin && amountMax ? `$${amountMin}–$${amountMax}` : amountMin ? `≥ $${amountMin}` : amountMax ? `≤ $${amountMax}` : ''
+  const shownRows = filtered.slice(0, visibleRows)
+  const hasMoreRows = shownRows.length < filtered.length
+  const selectedTransaction = selectedTransactionId ? rows.find((row) => row.id === selectedTransactionId) ?? null : null
 
   const clearAmount = () => {
     setAmountMin('')
@@ -100,14 +119,19 @@ export default function TransactionsPanel({
     clearAmount()
   }
 
+  const refreshAfterEdit = async () => {
+    await refreshData()
+    toast({ title: 'Transaction updated', sub: 'Expenses analytics have been refreshed.' })
+  }
+
   return (
     <Tile span={3} className="relative z-10">
       {/* header — title + result count · search + filters */}
       <header className="mb-3.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-baseline gap-2.5">
-          <h3 className="font-display text-[14px] font-bold text-ink">Transactions</h3>
-          <span className="text-[11px] uppercase tracking-[0.06em] tabular-nums text-muted">
-            {filtered.length} of {rows.length}
+          <h3 className="font-display text-[16px] font-bold text-ink">Transactions</h3>
+          <span className="text-[13px] uppercase tracking-[0.06em] tabular-nums text-muted">
+            Showing {shownRows.length} of {filtered.length}
           </span>
         </div>
         <div className="flex items-center gap-2.5">
@@ -153,7 +177,7 @@ export default function TransactionsPanel({
             <button
               type="button"
               onClick={clearAll}
-              className="ml-0.5 rounded-[8px] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-ink2 transition hover:bg-[var(--hair-soft)]"
+              className="ml-0.5 rounded-[8px] px-2 py-1 text-[13px] font-semibold uppercase tracking-[0.05em] text-ink2 transition hover:bg-[var(--hair-soft)]"
             >
               Clear all
             </button>
@@ -163,9 +187,41 @@ export default function TransactionsPanel({
 
       {/* list · empty states */}
       {filtered.length > 0 ? (
-        <div className="max-h-[440px] overflow-y-auto pr-1">
-          <Ledger rows={filtered} />
-        </div>
+        <>
+          <Ledger rows={shownRows} onEdit={(transaction) => setSelectedTransactionId(transaction.id)} />
+          <footer className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--hair-soft)] pt-3">
+            <span className="text-[13px] tabular-nums text-muted">Showing {shownRows.length} of {filtered.length} transactions</span>
+            <div className="flex flex-wrap items-center gap-2">
+              {hasMoreRows && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleRows((count) => Math.min(filtered.length, count + LOAD_MORE_ROWS))}
+                  className="rounded-[8px] border border-[var(--hair)] px-3 py-1.5 text-[13px] font-semibold text-ink2 transition hover:border-accent hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  Show {Math.min(LOAD_MORE_ROWS, filtered.length - shownRows.length)} more
+                </button>
+              )}
+              {hasMoreRows && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleRows(filtered.length)}
+                  className="rounded-[8px] px-3 py-1.5 text-[13px] font-semibold text-accent-ink transition hover:bg-[var(--accent-wash)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  Show all
+                </button>
+              )}
+              {!hasMoreRows && filtered.length > INITIAL_VISIBLE_ROWS && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleRows(INITIAL_VISIBLE_ROWS)}
+                  className="rounded-[8px] px-3 py-1.5 text-[13px] font-semibold text-accent-ink transition hover:bg-[var(--accent-wash)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  Show fewer
+                </button>
+              )}
+            </div>
+          </footer>
+        </>
       ) : rows.length === 0 ? (
         <div className="grid place-items-center py-12 text-center text-[12.5px] text-muted">
           No transactions in the selected period.
@@ -182,6 +238,11 @@ export default function TransactionsPanel({
           </button>
         </div>
       )}
+      <TransactionCategoryDrawer
+        transaction={selectedTransaction}
+        onClose={() => setSelectedTransactionId(null)}
+        onChanged={refreshAfterEdit}
+      />
     </Tile>
   )
 }

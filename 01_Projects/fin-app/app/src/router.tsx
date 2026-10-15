@@ -53,7 +53,9 @@ export function pathToView(pathname: string): View {
 
 interface Ctx {
   view: View
-  go: (v: View) => void
+  /** Optional state lets a dashboard observation open the relevant view with
+      a useful focus, without turning ephemeral UI context into a permanent URL. */
+  go: (v: View, options?: { state?: unknown }) => void
   toast: (a: { title: string; sub: string }) => void
   motionOn: boolean
   setMotionOn: (on: boolean) => void

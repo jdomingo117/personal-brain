@@ -16,6 +16,8 @@ related:
   - "[[CONTEXT]]"
   - "[[MANAGED_INVESTMENTS]]"
   - "[[MVP_SCOPE]]"
+  - "[[ONBOARDING_PLAN]]"
+  - "[[PLANNING_EXPERIENCE_PLAN]]"
   - "[[Halcyon_DesignSystem]]"
   - "[[System requirements - SRD]]"
   - "[[MIGRATION_PLAN]]"
@@ -61,6 +63,8 @@ CURRENT_STATUS.md             ← read first (current handoff / next options)
 CONTEXT.md                    historical decision diary and implementation rationale
 MANAGED_INVESTMENTS.md        managed-fund implementation, operations, and known transfer gap
 MVP_SCOPE.md                  the thin-slice MVP + deferred phases (plan of record)
+ONBOARDING_PLAN.md            shelved onboarding/tutorial strategy and future implementation gates
+PLANNING_EXPERIENCE_PLAN.md   phased durable goals, scenarios and plan-vs-actual delivery plan
 Halcyon_DesignSystem.md       definitive design system
 System requirements - SRD.md  full product vision + security model (reconciled to the build; missing a data model + API contract)
 MIGRATION_PLAN.md             historical (vanilla → React port)

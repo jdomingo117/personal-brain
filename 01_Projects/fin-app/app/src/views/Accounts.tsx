@@ -15,7 +15,9 @@ import AddAccountModal from '../components/AddAccountModal'
 import InvestmentAccountActivity from '../components/InvestmentAccountActivity'
 import EditAccountModal from '../components/EditAccountModal'
 import ConnectBankModal from '../components/ConnectBankModal'
+import TransactionCategoryDrawer from '../components/TransactionCategoryDrawer'
 import { earnedIncomeCents, expenseEffectCents, isEarnedIncome, isGrossExpense } from '../lib/classification'
+import { useView } from '../router'
 
 /* Resolves a "Quick Timeframe Selector" label to a concrete ISO date range.
    `null` means unbounded ('All Time'). Mirrors the semantics already
@@ -45,7 +47,8 @@ function timeframeRange(tf: string): { from: string; to: string } | null {
 }
 
 export default function Accounts() {
-  const { accounts, transactions } = useData()
+  const { accounts, transactions, refreshData } = useData()
+  const { toast } = useView()
   // Default to the first account (the router prevents this view from loading if accounts is empty)
   const [selectedAccountId, setSelectedAccountId] = useState(accounts[0]?.id)
   
@@ -61,12 +64,13 @@ export default function Accounts() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterFlow, setFilterFlow] = useState<'All' | 'Income' | 'Expense'>('All')
   const [timeframe, setTimeframe] = useState('All Time')
+  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null)
 
   if (!selectedAccount) {
     return (
       <Screen>
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-[13px] text-muted mb-4">No accounts found.</p>
+          <p className="body-copy mb-4">No accounts found.</p>
           <button
             onClick={() => setIsAddingAccount(true)}
             className="micro bg-ink text-surface hover:-translate-y-px hover:shadow-lg rounded-lg px-4 py-2 transition duration-200 cursor-pointer"
@@ -85,6 +89,14 @@ export default function Accounts() {
   // never match, so this used to silently produce an empty list — flat
   // trend line, $0 period stats, empty category donut, empty ledger.
   const txns = transactions.filter(t => t.account_id === selectedAccount.id)
+  const selectedTransaction = selectedTransactionId
+    ? txns.find((transaction) => transaction.id === selectedTransactionId) ?? null
+    : null
+
+  const refreshAfterTransactionEdit = async () => {
+    await refreshData()
+    toast({ title: 'Transaction updated', sub: 'Account analytics have been refreshed.' })
+  }
 
   // The Quick Timeframe Selectors scope everything on this page EXCEPT the
   // Vault Balance (a point-in-time authoritative figure, not a period sum)
@@ -437,9 +449,9 @@ export default function Accounts() {
             {/* Ledger Table */}
             <div className="min-h-[300px]">
               {paginatedTxns.length > 0 ? (
-                <Ledger rows={paginatedTxns} />
+                <Ledger rows={paginatedTxns} onEdit={(transaction) => setSelectedTransactionId(transaction.id)} />
               ) : (
-                <div className="py-10 text-center text-[13px] text-muted font-medium">No transactions found for this category.</div>
+                <div className="py-10 text-center body-copy font-medium">No transactions found for this category.</div>
               )}
             </div>
 
@@ -493,6 +505,11 @@ export default function Accounts() {
             setSelectedAccountId(accounts[0].id)
           }
         }}
+      />
+      <TransactionCategoryDrawer
+        transaction={selectedTransaction}
+        onClose={() => setSelectedTransactionId(null)}
+        onChanged={refreshAfterTransactionEdit}
       />
     </Screen>
   )

@@ -234,7 +234,7 @@ This section defines the structural architecture, widgets, filters, and fields r
   * *Inline Actions:* Modify (re-categorize or adjust description) or Remove (soft-delete/exclude transaction).
 
 ### C. Income & Strategy Section
-*Equipped with a tab switcher to transition between the Income Analyser and Strategic Projections views (the tabs are a Phase 2 addition over the shipped Income view).*
+*Equipped with a tab switcher to transition between the shipped Income Analyser and deterministic Strategic Projections calculator. Durable goals, saved scenarios, planned events and plan-versus-actual review are a separate follow-up; see `PLANNING_EXPERIENCE_PLAN.md`.*
 
 #### Tab 1: Income Analyser
 * **Header:** Title and description.
@@ -249,14 +249,17 @@ This section defines the structural architecture, widgets, filters, and fields r
 * **Income Distribution Chart:** Restrained-palette breakdown of income sources and parent categories.
 
 #### Tab 2: Strategic Projections
-* **AI Advisory Hub / Briefing:** Minimalist bulletin box displaying 3 tactical financial insights in heading and paragraph format (phrased asynchronously by Gemini over deterministic numbers).
-* **Strategic Financial Goals Section:**
-  * *Goal Tracking Card:* Shows goal name header, target milestone value, progress bar, and forecasted horizon date (along with a "Days Until Reached" counter — calculated deterministically; AI phrasing only).
-* **Wealth Trajectory Plot:**
-  * *Chart:* Combines actual historical net worth data with a projected future trajectory line and an explicit horizontal target goal marker.
+* **Shipped deterministic calculator:** Cash-holdings or net-worth trajectory from current balances
+  and completed-month history, answering either value-by-date or date-for-value. It exposes its
+  assumptions, target, monthly baseline and optional temporary what-if adjustment; it does not use
+  AI for money math or planning recommendations.
+* **Wealth Trajectory Plot:** Combines actual history with a projected future trajectory, optional
+  scenario comparison and an explicit horizontal target marker.
+* **Deferred durable planning:** Persisted multi-goal tracking, saved scenarios, planned future
+  events and actual-versus-plan review are specified in [PLANNING_EXPERIENCE_PLAN.md](PLANNING_EXPERIENCE_PLAN.md).
 
 ### D. Expenses Section
-*Equipped with a tab switcher to transition between Expense Analytics and the Recurring Hub views. Both are **built** — see Halcyon_DesignSystem.md §8.15–§8.17. The Recurring Hub's read-only half (detection, directory, billing calendar) shipped ahead of its Phase 4 slot because it is pure deterministic maths over the ledger. The Osko same-day linker (§6.E below) also shipped ahead of its Phase 4 slot — see [MVP_SCOPE.md](MVP_SCOPE.md) for what that pulled forward. Recurring write-back remains Phase 4.*
+*Equipped with a tab switcher to transition between Expense Analytics and the Recurring Hub views. Both are **built** — see Halcyon_DesignSystem.md §8.15–§8.17. The Recurring Hub's read-only half (detection, directory, billing calendar) shipped ahead of its Phase 4 slot because it is pure deterministic maths over the ledger. Durable recurring write-back (schedule overlays, stop/resume, guarded undo and in-app reminders) and bounded multi-year Annual detection are now also shipped. The Osko same-day linker (§6.E below) likewise shipped ahead of its Phase 4 slot — see [MVP_SCOPE.md](MVP_SCOPE.md) for the current deferred scope.*
 
 #### Tab 1: Analytics
 * **Header:** Section title, date bounds.

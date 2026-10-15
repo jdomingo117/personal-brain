@@ -44,7 +44,7 @@ export default function Ingestion() {
       <Grid>
         <Tile title="Target account" span={3} className="workflow-surface">
           {accounts.length === 0 ? (
-            <p className="text-[13px] text-muted">
+            <p className="body-copy">
               Create an account before importing — transactions have to belong to one.
             </p>
           ) : (
@@ -83,7 +83,7 @@ export default function Ingestion() {
 
         {!account && accounts.length > 0 && (
           <Tile title="Statement upload" span={3} className="workflow-surface">
-            <p className="text-[13px] text-muted">
+            <p className="body-copy">
               Choose a target account above to open its statement importer and upload history.
             </p>
           </Tile>

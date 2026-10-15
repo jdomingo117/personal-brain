@@ -18,7 +18,8 @@ describe('shared chart tooltip layout', () => {
 
   it('uses a single bounded card even when series points are close together', () => {
     const layout = sharedTooltipLayout({ anchorX: 400, pointYs: [112, 116], itemCount: 2, ...bounds })
-    expect(layout).toMatchObject({ width: 132, height: 52 })
+    // The 12px data labels use a roomier card than the former 9px treatment.
+    expect(layout).toMatchObject({ width: 160, height: 68 })
     expect(layout.y + layout.height).toBeLessThanOrEqual(bounds.bottom - 4)
   })
 })

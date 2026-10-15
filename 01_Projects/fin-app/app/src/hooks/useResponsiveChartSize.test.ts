@@ -26,6 +26,16 @@ describe('responsive chart sizing', () => {
     })).toEqual({ width: 600, height: 260, ready: true })
   })
 
+  it('can use height assigned by a neighbouring panel without exceeding its cap', () => {
+    expect(resolveResponsiveChartSize(760, {
+      aspectRatio: 760 / 440,
+      minHeight: 360,
+      maxHeight: 680,
+      fillAvailableHeight: true,
+      availableHeight: 610,
+    })).toEqual({ width: 760, height: 610, ready: true })
+  })
+
   it('waits for a measurable container and safely ignores invalid dimensions', () => {
     expect(resolveResponsiveChartSize(0)).toEqual({ width: 0, height: 0, ready: false })
     expect(resolveResponsiveChartSize(Number.NaN)).toEqual({ width: 0, height: 0, ready: false })

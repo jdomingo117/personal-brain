@@ -49,10 +49,10 @@ export default function Bar({
     aspectRatio: 640 / height,
     maxHeight: height,
   })
-  const padL = 40
+  const padL = 52
   const padR = 16
   const padT = 16
-  const padB = 22
+  const padB = 30
   const innerW = W - padL - padR
   const innerH = H - padT - padB
   const yTickCount = chartYTickCount(innerH)
@@ -161,9 +161,9 @@ export default function Bar({
             <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="var(--hair-soft)" strokeWidth={1} />
             <text
               x={padL - 8}
-              y={y + 3}
+              y={y + 4}
               fill="var(--color-muted)"
-              fontSize={9}
+              fontSize={12}
               textAnchor="end"
               letterSpacing="0.04em"
               className="tabular-nums"
@@ -176,7 +176,7 @@ export default function Bar({
 
       {/* X-axis labels are constrained by usable chart width, not data count. */}
       {xTickIndices.map((i) => (
-        <text key={i} x={padL + i * spacing + spacing / 2} y={H - 5} fill="var(--color-muted)" fontSize={9} textAnchor="middle">
+        <text key={i} x={padL + i * spacing + spacing / 2} y={H - 8} fill="var(--color-muted)" fontSize={12} textAnchor="middle">
           {labels[i]}
         </text>
       ))}

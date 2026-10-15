@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Txn } from '../data'
 import {
   buildCategorizationReviewImpact, buildReviewAssignments, categorizationPreviewPages, suggestedReviewIds,
+  reviewScopeTransactions,
   type CategorizationReviewRow,
 } from './categorizationReview'
 
@@ -26,6 +27,35 @@ const reviewRow = (txn: Txn, overrides: Partial<CategorizationReviewRow> = {}): 
 })
 
 describe('categorisation review selection', () => {
+  it('keeps the safe unresolved scope to source-less Uncategorized rows', () => {
+    const unresolved = transaction({ cat: 'Uncategorized', categorySource: null, needsReview: true })
+    const aiUnresolved = transaction({ cat: 'Uncategorized', categorySource: 'ai', needsReview: true })
+    const reviewFlag = transaction({ categorySource: null, needsReview: true })
+
+    expect(reviewScopeTransactions([unresolved, aiUnresolved, reviewFlag], 'unresolved').candidates)
+      .toEqual([unresolved])
+  })
+
+  it('offers the all-eligible scope as a bounded candidate batch while retaining server-side protection', () => {
+    const eligible = transaction({ categorySource: 'ai' })
+    const bank = transaction({ categorySource: 'bank' })
+    const manual = transaction({ categorySource: 'user' })
+    const system = transaction({ categorySource: null, kind: 'adjustment', kindSource: 'system' })
+
+    const result = reviewScopeTransactions([eligible, bank, manual, system], 'eligible', 1)
+    expect(result.candidates).toEqual([eligible])
+    expect(result.selected).toEqual([eligible])
+    expect(result.truncated).toBe(false)
+  })
+
+  it('makes the all-eligible boundary explicit rather than silently running every row', () => {
+    const rows = Array.from({ length: 501 }, () => transaction({ categorySource: 'ai' }))
+    const result = reviewScopeTransactions(rows, 'eligible')
+
+    expect(result.selected).toHaveLength(500)
+    expect(result.truncated).toBe(true)
+  })
+
   it('keeps one merchant together while bounding distinct merchants per preview', () => {
     const transactions = [
       { id: 'a1', merchantKey: 'same' }, { id: 'a2', merchantKey: 'same' },

@@ -33,7 +33,7 @@ export default function HeroMetric({
       >
         {value}
       </motion.div>
-      {sub && <div className={`mt-1.5 text-[12px] font-semibold ${subColor}`}>{sub}</div>}
+      {sub && <div className={`mt-1.5 text-[14px] font-semibold ${subColor}`}>{sub}</div>}
     </Tile>
   )
 }

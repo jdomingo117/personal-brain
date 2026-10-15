@@ -1,6 +1,7 @@
 export interface Slice {
   value: number
   color: string
+  label?: string
 }
 
 /**
@@ -14,11 +15,15 @@ export default function Donut({
   size = 190,
   centerLabel = '',
   centerValue = '',
+  selectedIndex,
+  onSelectIndex,
 }: {
   data: Slice[]
   size?: number
   centerLabel?: string
   centerValue?: string
+  selectedIndex?: number
+  onSelectIndex?: (index: number) => void
 }) {
   const r = size / 2 - 14
   const cx = size / 2
@@ -46,11 +51,23 @@ export default function Donut({
             r={r}
             fill="none"
             stroke={d.color}
-            strokeWidth={13}
+            strokeWidth={selectedIndex === i ? 16 : 13}
             strokeLinecap="round"
             strokeDasharray={`${dash} ${CIRC}`}
             strokeDashoffset={dash}
             transform={`rotate(${rot} ${cx} ${cy})`}
+            opacity={selectedIndex === undefined || selectedIndex === i ? 1 : 0.5}
+            role={onSelectIndex ? 'button' : undefined}
+            tabIndex={onSelectIndex ? 0 : undefined}
+            aria-label={onSelectIndex ? `Select ${d.label ?? `segment ${i + 1}`}` : undefined}
+            onClick={onSelectIndex ? () => onSelectIndex(i) : undefined}
+            onKeyDown={onSelectIndex ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                onSelectIndex(i)
+              }
+            } : undefined}
+            style={onSelectIndex ? { cursor: 'pointer' } : undefined}
           />
         )
       })}

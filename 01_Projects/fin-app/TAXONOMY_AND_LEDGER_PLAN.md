@@ -685,20 +685,27 @@ confidence mandatory in the response contract so the 75% policy receives real
 scores rather than a universal 0.5 fallback. The personal database was not used
 or modified.
 
-**Remaining follow-up:** extend the workflow with the safe unresolved default
-and all-eligible scopes. Introduce durable/resumable review-run storage only if
-large-review usage demonstrates that the current bounded in-memory preview is
-insufficient. The complete target remains a user-facing workflow with three
-separate scopes: unresolved transactions (safe default), selected ledger
-transactions, and all eligible transactions. Previously classified rows receive
-suggestions before mutation; users can accept individually or in bulk. The
-preview must show protected rows, current/proposed source and classification,
-confidence, category/reporting deltas and the operation cap. Application must
-preserve transaction-level manual corrections and user rules by default, use a
-grouped audit operation and provide guarded undo. The original recovery gate was
-met by the clean-account checkpoint in `SYSTEM_INTEGRITY.md`; destructive/live
-validation remains isolated-project-only; the completed Gate 1 followed that
-constraint, and future destructive/live harness work must do the same.
+**Follow-up update — bounded scope entry points delivered 2026-10-13.** The
+Ledger now exposes the safe unresolved-only default and an all-eligible batch
+alongside intentional selected-row review. Both scopes are deliberately capped
+at the existing 500-row preview/apply/guarded-undo boundary; when more than 500
+rows match, the UI names the first bounded batch rather than implying an
+unbounded mutation. Browser filtering only narrows candidates. The Edge
+Function remains authoritative and continues to protect transaction-level
+manual corrections, user rules, bank classifications and system reconciliation
+entries. Previously classified eligible rows still receive fresh suggestions
+before any mutation, and the existing preview continues to show protected rows,
+current/proposed source and classification, confidence, category/reporting
+deltas and the operation cap.
+
+**Still deferred:** durable/resumable review-run storage. Introduce it only
+when use of repeated bounded batches demonstrates that the current in-memory
+preview is insufficient. It requires a new audited, tenant-scoped persistence
+contract; it must never turn a sequence of preview batches into an unbounded
+apply operation. The original recovery gate was met by the clean-account
+checkpoint in `SYSTEM_INTEGRITY.md`; destructive/live validation remains
+isolated-project-only; the completed Gate 1 followed that constraint, and
+future destructive/live harness work must do the same.
 
 ## Decisions deferred beyond this plan
 

@@ -1,9 +1,10 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import type { Account, Txn, Achievement, CustomSubcategory, TransactionAllocation } from '../data'
-import type { RecurrenceHint } from '../lib/recurring'
+import type { RecurrenceHint, RecurringSeriesOverride } from '../lib/recurring'
 import { useAuth } from './AuthContext'
 import { expandTransactionAllocations } from '../lib/allocations'
+import type { PlanningGoal, PlanningScenario, PlanningEvent } from '../lib/planning'
 
 export type ProfileData = {
   callsign: string
@@ -31,7 +32,11 @@ interface DataCtx {
   achievements: Achievement[]
   budgets: Budget[]
   recurrenceHints: Map<string, RecurrenceHint>
+  recurrenceOverrides: RecurringSeriesOverride[]
   netWorthHistory: { month: string; value: number }[]
+  planningGoals: PlanningGoal[]
+  planningScenarios: PlanningScenario[]
+  planningEvents: PlanningEvent[]
   refreshData: () => Promise<void>
 }
 
@@ -59,7 +64,11 @@ export const DataContext = createContext<DataCtx>({
   achievements: [],
   budgets: [],
   recurrenceHints: new Map(),
+  recurrenceOverrides: [],
   netWorthHistory: [],
+  planningGoals: [],
+  planningScenarios: [],
+  planningEvents: [],
   refreshData: async () => {},
 })
 
@@ -79,7 +88,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [budgets, setBudgets] = useState<Budget[]>([])
   const [recurrenceHints, setRecurrenceHints] = useState<Map<string, RecurrenceHint>>(new Map())
+  const [recurrenceOverrides, setRecurrenceOverrides] = useState<RecurringSeriesOverride[]>([])
   const [netWorthHistory, setNetWorthHistory] = useState<{ month: string; value: number }[]>([])
+  const [planningGoals, setPlanningGoals] = useState<PlanningGoal[]>([])
+  const [planningScenarios, setPlanningScenarios] = useState<PlanningScenario[]>([])
+  const [planningEvents, setPlanningEvents] = useState<PlanningEvent[]>([])
   // Connection ids already given a stale-sync this session — refreshData()
   // runs after nearly every mutation, and without this a single session
   // would fire the same background sync repeatedly instead of once.
@@ -99,7 +112,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setAchievements([])
       setBudgets([])
       setRecurrenceHints(new Map())
+      setRecurrenceOverrides([])
       setNetWorthHistory([])
+      setPlanningGoals([])
+      setPlanningScenarios([]); setPlanningEvents([])
       setLoadError(null)
       setRefreshError(null)
       setIsRefreshing(false)
@@ -125,7 +141,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       // The getUser() round-trip that used to guard this block is also gone;
       // RequireAuth already gates every route that mounts this provider, and
       // an invalid token now fails the queries themselves.
-      const [profileRes, accountsRes, txnsRes, achievementsRes, userAchievementsRes, budgetsRes, accountConnectionsRes, accountIdentifiersRes, recurrenceHintsRes, netWorthHistoryRes, allocationsRes, customSubcategoriesRes, taxonomyCategoriesRes] = await Promise.all([
+      const [profileRes, accountsRes, txnsRes, achievementsRes, userAchievementsRes, budgetsRes, accountConnectionsRes, accountIdentifiersRes, recurrenceHintsRes, recurrenceOverridesRes, netWorthHistoryRes, allocationsRes, customSubcategoriesRes, taxonomyCategoriesRes, planningGoalsRes, planningGoalAccountsRes, planningScenariosRes, planningEventsRes] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle(),
         supabase.from('accounts').select('*'),
         supabase.from('transactions_analytic').select('*').order('date', { ascending: false }),
@@ -135,16 +151,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
         supabase.from('account_connections').select('id, account_id, connection_id, provider, cutover_date, balance_as_of, provider_connections(status)'),
         supabase.from('account_identifiers').select('account_id, kind, value, source, confidence'),
         supabase.from('merchant_recurrence_hints').select('merchant_key, is_recurring, suggested_cadence, confidence'),
+        supabase.from('recurring_series_overrides').select('id,merchant_key,account_id,state,cadence_override,expected_amount_override,next_expected_override,reminder_days_before'),
         supabase.from('net_worth_monthly').select('month, value_cents').order('month', { ascending: true }),
         supabase.from('transaction_allocations').select('id,transaction_id,position,amount,kind,category,subcategory,note').order('position'),
         supabase.from('tenant_subcategories').select('id,category_id,display_name').eq('active', true).order('display_name'),
         supabase.from('taxonomy_categories').select('id,display_name'),
+        supabase.from('planning_goals').select('id,name,metric,target_cents,target_date,status,updated_at').order('updated_at', { ascending: false }),
+        supabase.from('planning_goal_accounts').select('goal_id,account_id'),
+        supabase.from('planning_scenarios').select('id,goal_id,name,is_baseline,annual_return_bps,include_recurring,status'),
+        supabase.from('planning_events').select('id,scenario_id,name,amount_cents,cadence,start_date,end_date').order('start_date'),
       ])
 
       const requiredError = [profileRes, accountsRes, txnsRes].find((result) => result.error)?.error
       if (requiredError) throw requiredError
 
-      const optionalResults = [achievementsRes, userAchievementsRes, budgetsRes, accountConnectionsRes, accountIdentifiersRes, recurrenceHintsRes, netWorthHistoryRes, allocationsRes, customSubcategoriesRes, taxonomyCategoriesRes]
+      const optionalResults = [achievementsRes, userAchievementsRes, budgetsRes, accountConnectionsRes, accountIdentifiersRes, recurrenceHintsRes, recurrenceOverridesRes, netWorthHistoryRes, allocationsRes, customSubcategoriesRes, taxonomyCategoriesRes, planningGoalsRes, planningGoalAccountsRes, planningScenariosRes, planningEventsRes]
       for (const result of optionalResults) {
         if (result.error) console.warn('Optional data enrichment failed:', result.error.message)
       }
@@ -301,10 +322,34 @@ export function DataProvider({ children }: { children: ReactNode }) {
           },
         ]),
       ))
+      setRecurrenceOverrides((recurrenceOverridesRes.data || []).map((override) => ({
+        id: override.id,
+        merchantKey: override.merchant_key,
+        accountId: override.account_id,
+        state: override.state as RecurringSeriesOverride['state'],
+        cadenceOverride: override.cadence_override as RecurringSeriesOverride['cadenceOverride'],
+        expectedAmountOverride: override.expected_amount_override,
+        nextExpectedOverride: override.next_expected_override,
+        reminderDaysBefore: override.reminder_days_before,
+      })))
       setNetWorthHistory((netWorthHistoryRes.data ?? []).map((point) => ({
         month: point.month,
         value: Number(point.value_cents),
       })))
+      const planningAccountsByGoal = new Map<string, string[]>()
+      for (const row of planningGoalAccountsRes.data ?? []) {
+        const ids = planningAccountsByGoal.get(row.goal_id) ?? []
+        ids.push(row.account_id)
+        planningAccountsByGoal.set(row.goal_id, ids)
+      }
+      setPlanningGoals((planningGoalsRes.data ?? []).map((goal) => ({
+        id: goal.id, name: goal.name, metric: goal.metric as PlanningGoal['metric'],
+        targetCents: goal.target_cents, targetDate: goal.target_date,
+        status: goal.status as PlanningGoal['status'], accountIds: planningAccountsByGoal.get(goal.id) ?? [],
+        updatedAt: goal.updated_at,
+      })))
+      setPlanningScenarios((planningScenariosRes.data ?? []).map((scenario) => ({ id: scenario.id, goalId: scenario.goal_id, name: scenario.name, isBaseline: scenario.is_baseline, annualReturnBps: scenario.annual_return_bps, includeRecurring: scenario.include_recurring, status: scenario.status as PlanningScenario['status'] })))
+      setPlanningEvents((planningEventsRes.data ?? []).map((event) => ({ id: event.id, scenarioId: event.scenario_id, name: event.name, amountCents: event.amount_cents, cadence: event.cadence as PlanningEvent['cadence'], startDate: event.start_date, endDate: event.end_date })))
 
       // Calculate 30-day net worth delta
       const thirtyDaysAgo = new Date()
@@ -354,7 +399,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [session?.user?.id])
 
   return (
-    <DataContext.Provider value={{ loadState, loadError, isRefreshing, refreshError, profile, isAdmin, accounts, transactions, reportingTransactions, customSubcategories, achievements, budgets, recurrenceHints, netWorthHistory, refreshData }}>
+    <DataContext.Provider value={{ loadState, loadError, isRefreshing, refreshError, profile, isAdmin, accounts, transactions, reportingTransactions, customSubcategories, achievements, budgets, recurrenceHints, recurrenceOverrides, netWorthHistory, planningGoals, planningScenarios, planningEvents, refreshData }}>
       {children}
     </DataContext.Provider>
   )

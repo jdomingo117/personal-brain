@@ -1,4 +1,5 @@
 import { FULL_TAXONOMY, UNCATEGORIZED, type Txn } from '../data'
+import { isEarnedIncome } from './classification'
 
 export type LedgerReviewFilter =
   | 'all'
@@ -19,6 +20,10 @@ export interface LedgerFilters {
   category: string
   kind?: string
   review: LedgerReviewFilter
+  accountIds?: string[]
+  from?: string
+  to?: string
+  incomeOnly?: boolean
 }
 
 export interface LedgerSelectionSummary {
@@ -104,8 +109,12 @@ export function filterLedger(transactions: Txn[], filters: LedgerFilters): Txn[]
   const query = filters.query.trim().toLowerCase()
   return transactions.filter((transaction) => {
     if (filters.accountId && transaction.account_id !== filters.accountId) return false
+    if (filters.accountIds?.length && !filters.accountIds.includes(transaction.account_id)) return false
     if (filters.category && transaction.cat !== filters.category) return false
     if (filters.kind && transaction.kind !== filters.kind) return false
+    if (filters.from && transaction.date < filters.from) return false
+    if (filters.to && transaction.date > filters.to) return false
+    if (filters.incomeOnly && (!isEarnedIncome(transaction) || transaction.isTransfer)) return false
     if (!matchesLedgerReview(transaction, filters.review)) return false
     if (query) {
       const haystack = [

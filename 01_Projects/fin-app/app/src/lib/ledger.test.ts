@@ -34,6 +34,20 @@ describe('ledger review filtering', () => {
     expect(filterLedger(attributed, { query: '', accountId: '', category: '', review: 'recurring' }).map((row) => row.id)).toEqual(['1'])
     expect(filterLedger(attributed, { query: '', accountId: '', category: '', review: 'tax-related' }).map((row) => row.id)).toEqual(['1'])
   })
+
+  it('keeps an income drill-down constrained to its selected accounts, period and earned deposits', () => {
+    const scopedRows: Txn[] = [
+      ...rows,
+      { ...rows[3], id: '5', date: '2026-08-05', account_id: 'b', account: 'Bills' },
+      { ...rows[3], id: '6', date: '2026-08-06', isTransfer: true },
+      { ...rows[3], id: '7', date: '2026-09-01' },
+    ]
+
+    expect(filterLedger(scopedRows, {
+      query: '', accountId: '', category: 'Income', review: 'all',
+      accountIds: ['a'], from: '2026-08-01', to: '2026-08-31', incomeOnly: true,
+    }).map((row) => row.id)).toEqual(['4'])
+  })
 })
 
 describe('ledger cross-page selection summary', () => {

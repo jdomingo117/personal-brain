@@ -45,7 +45,7 @@ function FundingAccountsCard({
                   width: `${acc.percentage}%`,
                   background: glowColor[acc.glow],
                 }}
-                className={`h-full transition-all duration-300 first:rounded-l-full last:rounded-r-full cursor-pointer ${
+                className={`h-full transition-all duration-300 first:rounded-l-full last:rounded-r-full ${
                   isOtherHovered ? 'opacity-30' : 'opacity-100 shadow-[0_0_8px_rgba(var(--color-accent),0.1)]'
                 }`}
               />
@@ -63,7 +63,7 @@ function FundingAccountsCard({
                 key={acc.name}
                 onMouseEnter={() => onHoverAccount(acc.name)}
                 onMouseLeave={() => onHoverAccount(null)}
-                className={`flex items-center justify-between p-2 rounded-lg border border-transparent transition-all duration-200 cursor-pointer ${
+                className={`flex items-center justify-between p-2 rounded-lg border border-transparent transition-all duration-200 ${
                   isHovered
                     ? 'bg-black/[0.03] dark:bg-white/[0.03] border-[var(--hair-soft)]'
                     : isOtherHovered
@@ -79,11 +79,11 @@ function FundingAccountsCard({
                       boxShadow: `0 0 6px ${glowColor[acc.glow]}`,
                     }}
                   />
-                  <span className="text-[12px] font-semibold text-ink">{acc.name}</span>
+                  <span className="text-[14px] font-semibold text-ink">{acc.name}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[12.5px] font-bold text-ink tabular-nums">{fmt(acc.amount)}</span>
-                  <span className="ml-2.5 text-[10.5px] font-semibold text-muted tabular-nums">
+                  <span className="text-[15px] font-bold text-ink tabular-nums">{fmt(acc.amount)}</span>
+                  <span className="ml-2.5 text-[12px] font-semibold text-muted tabular-nums">
                     {Math.round(acc.percentage)}%
                   </span>
                 </div>
@@ -97,10 +97,10 @@ function FundingAccountsCard({
 }
 
 export default function RecurringHub() {
-  const { reportingTransactions: transactions, accounts, recurrenceHints } = useData()
+  const { reportingTransactions: transactions, accounts, recurrenceHints, recurrenceOverrides, refreshData } = useData()
   const r = useMemo(
-    () => buildRecurring(transactions, accounts, undefined, recurrenceHints),
-    [transactions, accounts, recurrenceHints],
+    () => buildRecurring(transactions, accounts, undefined, recurrenceHints, recurrenceOverrides),
+    [transactions, accounts, recurrenceHints, recurrenceOverrides],
   )
 
   // Cross-highlighting states (ui-ux-pro-max)
@@ -126,11 +126,11 @@ export default function RecurringHub() {
       <div className="md:col-span-2 xl:col-span-3">
         <div className="flex flex-wrap items-center justify-between gap-x-2.5 gap-y-1 rounded-xl border border-[var(--hair-soft)] bg-[var(--hair-soft)] px-3.5 py-2.5">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
+            <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">
               Recurring commitments
             </span>
-            <span className="text-[12px] text-muted">
-              detected from 12 months of ledger history · {monthLabel(r.bounds.from)} – {monthLabel(r.bounds.to)}
+            <span className="text-[13px] text-muted">
+              detected from 12 months of ledger history · annual patterns use up to 3 years · {monthLabel(r.bounds.from)} – {monthLabel(r.bounds.to)}
             </span>
           </div>
           {(focusedSeriesId || hoveredSeriesId || hoveredDate || hoveredAccount) && (
@@ -141,7 +141,7 @@ export default function RecurringHub() {
                 setHoveredDate(null)
                 setHoveredAccount(null)
               }}
-              className="text-[11px] font-bold text-accent-ink hover:underline cursor-pointer border-none bg-transparent"
+              className="text-[12px] font-bold text-accent-ink hover:underline cursor-pointer border-none bg-transparent"
             >
               Clear Focus
             </button>
@@ -158,7 +158,7 @@ export default function RecurringHub() {
         <HeroMetric
           label="Annualized cash burn"
           value={none ? '—' : fmt(r.annualBurn)}
-          sub={none ? mix : `run rate · ${fmt(r.trailingActual)} trailing actual`}
+          sub={none ? mix : burnGap === 0 ? 'Matches trailing actual spend' : `${fmt(Math.abs(burnGap))} ${burnGap > 0 ? 'above' : 'below'} trailing actual spend`}
           tone={none || Math.abs(burnGap) < 1 ? 'muted' : burnGap > 0 ? 'neg' : 'pos'}
         />
         <HeroMetric
@@ -167,7 +167,7 @@ export default function RecurringHub() {
           sub={
             pressurePct === null
               ? 'no outflow in the last 30 days'
-              : `${fmt(r.pressure.recurring)} of ${fmt(r.pressure.total)} · trailing 30d`
+              : `${fmt(r.pressure.recurring)} of ${fmt(r.pressure.total)} spent in the last 30 days`
           }
         />
         <HeroMetric
@@ -193,6 +193,8 @@ export default function RecurringHub() {
           onHoverSeries={setHoveredSeriesId}
           hoveredDate={hoveredDate}
           hoveredAccount={hoveredAccount}
+          untracked={r.untracked}
+          onChanged={refreshData}
         />
         <div className="flex flex-col gap-3.5">
           <FundingAccountsCard

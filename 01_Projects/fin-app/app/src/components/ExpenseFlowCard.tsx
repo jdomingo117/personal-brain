@@ -11,6 +11,18 @@ import { isGrossExpense } from '../lib/classification'
    flow so it doesn't crowd the node cards, and keeps small flows visible. */
 const edgeW = (ratio: number, k: number, cap: number) => Math.min(cap, Math.max(2, Math.sqrt(ratio) * k))
 
+// The card type is intentionally generous for scanability. Keep the layout
+// measurements with it: otherwise React Flow positions the larger cards on top
+// of one another, or leaves the category and sub-category columns touching.
+const FLOW_LAYOUT = {
+  totalX: 20,
+  categoryX: 220,
+  subcategoryX: 500,
+  categoryGap: 72,
+  subcategoryGap: 66,
+  topY: 24,
+} as const
+
 /** A card node. Category and sub-category cards are clickable — they expand, and
  *  they set the view's shared focus. `selected` means *expanded* (structural);
  *  `dimmed` means *out of the shared focus*. Keeping them separate is what lets
@@ -24,7 +36,11 @@ function FlowNode({
   return (
     <div
       style={{
-        minWidth: isTotal ? 96 : 122,
+        // A generous minimum leaves a predictable gutter between columns. Let
+        // unusually long labels grow instead of wrapping into the next row.
+        minWidth: isTotal ? 118 : 188,
+        boxSizing: 'border-box',
+        whiteSpace: 'nowrap',
         padding: '7px 12px',
         borderRadius: 12,
         background: 'var(--toast-bg)',
@@ -40,8 +56,8 @@ function FlowNode({
       }}
     >
       <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
-      <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-ink)' }}>{data.label}</div>
-      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-ink)', fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--color-ink)' }}>{data.label}</div>
+      <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-ink)', fontVariantNumeric: 'tabular-nums' }}>
         {data.amount}
         {data.pct && <span style={{ color: 'var(--color-muted)', fontWeight: 500 }}> · {data.pct}</span>}
       </div>
@@ -103,7 +119,10 @@ export default function ExpenseFlowCard({
      When a focus is active the expanded category is always one of the selected
      ones, so you never get the broken-looking "expanded but dimmed". */
   const focusOn = isActive(selection)
-  const flowHeight = height ?? Math.max(360, Math.min(540, cats.length * 48 + 70))
+  const flowHeight = height ?? Math.max(420, Math.min(720, cats.length * FLOW_LAYOUT.categoryGap + 112))
+  // For very dense periods, retain legible node type at the capped panel height
+  // and let the person explore the diagram directly instead of growing the page.
+  const denseFlow = cats.length > 10
   const inScope = cats.filter((c) => catInScope(c.name, selection)) // cats is sorted desc
   const expanded = focusOn
     ? inScope[0]?.name ?? null
@@ -112,33 +131,29 @@ export default function ExpenseFlowCard({
       : cats[0]?.name ?? null
 
   const { nodes, edges } = useMemo(() => {
-    const CAT_X = 180
-    const SUB_X = 350
-    const CAT_GAP = 52
     const nodes: any[] = []
     const edges: any[] = []
-    const topY = 20
-    const centerY = topY + ((cats.length - 1) * CAT_GAP) / 2
+    const centerY = FLOW_LAYOUT.topY + ((cats.length - 1) * FLOW_LAYOUT.categoryGap) / 2
 
-    nodes.push({ id: 'total', type: 'flow', position: { x: 20, y: centerY }, data: { label: 'Total outflow', amount: fmt(total), color: 'var(--color-ink2)', kind: 'total' } })
+    nodes.push({ id: 'total', type: 'flow', position: { x: FLOW_LAYOUT.totalX, y: centerY }, data: { label: 'Total outflow', amount: fmt(total), color: 'var(--color-ink2)', kind: 'total' } })
 
     cats.forEach((c, i) => {
-      const y = topY + i * CAT_GAP
+      const y = FLOW_LAYOUT.topY + i * FLOW_LAYOUT.categoryGap
       const color = catColor(c.name)
       const isExpanded = expanded === c.name
       // dimming is additive: with no focus it's always false, so the card renders
       // exactly as it did before cross-filtering existed
       const isDimmed = focusOn && !catInScope(c.name, selection)
-      nodes.push({ id: `cat:${c.name}`, type: 'flow', position: { x: CAT_X, y }, data: { label: c.name, amount: fmt(c.total), pct: `${Math.round((c.total / total) * 100)}%`, color, kind: 'cat', selected: isExpanded, dimmed: isDimmed } })
+      nodes.push({ id: `cat:${c.name}`, type: 'flow', position: { x: FLOW_LAYOUT.categoryX, y }, data: { label: c.name, amount: fmt(c.total), pct: `${Math.round((c.total / total) * 100)}%`, color, kind: 'cat', selected: isExpanded, dimmed: isDimmed } })
       // `animated` stays bound to expansion, not the focus — a multi-select would
       // otherwise animate every edge at once
       edges.push({ id: `e-t-${c.name}`, source: 'total', target: `cat:${c.name}`, animated: isExpanded, style: { stroke: color, strokeWidth: edgeW(c.total / total, 16, 13), opacity: (isExpanded ? 0.85 : 0.28) * (isDimmed ? 0.5 : 1) } })
 
       if (isExpanded) {
-        const subStartY = y - ((c.subs.length - 1) * 48) / 2
+        const subStartY = y - ((c.subs.length - 1) * FLOW_LAYOUT.subcategoryGap) / 2
         c.subs.forEach((s, j) => {
           const subDimmed = focusOn && !subInScope(c.name, s.name, selection)
-          nodes.push({ id: `sub:${c.name}:${s.name}`, type: 'flow', position: { x: SUB_X, y: subStartY + j * 48 }, data: { label: s.name, amount: fmt(s.value), color, kind: 'sub', dimmed: subDimmed } })
+          nodes.push({ id: `sub:${c.name}:${s.name}`, type: 'flow', position: { x: FLOW_LAYOUT.subcategoryX, y: subStartY + j * FLOW_LAYOUT.subcategoryGap }, data: { label: s.name, amount: fmt(s.value), color, kind: 'sub', dimmed: subDimmed } })
           edges.push({ id: `e-${c.name}-${s.name}`, source: `cat:${c.name}`, target: `sub:${c.name}:${s.name}`, animated: true, style: { stroke: color, strokeWidth: edgeW(s.value / c.total, 12, 11), opacity: 0.85 * (subDimmed ? 0.5 : 1) } })
         })
       }
@@ -150,7 +165,7 @@ export default function ExpenseFlowCard({
   // one, plus a later one after React Flow has measured node sizes and the grid
   // has settled the column width (otherwise the first fit can be to a stale width).
   useEffect(() => {
-    const fit = () => inst.current?.fitView({ padding: 0.14, maxZoom: 1.15, duration: 300 })
+    const fit = () => inst.current?.fitView({ padding: 0.1, maxZoom: 1.15, duration: 300 })
     const a = window.setTimeout(fit, 50)
     const b = window.setTimeout(fit, 260)
     return () => {
@@ -166,7 +181,7 @@ export default function ExpenseFlowCard({
   useEffect(() => {
     const el = paneRef.current
     if (!el) return
-    const ro = new ResizeObserver(() => inst.current?.fitView({ padding: 0.15, maxZoom: 1.15 }))
+    const ro = new ResizeObserver(() => inst.current?.fitView({ padding: 0.1, maxZoom: 1.15 }))
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
@@ -174,8 +189,10 @@ export default function ExpenseFlowCard({
   return (
     <Tile className="flex flex-col">
       <header className="mb-3 flex flex-wrap items-baseline justify-between gap-3">
-        <h3 className="font-display text-[14px] font-bold text-ink">Category Outflow</h3>
-        <span className="text-[11px] uppercase tracking-[0.06em] text-muted">click to focus the page</span>
+        <h3 className="font-display text-[16px] font-bold text-ink">Category Outflow</h3>
+        <span className="text-[13px] uppercase tracking-[0.06em] text-muted">
+          {denseFlow ? 'click to focus · drag to explore' : 'click to focus the page'}
+        </span>
       </header>
 
       {total === 0 ? (
@@ -207,13 +224,13 @@ export default function ExpenseFlowCard({
               }
             }}
             fitView
-            fitViewOptions={{ padding: 0.15, maxZoom: 1.15 }}
-            minZoom={0.4}
+            fitViewOptions={{ padding: 0.1, maxZoom: 1.15 }}
+            minZoom={denseFlow ? 0.65 : 0.4}
             maxZoom={1.6}
             nodesConnectable={false}
             nodesDraggable={false}
-            panOnDrag={false}
-            zoomOnScroll={false}
+            panOnDrag={denseFlow}
+            zoomOnScroll={denseFlow}
             preventScrolling={false}
             zoomOnDoubleClick={false}
             proOptions={{ hideAttribution: true }}

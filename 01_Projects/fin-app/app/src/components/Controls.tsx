@@ -29,11 +29,11 @@ export function Button({
   )
 }
 
-export function Chip({ active, children, onClick }: { active?: boolean; children: ReactNode; onClick?: () => void }) {
+export function Chip({ active, children, onClick, className = '' }: { active?: boolean; children: ReactNode; onClick?: () => void; className?: string }) {
   return (
     <button
       onClick={onClick}
-      className={`rounded-[10px] border px-3.5 py-2 text-[12px] font-medium transition ${
+      className={`rounded-[10px] border px-3.5 py-2 text-[12px] font-medium transition ${className} ${
         active
           ? 'border-accent bg-[var(--accent-wash)] text-accent-ink'
           : 'border-[var(--hair)] text-ink2 hover:border-[var(--hair)] hover:bg-black/[0.02]'
@@ -72,12 +72,14 @@ export function Select({
   children,
   ariaLabel,
   className = '',
+  inputClassName = '',
 }: {
   value: string
   onChange: (v: string) => void
   children: ReactNode
   ariaLabel?: string
   className?: string
+  inputClassName?: string
 }) {
   return (
     <div className={`relative ${className}`}>
@@ -85,7 +87,7 @@ export function Select({
         aria-label={ariaLabel}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full cursor-pointer appearance-none rounded-[10px] border border-[var(--hair)] bg-[var(--input-bg)] py-2.5 pl-3.5 pr-9 text-[13px] font-medium text-ink outline-none transition focus:border-accent focus:ring-4 focus:ring-[var(--accent-wash)]"
+        className={`w-full cursor-pointer appearance-none rounded-[10px] border border-[var(--hair)] bg-[var(--input-bg)] py-2.5 pl-3.5 pr-9 text-[13px] font-medium text-ink outline-none transition focus:border-accent focus:ring-4 focus:ring-[var(--accent-wash)] ${inputClassName}`}
       >
         {children}
       </select>
@@ -140,12 +142,14 @@ export function SearchInput({
   placeholder = 'Search',
   ariaLabel,
   className = '',
+  inputClassName = '',
 }: {
   value: string
   onChange: (v: string) => void
   placeholder?: string
   ariaLabel?: string
   className?: string
+  inputClassName?: string
 }) {
   return (
     <div className={`relative ${className}`}>
@@ -164,7 +168,7 @@ export function SearchInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={ariaLabel ?? placeholder}
-        className="w-full rounded-[10px] border border-[var(--hair)] bg-[var(--input-bg)] py-2.5 pl-9 pr-8 text-[13px] font-medium text-ink outline-none transition placeholder:text-faint focus:border-accent focus:ring-4 focus:ring-[var(--accent-wash)]"
+        className={`w-full rounded-[10px] border border-[var(--hair)] bg-[var(--input-bg)] py-2.5 pl-9 pr-8 text-[13px] font-medium text-ink outline-none transition placeholder:text-faint focus:border-accent focus:ring-4 focus:ring-[var(--accent-wash)] ${inputClassName}`}
       />
       {value && (
         <button

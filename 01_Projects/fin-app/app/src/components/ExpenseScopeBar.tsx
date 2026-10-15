@@ -36,7 +36,7 @@ export default function ExpenseScopeBar({
           className="overflow-hidden md:col-span-2 xl:col-span-3"
         >
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-[var(--hair-soft)] bg-[var(--hair-soft)] px-3.5 py-2.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">Focused on</span>
+            <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">Focused on</span>
             
             {hasCategory && (
               <RemovableChip onRemove={onClear}>{label}</RemovableChip>
@@ -57,7 +57,7 @@ export default function ExpenseScopeBar({
                 if (hasCategory) onClear()
                 if (hasTime && onClearTimeFocus) onClearTimeFocus()
               }}
-              className="ml-auto rounded-[8px] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-ink2 transition hover:bg-[var(--hair)]"
+              className="ml-auto rounded-[8px] px-2 py-1 text-[12px] font-semibold uppercase tracking-[0.05em] text-ink2 transition hover:bg-[var(--hair)]"
             >
               Clear focus
             </button>

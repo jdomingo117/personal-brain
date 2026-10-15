@@ -3,6 +3,13 @@ import { defaultTransactionKind, earnedIncomeCents, expenseEffectCents, type Tra
 
 export type ReviewSource = 'user' | 'bank' | 'ai' | 'seed' | null
 export type ReviewStatus = 'suggested' | 'unchanged' | 'protected' | 'unresolved'
+export type CategorizationReviewScope = 'selected' | 'unresolved' | 'eligible'
+
+/** Review application is deliberately bounded by the same atomic operation
+ * limit as the service boundary. Durable, multi-batch runs are a separate
+ * future contract; do not silently turn a scope shortcut into an unbounded
+ * mutation. */
+export const MAX_CATEGORIZATION_REVIEW_ROWS = 500
 
 export interface ReviewClassification {
   category: string
@@ -58,6 +65,36 @@ export interface CategorizationReviewImpact {
 }
 
 const SUBSCRIPTION_SUBCATEGORIES = new Set(['Streaming', 'Software & digital services', 'Memberships'])
+
+/** The safe recovery/default scope mirrors the backlog drain: only rows with
+ * no classification source that still remain explicitly unresolved. */
+export function isUnresolvedReviewCandidate(transaction: Txn): boolean {
+  return transaction.cat === 'Uncategorized' && transaction.categorySource == null
+}
+
+/** This is intentionally a *candidate* predicate. The Edge Function remains
+ * authoritative for user rules and protects manual, bank and system rows a
+ * browser cannot safely determine on its own. */
+export function isEligibleReviewCandidate(transaction: Txn): boolean {
+  return transaction.categorySource !== 'user'
+    && transaction.categorySource !== 'bank'
+    && !(transaction.kind === 'adjustment' && transaction.kindSource === 'system')
+}
+
+export function reviewScopeTransactions(
+  transactions: Txn[],
+  scope: Exclude<CategorizationReviewScope, 'selected'>,
+  limit = MAX_CATEGORIZATION_REVIEW_ROWS,
+): { candidates: Txn[]; selected: Txn[]; truncated: boolean } {
+  const candidates = transactions.filter(scope === 'unresolved'
+    ? isUnresolvedReviewCandidate
+    : isEligibleReviewCandidate)
+  return {
+    candidates,
+    selected: candidates.slice(0, limit),
+    truncated: candidates.length > limit,
+  }
+}
 
 /** Keep all rows for one merchant in the same preview request so one fresh AI
  * answer cannot diverge across pages. The row cap still matches atomic apply. */

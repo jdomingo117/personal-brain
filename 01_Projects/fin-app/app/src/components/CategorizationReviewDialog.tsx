@@ -4,7 +4,7 @@ import { fmtCents, type Txn } from '../data'
 import { supabase } from '../lib/supabaseClient'
 import {
   buildCategorizationReviewImpact, buildReviewAssignments, categorizationPreviewPages, suggestedReviewIds,
-  type CategorizationReviewResponse, type CategorizationReviewRow,
+  type CategorizationReviewResponse, type CategorizationReviewRow, type CategorizationReviewScope,
 } from '../lib/categorizationReview'
 import { KIND_LABELS } from '../lib/classification'
 import { useDialogFocus } from '../hooks/useDialogFocus'
@@ -28,9 +28,13 @@ function delta(label: string, cents: number) {
 }
 
 export default function CategorizationReviewDialog({
-  transactions, onClose, onChanged,
+  transactions, scope = 'selected', scopeCandidateCount, scopeTruncated = false, onClose, onChanged,
 }: {
   transactions: Txn[]
+  scope?: CategorizationReviewScope
+  /** Candidate count before the shared 500-row atomic boundary is applied. */
+  scopeCandidateCount?: number
+  scopeTruncated?: boolean
   onClose: (clearSelection?: boolean) => void
   onChanged: () => Promise<void>
 }) {
@@ -44,6 +48,8 @@ export default function CategorizationReviewDialog({
   const dialogRef = useDialogFocus()
   const completed = updated !== null && updated > 0
   const transactionKey = transactions.map((transaction) => transaction.id).join(',')
+  const scopeLabel = scope === 'unresolved' ? 'Unresolved transactions'
+    : scope === 'eligible' ? 'Eligible transactions' : 'Selected transactions'
 
   const close = () => onClose(completed)
 
@@ -140,15 +146,19 @@ export default function CategorizationReviewDialog({
       <section ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="categorization-review-title" className="max-h-[calc(100vh-2rem)] w-full max-w-[760px] overflow-y-auto rounded-2xl border border-[var(--hair)] bg-surface p-6 shadow-2xl">
         <header className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-ink">Selected transactions</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-ink">{scopeLabel}</p>
             <h2 id="categorization-review-title" className="mt-1 font-display text-[24px] font-black text-ink">Review with categorisation engine</h2>
-            <p className="mt-1 text-[12px] text-muted">Fresh suggestions are previews only. Manual corrections, user rules, bank classifications and reconciliation entries stay protected.</p>
+            <p className="mt-2 body-copy">Fresh suggestions are previews only. Manual corrections, user rules, bank classifications and reconciliation entries stay protected.</p>
           </div>
           <button type="button" aria-label="Close categorisation review" disabled={saving} onClick={close} className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-[var(--hair)] disabled:opacity-40">×</button>
         </header>
 
-        {loading && <p role="status" aria-live="polite" className="mt-6 rounded-xl border border-[var(--hair)] bg-[var(--input-bg)] p-4 text-[12.5px] text-muted">Asking the current engine for fresh suggestions…</p>}
-        {error && <p role="alert" className="mt-4 rounded-lg border border-[var(--color-neg)] p-3 text-[12.5px] text-neg">{error}</p>}
+        {loading && <p role="status" aria-live="polite" className="mt-6 rounded-xl border border-[var(--hair)] bg-[var(--input-bg)] p-5 body-copy">Asking the current engine for fresh suggestions…</p>}
+        {error && <p role="alert" className="mt-4 rounded-lg border border-[var(--color-neg)] p-4 text-[14px] leading-6 text-neg">{error}</p>}
+
+        {scopeTruncated && <p className="mt-4 rounded-xl border border-warn/40 bg-[var(--input-bg)] p-4 text-[14px] leading-6 text-ink2" role="status">
+          This review contains the first {transactions.length} of {scopeCandidateCount ?? transactions.length} matching rows. The {transactions.length}-row limit keeps preview, apply and undo atomic. Select a different set when you are ready to review more.
+        </p>}
 
         {response && !completed && <>
           <div className="mt-5 grid gap-2 sm:grid-cols-4">
@@ -161,7 +171,7 @@ export default function CategorizationReviewDialog({
           </div>
 
           {suggested.length > 0 && <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[12px] text-muted">{acceptedIds.size} of {suggested.length} suggestions accepted</p>
+            <p className="detail-copy">{acceptedIds.size} of {suggested.length} suggestions accepted</p>
             <div className="flex gap-2">
               <button type="button" onClick={() => setAcceptedIds(suggestedReviewIds(response.rows))} className="min-h-11 px-3 text-[11px] font-semibold text-accent-ink">Accept all suggestions</button>
               <button type="button" onClick={() => setAcceptedIds(new Set())} className="min-h-11 px-3 text-[11px] font-semibold text-muted">Clear</button>

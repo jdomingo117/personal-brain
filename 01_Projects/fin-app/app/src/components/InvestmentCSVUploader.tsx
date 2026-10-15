@@ -142,7 +142,7 @@ export default function InvestmentCSVUploader({ accountId, accountName, onImport
         {step === 'review' && staged && <motion.div key="review" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid gap-4">
           <div className="rounded-[12px] border border-[var(--hair)] bg-black/[0.02] p-4">
             <p className="text-[14px] font-semibold">Vanguard Personal Investor detected</p>
-            <p className="mt-1 text-[13px] text-muted">{staged.instrument.name} · {staged.instrument.identifier} · account ending {staged.accountSuffix}</p>
+            <p className="mt-2 body-copy">{staged.instrument.name} · {staged.instrument.identifier} · account ending {staged.accountSuffix}</p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Metric label="Activities" value={String(staged.summary.activityCount)} />
@@ -176,7 +176,7 @@ export default function InvestmentCSVUploader({ accountId, accountName, onImport
         {step === 'processing' && <motion.p role="status" aria-live="polite" key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-8 text-center text-[13px] text-ink2">Importing and reconciling the holding…</motion.p>}
         {step === 'success' && result && <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid gap-3">
           <p className="text-[15px] font-semibold">{result.inserted === 0 ? 'No new investment activity' : 'Investment activity imported'}</p>
-          <ul className="grid gap-1 text-[13px] text-muted"><li><strong className="text-ink">{result.inserted}</strong> activities imported</li>{result.skipped > 0 && <li><strong className="text-ink">{result.skipped}</strong> duplicates skipped</li>}<li><strong className="text-ink">{result.units}</strong> units held</li></ul>
+          <ul className="grid gap-2 body-copy"><li><strong className="text-ink">{result.inserted}</strong> activities imported</li>{result.skipped > 0 && <li><strong className="text-ink">{result.skipped}</strong> duplicates skipped</li>}<li><strong className="text-ink">{result.units}</strong> units held</li></ul>
           {result.valuation.status === 'preserved' && <p className="text-[12.5px] text-muted">No monetary data changed. Your existing valuation of <strong className="text-ink">{fmtCents(result.valuation.value_cents)}</strong>{result.valuation.price_date ? ` as at ${result.valuation.price_date.slice(0, 10)}` : ''} was preserved.</p>}
           {result.valuation.status === 'revalued' && <p className="text-[12.5px] text-muted">The account was revalued from the verified NAV already on file{result.valuation.price_date ? `, dated ${result.valuation.price_date.slice(0, 10)}` : ''}. No live provider request was required.</p>}
           {result.valuation.status === 'awaiting_price' && <p className="text-[12.5px] text-muted">The activity is recorded, but a verified price is not yet available for all of it. Your last valid value is retained until the next NAV refresh.</p>}

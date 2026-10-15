@@ -89,7 +89,7 @@ export default function Settings() {
               />
             ))}
           </div>
-          <div className="mt-3 text-[12px] text-muted">{accent}</div>
+          <div className="mt-4 detail-copy">{accent}</div>
         </Tile>
 
         <Tile title="Profile" span={3}>
@@ -133,7 +133,7 @@ export default function Settings() {
                     </button>
                   </div>
                 )}
-                <div className="text-[12px] text-muted">
+                <div className="detail-copy">
                   {user?.email ?? 'Private Wealth'} · {isAdmin ? <span className="font-medium text-accent">Admin</span> : 'Member tier'}
                 </div>
               </div>

@@ -1,0 +1,3 @@
+# This TypeScript module historically contained a NUL-delimited local key.
+# Keep its review diff textual while the working source remains ordinary UTF-8.
+app/src/lib/recurring.ts diff

@@ -84,9 +84,9 @@ is deferred.
 
 | Phase | Scope |
 |---|---|
-| **2 — Intelligence & deep analytics** (no external integrations) | AI async categorization (Gemini background); Insights engine (**deterministic math**, AI only phrases the bulletin); Income Analyser advanced cards; Expenses analytics (daily-spikes, hierarchy flow, top-10 merchants, volatility/pacing); Strategic Projections + goal-horizon forecast (deterministic) |
+| **2 — Intelligence & deep analytics** (no external integrations) | AI async categorization (Gemini background); Insights engine (**deterministic math**, AI only phrases the bulletin); Income Analyser advanced cards; Expenses analytics (daily-spikes, hierarchy flow, top-10 merchants, volatility/pacing); **persistent planning** — durable goals, saved scenarios, planned future events and a plan-vs-actual loop — extending the shipped deterministic Strategic Projections calculator. See [PLANNING_EXPERIENCE_PLAN.md](PLANNING_EXPERIENCE_PLAN.md). |
 | **3 — Automation & external data** | ~~Direct neobank sync (Up)~~; broader AU CDR/Basiq coverage; ~~managed-fund daily NAV valuation + historical activity ingestion~~ (Vanguard Personal Investor is the first adapter); complete parcel-level cost-basis/CGT engine and broader instrument/provider coverage; **AI-parsing ingestion fallback**. AES-256-GCM credential storage shipped with Up. |
-| **4 — Recurring & reconciliation** | Recurring **write-back** (edit / cancel / remind on a detected series); multi-year cadence detection (Annual can't fire from a 12-month ledger). ~~Osko same-day linker~~ — **shipped early, see below.** |
+| **4 — Recurring & reconciliation** | ~~Recurring write-back~~ — shipped as durable app-projection edits, stop/resume tracking and in-app reminders for detected series; it cannot cancel the real merchant subscription. ~~Multi-year cadence detection~~ — Annual uses a bounded three-year evidence pass (three stable renewals confirm; two remain an excluded early signal). ~~Osko same-day linker~~ — **shipped early, see below.** |
 | **5 — Admin & ops** | Hidden admin portal; platform metrics; user/role directory |
 
 > **The Recurring Hub's read-only half shipped early** — detection, the commitments directory and
@@ -97,8 +97,13 @@ is deferred.
 >
 > **The Osko same-day linker also shipped early** (2026-08-05) — `link-transfers`/`decide-transfer`
 > Edge Functions, `app/src/lib/transfers/`, `OskoLinker.tsx`, plus an unmatched-single-leg review
-> path the original SRD scope didn't call out. See [INDEX.md](INDEX.md) for the file map. What
-> remains in Phase 4 is only recurring write-back and multi-year cadence detection. Managed-fund
+> path the original SRD scope didn't call out. See [INDEX.md](INDEX.md) for the file map. Recurring
+> write-back shipped on 2026-10-14:
+> account-scoped detected series can be managed with durable schedule overrides, stop/resume tracking,
+> guarded undo and in-app reminder states. Multi-year Annual detection shipped on 2026-10-15 with a
+> three-year, Annual-only evidence window: confirmed series retain trailing-year reporting; two
+> matching renewals remain non-financial early signals. Email/push delivery is intentionally separate
+> notification infrastructure, not implied by the in-app reminder. Managed-fund
 > purchase/redemption reconciliation joined the same review surface on 2026-08-08 through a
 > separate cross-ledger link model; distributions remain income and non-cash activities are excluded.
 
@@ -106,8 +111,9 @@ is deferred.
 
 - Information architecture: the 6 views map to the SRD pages (Dashboard, Accounts, Income,
   Expenses, Ingestion, Settings). The SRD's tabbed sub-views are **built**: Expenses
-  Analytics/Recurring (DesignSystem §8.15–§8.17) and Income Analyser (§8.14). Income's Strategic
-  Projections remains a **Phase 2** addition.
+  Analytics/Recurring (DesignSystem §8.15–§8.17) and Income Analyser (§8.14), plus Income's
+  deterministic **Strategic Projections** calculator. Its durable planning follow-up is explicitly
+  scoped in [PLANNING_EXPERIENCE_PLAN.md](PLANNING_EXPERIENCE_PLAN.md).
 - **anime.js chart motion** — the SRD's "staggered SVG timeline animations" requirement is done.
 - Dark mode, motion toggle, reduced-motion, the design-system tokens & components.
 

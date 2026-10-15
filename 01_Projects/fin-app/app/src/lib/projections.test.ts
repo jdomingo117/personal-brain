@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest'
 import type { Account, Txn } from '../data'
 import {
   buildProjection,
+  buildProjectionBreakdown,
   currentValueFor,
   deriveProjectionBaseline,
   firstTargetPoint,
   requiredMonthlyAdjustment,
 } from './projections'
 import { defaultTransactionKind } from './classification'
+import { reviewCompletedMonth } from './planningReview'
 
 const accounts: Account[] = [
   { id: 'cash', name: 'Everyday', type: 'Liquid', balance: 50_000_00, glow: 'cyan' },
@@ -82,5 +84,42 @@ describe('strategic projection model', () => {
     expect(points.map((point) => point.value)).toEqual([
       10_000_00, 11_000_00, 12_000_00, 13_500_00, 15_000_00,
     ])
+  })
+
+  it('applies one-off and bounded monthly planning events in their calendar months', () => {
+    const points = buildProjection({
+      metric: 'cash', currentValue: 10_000_00, investmentBalance: 0,
+      monthlyFlow: 1_000_00, monthlyInvestmentContribution: 0,
+      annualReturnPct: 0, months: 4, startDate: new Date(2026, 0, 1),
+      events: [
+        { id: 'trip', name: 'Trip', amountCents: -2_000_00, cadence: 'once', startDate: '2026-03-15' },
+        { id: 'raise', name: 'Raise', amountCents: 300_00, cadence: 'monthly', startDate: '2026-02-01', endDate: '2026-03-31' },
+      ],
+    })
+    expect(points.map((point) => point.value)).toEqual([10_000_00, 11_300_00, 10_600_00, 11_600_00, 12_600_00])
+  })
+
+  it('provides an exact, inspectable reconciliation for each forecast month', () => {
+    const [february] = buildProjectionBreakdown({
+      metric: 'netWorth', currentValue: 10_000_00, investmentBalance: 5_000_00,
+      monthlyFlow: 1_000_00, monthlyInvestmentContribution: 0,
+      annualReturnPct: 12, months: 1, startDate: new Date(2026, 0, 1),
+      events: [{ id: 'trip', name: 'Trip', amountCents: -200_00, cadence: 'once', startDate: '2026-02-10' }],
+    })
+    expect(february.plannedEvents.map((event) => event.name)).toEqual(['Trip'])
+    expect(february.openingValue + february.observedRunRate + february.adjustment + february.plannedMovement + february.investmentGrowth).toBe(february.closingValue)
+  })
+
+  it('reviews only the completed month and reconciles planned variance', () => {
+    const review = reviewCompletedMonth({
+      metric: 'cash', accounts, monthlyRunRate: 1_000_00, today: new Date(2026, 2, 10),
+      transactions: [txn('feb-income', '2026-02-03', 1_500_00), txn('feb-food', '2026-02-10', -300_00), txn('mar-partial', '2026-03-01', 9_000_00)],
+      events: [{ id: 'trip', name: 'Trip', amountCents: -200_00, cadence: 'once', startDate: '2026-02-14' }],
+    })
+    expect(review.month).toBe('2026-02')
+    expect(review.actualMovement).toBe(1_200_00)
+    expect(review.expectedMovement).toBe(800_00)
+    expect(review.variance).toBe(400_00)
+    expect(review.observedRunRateDifference + review.plannedEventDifference + review.recurringTimingDifference + review.uncategorisedResidual).toBe(review.variance)
   })
 })

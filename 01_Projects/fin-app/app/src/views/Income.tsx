@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Screen, ViewHeader, Grid } from '../components/Screen'
+import { Screen, ViewHeader } from '../components/Screen'
 import Tile from '../components/Tile'
 import Area from '../components/charts/Area'
 import AllocationDonut from '../components/AllocationDonut'
@@ -13,9 +13,12 @@ import { useResponsiveChartSize } from '../hooks/useResponsiveChartSize'
 import { dayLabel } from '../lib/period'
 import { buildCashFlowSeries } from '../lib/cashFlowSeries'
 import { isEarnedIncome } from '../lib/classification'
-import { fmt } from '../data'
+import { fmt, type Txn } from '../data'
 import { useData } from '../contexts/DataContext'
 import StrategicProjections from '../components/StrategicProjections'
+import { ease, gridStagger } from '../components/motion'
+import { useView } from '../router'
+import TransactionCategoryDrawer from '../components/TransactionCategoryDrawer'
 
 const TABS = [
   { id: 'analyzer', label: 'Income analyzer' },
@@ -73,24 +76,24 @@ export default function Income() {
         )}
       </div>
 
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence mode="wait">
         {view === 'analyzer' ? (
           <motion.div
             key="analyzer"
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.25 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35, ease }}
           >
             <IncomeAnalyzer from={from} to={to} accounts={accounts} dbAccountsLength={dbAccounts.length} />
           </motion.div>
         ) : (
           <motion.div
             key="projections"
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.25 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35, ease }}
           >
             <StrategicProjections />
           </motion.div>
@@ -103,7 +106,10 @@ export default function Income() {
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0)
 
 function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string; to: string; accounts: string[]; dbAccountsLength: number }) {
-  const { reportingTransactions: transactions } = useData()
+  const { reportingTransactions: transactions, refreshData } = useData()
+  const { go, toast } = useView()
+  const [selectedSource, setSelectedSource] = useState<string | null>(null)
+  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null)
   const m = useMemo(() => {
     const share = accounts.length > 0 ? accounts.length / (dbAccountsLength || 1) : 0
     const flow = buildCashFlowSeries({ from, to, accountIds: accounts, transactions })
@@ -130,12 +136,14 @@ function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string
     const periodRates = inc.map((v, i) => (v > 0 ? (v - exp[i]) / v : 0))
     const savingsRate = totalInflow > 0 ? surplus / totalInflow : 0
 
-    // income composition over the period (compute real slices from categorized transactions)
+    // Inflow composition and its drill-down use the exact same scoped settled
+    // transactions, so every donut value has a traceable transaction list.
+    const sourceTransactions = share > 0
+      ? transactions.filter((t) => isEarnedIncome(t) && !t.isTransfer && t.account_id && accounts.includes(t.account_id) && t.date >= from && t.date <= to)
+      : []
     const sourceMap: Record<string, number> = {}
-    transactions.forEach(t => {
-      if (isEarnedIncome(t) && !t.isTransfer && t.account_id && accounts.includes(t.account_id) && t.date >= from && t.date <= to) {
-        sourceMap[t.cat || 'Other'] = (sourceMap[t.cat || 'Other'] || 0) + t.amount
-      }
+    sourceTransactions.forEach(t => {
+      sourceMap[t.cat || 'Other'] = (sourceMap[t.cat || 'Other'] || 0) + t.amount
     })
     
     const colors = ['cyan', 'green', 'blue', 'purple', 'amber']
@@ -148,17 +156,13 @@ function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string
       }))
 
     // inflow transactions within the selected range, most recent first
-    const deposits =
-      share > 0
-        ? transactions
-            .filter((t) => isEarnedIncome(t) && !t.isTransfer && t.account_id && accounts.includes(t.account_id) && t.date >= from && t.date <= to)
-            .sort((a, b) => b.date.localeCompare(a.date))
-            .slice(0, 6)
-        : []
+    const deposits = [...sourceTransactions]
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 6)
 
     return {
       share, inc, totalInflow, totalOutflow, prorated, coverage, surplus, n, peakVal, peakPeriod,
-      cumInflow, cumNet, periodRates, savingsRate, sourceSlices, deposits, flow,
+      cumInflow, cumNet, periodRates, savingsRate, sourceSlices, sourceTransactions, deposits, flow,
     }
   }, [from, to, accounts, transactions, dbAccountsLength])
 
@@ -173,11 +177,32 @@ function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string
   const covPositive = m.coverage >= 1
   const periodUnit = m.flow.granularity === 'day' ? 'day' : m.flow.granularity === 'week' ? 'week' : 'month'
   const periodCadenceLabel = m.flow.granularity === 'day' ? 'daily' : m.flow.granularity === 'week' ? 'weekly' : 'monthly'
+  const activeSource = selectedSource && m.sourceSlices.some((slice) => slice.label === selectedSource)
+    ? selectedSource
+    : m.sourceSlices[0]?.label ?? null
+  const sourceTransactions = activeSource
+    ? m.sourceTransactions.filter((transaction) => (transaction.cat || 'Other') === activeSource)
+    : []
+  const latestSourceTransactions = [...sourceTransactions].sort((a, b) => b.date.localeCompare(a.date))
+  const largestSourceTransaction = [...sourceTransactions].sort((a, b) => b.amount - a.amount)[0] ?? null
+  const selectedTransaction = selectedTransactionId
+    ? transactions.find((transaction) => transaction.id === selectedTransactionId) ?? null
+    : null
+
+  const refreshAfterTransactionEdit = async () => {
+    await refreshData()
+    toast({ title: 'Transaction updated', sub: 'Income analytics have been refreshed.' })
+  }
 
   return (
-    <Grid>
+    <motion.div
+      variants={gridStagger}
+      initial="hidden"
+      animate="show"
+      className="mt-5 grid grid-cols-1 gap-3.5 md:grid-cols-2 xl:grid-cols-[minmax(0,1.62fr)_minmax(360px,1fr)]"
+    >
       {/* Row 1 — period KPI hero cards */}
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:col-span-2 xl:col-span-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:col-span-2 xl:col-span-2 xl:grid-cols-4">
         <HeroMetric
           label="Total period inflow"
           value={fmt(m.totalInflow)}
@@ -203,7 +228,7 @@ function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string
       </div>
 
       {/* Row 2 — cumulative pacing + savings rate */}
-      <Tile title="Cash flow pacing" tag={`cumulative · ${periodCadenceLabel}`} span={2}>
+      <Tile title="Cash flow pacing" tag={`cumulative · ${periodCadenceLabel}`} span={2} className="xl:col-span-1">
         <div className="mb-2 mt-0.5 flex items-center gap-4">
           <LegendDot color="var(--color-pos)" label="Cumulative inflow" />
           <LegendDot color="var(--color-blue)" label="Cumulative net" />
@@ -220,10 +245,30 @@ function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string
       </Tile>
       <SavingsTile rate={m.savingsRate} saved={m.surplus} monthlyRates={m.periodRates} target={0.2} />
 
-      {/* Row 3 — income sources + recent deposits */}
-      <Tile title="Income sources" tag="share of inflow" span={2}>
+      {/* Row 3 — inflow categories + recent deposits */}
+      <Tile title="Inflow categories" tag="share of inflow" span={2} className="flex h-full flex-col xl:col-span-1">
         {m.totalInflow > 0 ? (
-          <AllocationDonut data={m.sourceSlices} totalLabel="Period inflow" />
+          <>
+            <AllocationDonut
+              data={m.sourceSlices}
+              totalLabel="Period inflow"
+              selectedLabel={activeSource}
+              onSelect={(slice) => setSelectedSource(slice.label)}
+            />
+            {activeSource && (
+              <IncomeSourceActivity
+                category={activeSource}
+                total={m.sourceSlices.find((slice) => slice.label === activeSource)?.value ?? 0}
+                periodTotal={m.totalInflow}
+                transactions={latestSourceTransactions}
+                largestTransaction={largestSourceTransaction}
+                onEdit={(transaction) => setSelectedTransactionId(transaction.id)}
+                onViewAll={() => go('ledger', {
+                  state: { source: 'income-source', category: activeSource, accountIds: accounts, from, to, incomeOnly: true },
+                })}
+              />
+            )}
+          </>
         ) : (
           <div className="grid place-items-center py-12 text-center text-[12.5px] text-muted">
             No inflow for the current filters.
@@ -232,14 +277,77 @@ function IncomeAnalyzer({ from, to, accounts, dbAccountsLength }: { from: string
       </Tile>
       <Tile title="Recent deposits" tag={m.deposits.length ? `${m.deposits.length} shown` : 'none'}>
         {m.deposits.length ? (
-          <Ledger rows={m.deposits} />
+          <Ledger rows={m.deposits} onEdit={(transaction) => setSelectedTransactionId(transaction.id)} />
         ) : (
           <div className="grid place-items-center py-10 text-center text-[12.5px] text-muted">
             No deposits in the selected range.
           </div>
         )}
       </Tile>
-    </Grid>
+      <TransactionCategoryDrawer
+        transaction={selectedTransaction}
+        onClose={() => setSelectedTransactionId(null)}
+        onChanged={refreshAfterTransactionEdit}
+      />
+    </motion.div>
+  )
+}
+
+function IncomeSourceActivity({
+  category,
+  total,
+  periodTotal,
+  transactions,
+  largestTransaction,
+  onEdit,
+  onViewAll,
+}: {
+  category: string
+  total: number
+  periodTotal: number
+  transactions: Txn[]
+  largestTransaction: Txn | null
+  onEdit: (transaction: Txn) => void
+  onViewAll: () => void
+}) {
+  const share = periodTotal > 0 ? Math.round((total / periodTotal) * 1000) / 10 : 0
+
+  return (
+    <section aria-label={`${category} income activity`} className="mt-5 border-t border-[var(--hair-soft)] pt-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted">Income activity · {category}</p>
+          <p className="mt-1 text-[17px] font-bold tabular-nums text-ink">{fmt(total)} <span className="text-[13px] font-semibold text-muted">· {share}% of inflow</span></p>
+        </div>
+        <span className="text-[12.5px] font-semibold text-accent-ink">{transactions.length} deposit{transactions.length === 1 ? '' : 's'}</span>
+      </div>
+
+      <p className="mt-2 text-[12.5px] leading-5 text-muted">
+        {largestTransaction ? <>Largest deposit {fmt(largestTransaction.amount)} · latest {dayLabel(transactions[0]?.date ?? largestTransaction.date)}.</> : 'No matching deposits in the selected range.'}
+      </p>
+
+      <div className="mt-3 divide-y divide-[var(--hair-soft)] border-y border-[var(--hair-soft)]">
+        {transactions.slice(0, 3).map((transaction) => (
+          <button
+            key={transaction.id}
+            type="button"
+            onClick={() => onEdit(transaction)}
+            aria-label={`Edit ${transaction.merchant} on ${transaction.date}`}
+            className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-2.5 text-left transition hover:bg-[var(--hair-soft)] focus-visible:bg-[var(--accent-wash)]"
+          >
+            <div className="min-w-0">
+              <p className="truncate text-[13px] font-semibold text-ink">{transaction.merchant}</p>
+              <p className="mt-0.5 text-[12px] text-muted">{dayLabel(transaction.date)}{transaction.subcat ? ` · ${transaction.subcat}` : ''}</p>
+            </div>
+            <span className="flex items-center gap-2 text-[13px] font-bold tabular-nums text-pos"><span>{fmt(transaction.amount)}</span><span className="text-[12px] font-semibold text-accent-ink">Edit →</span></span>
+          </button>
+        ))}
+      </div>
+
+      <button type="button" onClick={onViewAll} className="mt-3 text-[13px] font-semibold text-accent-ink transition hover:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent">
+        View all {transactions.length} matching transactions →
+      </button>
+    </section>
   )
 }
 

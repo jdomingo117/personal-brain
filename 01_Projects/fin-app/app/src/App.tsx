@@ -64,7 +64,7 @@ function ViewBridge({
 }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const go = useCallback((v: View) => navigate(VIEW_PATHS[v]), [navigate])
+  const go = useCallback((v: View, options?: { state?: unknown }) => navigate(VIEW_PATHS[v], options), [navigate])
   const view = pathToView(location.pathname)
 
   return (
