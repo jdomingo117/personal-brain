@@ -53,6 +53,19 @@ export interface ReviewApplyAssignment {
   subcategory: string | null
 }
 
+export interface ReviewChoice { category: string; subcategory: string | null }
+export type ReviewChoices = ReadonlyMap<string, ReviewChoice>
+
+/** Manual choices are staged locally, and never make a protected row eligible. */
+export function reviewTarget(row: CategorizationReviewRow, choices: ReviewChoices = new Map()): ReviewChoice | null {
+  if (row.status === 'protected') return null
+  const choice = choices.get(row.transaction_id)
+  if (choice) return choice
+  return row.status === 'suggested' && row.proposed
+    ? { category: row.proposed.category, subcategory: row.proposed.subcategory }
+    : null
+}
+
 export interface CategorizationReviewImpact {
   accepted: number
   categoryChanges: number
@@ -147,9 +160,11 @@ export function suggestedReviewIds(rows: CategorizationReviewRow[]): Set<string>
 export function buildReviewAssignments(
   rows: CategorizationReviewRow[],
   acceptedIds: ReadonlySet<string>,
+  choices: ReviewChoices = new Map(),
 ): ReviewApplyAssignment[] {
   return rows.flatMap((row) => {
-    if (!acceptedIds.has(row.transaction_id) || row.status !== 'suggested' || !row.proposed) return []
+    const target = reviewTarget(row, choices)
+    if (!acceptedIds.has(row.transaction_id) || !target) return []
     return [{
       transaction_id: row.transaction_id,
       before_category: row.current.category,
@@ -157,8 +172,8 @@ export function buildReviewAssignments(
       before_source: row.current.source as Exclude<ReviewSource, 'user'>,
       before_confidence: row.current.confidence,
       before_needs_review: row.current.needs_review,
-      category: row.proposed.category,
-      subcategory: row.proposed.subcategory,
+      category: target.category,
+      subcategory: target.subcategory,
     }]
   })
 }
@@ -167,6 +182,7 @@ export function buildCategorizationReviewImpact(
   transactions: Txn[],
   rows: CategorizationReviewRow[],
   acceptedIds: ReadonlySet<string>,
+  choices: ReviewChoices = new Map(),
 ): CategorizationReviewImpact {
   const transactionById = new Map(transactions.map((transaction) => [transaction.id, transaction]))
   const transitionCounts = new Map<string, { from: TransactionKind; to: TransactionKind; count: number }>()
@@ -179,17 +195,18 @@ export function buildCategorizationReviewImpact(
   let accepted = 0
 
   for (const row of rows) {
-    if (!acceptedIds.has(row.transaction_id) || row.status !== 'suggested' || !row.proposed) continue
+    const target = reviewTarget(row, choices)
+    if (!acceptedIds.has(row.transaction_id) || !target) continue
     const transaction = transactionById.get(row.transaction_id)
     if (!transaction) continue
     accepted++
-    if (transaction.cat !== row.proposed.category) categoryChanges++
-    if ((transaction.subcat ?? null) !== row.proposed.subcategory) subcategoryChanges++
+    if (transaction.cat !== target.category) categoryChanges++
+    if ((transaction.subcat ?? null) !== target.subcategory) subcategoryChanges++
     if (transaction.needsReview) reviewFlagsCleared++
 
     const targetKind = transaction.kindSource === 'user'
       ? transaction.kind
-      : defaultTransactionKind(row.proposed.category, row.proposed.subcategory ?? undefined, transaction.amount)
+      : defaultTransactionKind(target.category, target.subcategory ?? undefined, transaction.amount)
     const targetKindSource: NonNullable<Txn['kindSource']> = transaction.kindSource === 'user'
       ? 'user'
       : targetKind === 'adjustment' ? 'system' : 'derived'
@@ -203,7 +220,7 @@ export function buildCategorizationReviewImpact(
 
     const targetSubscription = transaction.subscriptionSource === 'user'
       ? transaction.isSubscription === true
-      : row.proposed.category === 'Lifestyle' && SUBSCRIPTION_SUBCATEGORIES.has(row.proposed.subcategory ?? '')
+      : target.category === 'Lifestyle' && SUBSCRIPTION_SUBCATEGORIES.has(target.subcategory ?? '')
     if (targetSubscription !== (transaction.isSubscription === true)) subscriptionChanges++
 
     const projected = { ...transaction, kind: targetKind, kindSource: targetKindSource }

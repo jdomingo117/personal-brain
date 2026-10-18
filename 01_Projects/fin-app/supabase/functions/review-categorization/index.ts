@@ -2,7 +2,8 @@ import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 import { SafeHttpError, withAuth } from '../_shared/withAuth.ts'
 import { LIMITS } from '../_shared/rateLimit.ts'
 import { resolveMerchantCategories, type MerchantInput } from '../_shared/categorize.ts'
-import { ALL_CATEGORIES, FULL_TAXONOMY, UNCATEGORIZED } from '../_shared/taxonomy.ts'
+import { UNCATEGORIZED } from '../_shared/taxonomy.ts'
+import { reviewTaxonomyResolver, validFixedReviewPair } from '../_shared/reviewTaxonomy.ts'
 
 const TransactionIds = z.array(z.string().uuid()).min(1).max(500)
 const PreviewPayload = z.object({ action: z.literal('preview'), transaction_ids: TransactionIds })
@@ -68,26 +69,39 @@ async function userRuleKeys(ctx: { db: any }, merchantKeys: string[]): Promise<S
   return keys
 }
 
-function validTaxonomyPair(category: string, subcategory: string | null) {
-  if (![...ALL_CATEGORIES, UNCATEGORIZED].includes(category)) return false
-  if (!subcategory) return true
-  return (FULL_TAXONOMY[category] ?? []).includes(subcategory)
-    && !(category === 'Transfer' && subcategory === 'Reconciliation')
+/** Engine suggestions use the fixed taxonomy; an explicitly staged user
+ * choice may also use an active custom subcategory belonging to this tenant. */
+async function resolveReviewAssignments(ctx: { db: any; tenantId: string }, assignments: z.infer<typeof Assignment>[]) {
+  const needsCustom = assignments.some((assignment) => !validFixedReviewPair(assignment.category, assignment.subcategory))
+  if (!needsCustom) return assignments
+  const [categories, custom] = await Promise.all([
+    ctx.db.from('taxonomy_categories').select('id,display_name').eq('active', true),
+    ctx.db.from('tenant_subcategories').select('category_id,display_name').eq('tenant_id', ctx.tenantId).eq('active', true),
+  ])
+  if (categories.error) throw categories.error
+  if (custom.error) throw custom.error
+  const resolve = reviewTaxonomyResolver(categories.data ?? [], custom.data ?? [])
+  return assignments.map((assignment) => {
+    if (assignment.category === 'Transfer' && assignment.subcategory?.toLowerCase() === 'reconciliation') {
+      throw new SafeHttpError(422, { error: 'Reconciliation is reserved for system entries.' })
+    }
+    const pair = resolve(assignment.category, assignment.subcategory)
+    if (!pair) {
+      throw new SafeHttpError(422, { error: 'A selected category pair is invalid or unavailable.' })
+    }
+    return { ...assignment, ...pair }
+  })
 }
 
 Deno.serve(withAuth({ schema: Payload, requireRole: 'member', rateLimit: LIMITS.categorizePerUser }, async (ctx) => {
   if (ctx.body.action === 'apply') {
     assertUnique(ctx.body.assignments.map((assignment) => assignment.transaction_id))
-    for (const assignment of ctx.body.assignments) {
-      if (!validTaxonomyPair(assignment.category, assignment.subcategory)) {
-        throw new SafeHttpError(422, { error: 'A suggested category pair is invalid' })
-      }
-    }
+    const assignments = await resolveReviewAssignments(ctx, ctx.body.assignments)
 
     const { data, error } = await ctx.admin().rpc('apply_categorization_review', {
       p_tenant_id: ctx.tenantId,
       p_actor_id: ctx.user.id,
-      p_assignments: ctx.body.assignments,
+      p_assignments: assignments,
     })
     if (error) {
       const message = String(error.message ?? '')

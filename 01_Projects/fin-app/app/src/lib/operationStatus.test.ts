@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { OperationProgress, OperationStatusPanel } from '../components/OperationStatus'
+import { readFileSync } from 'node:fs'
+import { BackgroundOperationNotice, InlineActivity, OperationProgress, OperationStatusPanel, OperationSteps } from '../components/OperationStatus'
 import { completedOperationSteps, operationStateRole, progressFraction } from './operationStatus'
 
 describe('operation status view model', () => {
@@ -56,5 +57,40 @@ describe('operation status view model', () => {
     expect(working).toContain('aria-busy="true"')
     expect(failed).toContain('role="alert"')
     expect(failed).not.toContain('aria-busy="true"')
+  })
+
+  it('keeps compact activity labelled and preserves current/upcoming stage meaning', () => {
+    const activity = renderToStaticMarkup(createElement(InlineActivity, { label: 'Saving correction', size: 'compact' }))
+    const steps = renderToStaticMarkup(createElement(OperationSteps, {
+      steps: [
+        { id: 'saved', label: 'Saved stage', state: 'complete' },
+        { id: 'writing', label: 'Writing change', state: 'current' },
+        { id: 'done', label: 'Ready', state: 'upcoming' },
+      ],
+    }))
+
+    expect(activity).toContain('role="status"')
+    expect(activity).toContain('aria-label="Saving correction"')
+    expect(steps).toContain('Writing change in progress')
+    expect(steps).toContain('1 of 3 stages complete.')
+  })
+
+  it('uses a polite busy region for durable background work and an alert for failure', () => {
+    const working = renderToStaticMarkup(createElement(BackgroundOperationNotice, {
+      title: 'Provider sync in progress', detail: 'Checking Everyday cash.',
+    }))
+    const failed = renderToStaticMarkup(createElement(BackgroundOperationNotice, {
+      state: 'failed', title: 'Provider sync needs attention', detail: 'Reconnect to continue.',
+    }))
+
+    expect(working).toContain('role="status"')
+    expect(working).toContain('aria-busy="true"')
+    expect(failed).toContain('role="alert"')
+    expect(failed).not.toContain('aria-busy="true"')
+  })
+
+  it('retains a static activity cue when reduced motion is requested', () => {
+    const css = readFileSync(new URL('../index.css', import.meta.url), 'utf8')
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*\.operation-activity__icon \{ animation: none !important; \}/)
   })
 })

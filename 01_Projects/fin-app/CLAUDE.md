@@ -64,6 +64,10 @@ hand to find the transfer-linker gap.
 
 ## Recent changes
 
+- 2026-10-17 — Expanded Ledger categorisation review with transaction context, staged category choices and a guarded handoff to the full editor.
+
+- 2026-10-16 — Began Phase 5 operation-feedback verification: strengthened unit/ARIA/reduced-motion and provider-checkpoint coverage, plus a guarded delayed no-write/retry Ledger browser regression awaiting an isolated stack run.
+
 - 2026-10-16 — Completed Phase 4 operation feedback: routine writes and known-shape tile reads now use named activity cues, while one durable provider-sync notice safely survives navigation.
 
 - 2026-10-16 — Completed Phase 3 operation feedback: ingestion, investment, provider and transfer-review waits now show real checkpoints or explicit indeterminate stages without changing service behavior.
@@ -79,7 +83,3 @@ hand to find the transfer-linker gap.
 - 2026-10-04 — Completed Phase 4 ingestion hardening: isolated golden coverage verifies overlap/reconciliation, rollback, connected cutover, profile persistence and direct-write denial; hung chunks recover safely, test-stack cleanup is project-scoped, and the full golden plus six-file Gate 2 gates are green.
 
 - 2026-10-04 — Completed Phase 3 ingestion hardening: imports now canonicalize and validate global and active tenant custom taxonomy pairs before the atomic write; isolated golden coverage verifies custom, inactive, mismatched, unknown and cross-tenant cases plus denied direct browser writes.
-
-- 2026-10-04 — Completed Phase 2 ingestion hardening: categorisation now keeps successful ≤300-merchant batches when another batch fails, continues independently and flags only unresolved affected rows for review; unit and disposable golden boundaries are green.
-
-- 2026-10-04 — Completed Phase 1 ingestion hardening: a 5,000 source-row cap now fails closed in the browser, Edge Function and atomic SQL path; isolated golden coverage proves an exact-limit import plus one reconciliation anchor and a zero-write 5,001-row rejection.

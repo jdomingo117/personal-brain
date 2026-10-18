@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { fmtCents, type Txn } from '../data'
+import { ALL_CATEGORIES, FULL_TAXONOMY, fmtCents, type Txn } from '../data'
 import { supabase } from '../lib/supabaseClient'
+import { useData } from '../contexts/DataContext'
 import {
-  buildCategorizationReviewImpact, buildReviewAssignments, categorizationPreviewPages, categorizationPreviewProgress, suggestedReviewIds,
-  type CategorizationReviewResponse, type CategorizationReviewRow, type CategorizationReviewScope,
+  buildCategorizationReviewImpact, buildReviewAssignments, categorizationPreviewPages, categorizationPreviewProgress, reviewTarget, suggestedReviewIds,
+  type CategorizationReviewResponse, type CategorizationReviewRow, type CategorizationReviewScope, type ReviewChoice, type ReviewStatus,
 } from '../lib/categorizationReview'
 import { KIND_LABELS } from '../lib/classification'
 import { useDialogFocus } from '../hooks/useDialogFocus'
@@ -29,18 +30,29 @@ function delta(label: string, cents: number) {
 }
 
 export default function CategorizationReviewDialog({
-  transactions, scope = 'selected', scopeCandidateCount, scopeTruncated = false, onClose, onChanged,
+  transactions, scope = 'selected', scopeCandidateCount, scopeTruncated = false, suspended = false, invalidated = false, onOpenTransaction, onClose, onChanged,
 }: {
   transactions: Txn[]
   scope?: CategorizationReviewScope
   /** Candidate count before the shared 500-row atomic boundary is applied. */
   scopeCandidateCount?: number
   scopeTruncated?: boolean
+  suspended?: boolean
+  invalidated?: boolean
+  onOpenTransaction: (id: string) => void
   onClose: (clearSelection?: boolean) => void
   onChanged: () => Promise<void>
 }) {
+  const { customSubcategories } = useData()
   const [response, setResponse] = useState<CategorizationReviewResponse | null>(null)
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set())
+  const [choices, setChoices] = useState<Map<string, ReviewChoice>>(new Map())
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [draftCategory, setDraftCategory] = useState('')
+  const [draftSubcategory, setDraftSubcategory] = useState('')
+  const [excludedIds, setExcludedIds] = useState<Set<string>>(new Set())
+  const [filter, setFilter] = useState<ReviewStatus | 'all'>('all')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [savingAction, setSavingAction] = useState<'apply' | 'undo' | null>(null)
   const [error, setError] = useState('')
@@ -48,7 +60,7 @@ export default function CategorizationReviewDialog({
   const [completedPreviewPages, setCompletedPreviewPages] = useState(0)
   const [operationId, setOperationId] = useState<string | null>(null)
   const [updated, setUpdated] = useState<number | null>(null)
-  const dialogRef = useDialogFocus()
+  const dialogRef = useDialogFocus({ active: !suspended })
   const completed = updated !== null && updated > 0
   const saving = savingAction !== null
   const transactionKey = transactions.map((transaction) => transaction.id).join(',')
@@ -105,16 +117,22 @@ export default function CategorizationReviewDialog({
   }, [transactionKey, retryToken])
 
   useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape' && !saving) close() }
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape' && !saving && !suspended) close() }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [completed, saving, onClose])
+  }, [completed, saving, suspended, onClose])
 
   const suggested = response?.rows.filter((row) => row.status === 'suggested') ?? []
   const impact = useMemo(
-    () => buildCategorizationReviewImpact(transactions, response?.rows ?? [], acceptedIds),
-    [transactions, response, acceptedIds],
+    () => buildCategorizationReviewImpact(transactions, response?.rows ?? [], acceptedIds, choices),
+    [transactions, response, acceptedIds, choices],
   )
+  const transactionById = useMemo(() => new Map(transactions.map((transaction) => [transaction.id, transaction])), [transactions])
+  const visibleRows = (response?.rows ?? []).filter((row) => {
+    const transaction = transactionById.get(row.transaction_id)
+    const text = `${row.merchant} ${transaction?.originalDescription ?? ''} ${transaction?.account ?? ''}`.toLocaleLowerCase()
+    return (filter === 'all' || row.status === filter) && text.includes(search.trim().toLocaleLowerCase())
+  })
 
   const toggle = (id: string) => setAcceptedIds((current) => {
     const next = new Set(current)
@@ -125,7 +143,8 @@ export default function CategorizationReviewDialog({
 
   const apply = async () => {
     if (!response) return
-    const assignments = buildReviewAssignments(response.rows, acceptedIds)
+    if (invalidated) return
+    const assignments = buildReviewAssignments(response.rows, acceptedIds, choices)
     if (!assignments.length) return
     setSavingAction('apply'); setError('')
     const { data, error: applyError } = await supabase.functions.invoke('review-categorization', {
@@ -158,8 +177,21 @@ export default function CategorizationReviewDialog({
     if (loading) return
     setResponse(null)
     setAcceptedIds(new Set())
+    setChoices(new Map())
+    setExcludedIds(new Set())
     setError('')
     setRetryToken((current) => current + 1)
+  }
+
+  const setChoice = (row: CategorizationReviewRow, choice: ReviewChoice) => {
+    setChoices((current) => new Map(current).set(row.transaction_id, choice))
+    setAcceptedIds((current) => new Set(current).add(row.transaction_id))
+  }
+
+  const openTransaction = (id: string) => {
+    setExcludedIds((current) => new Set(current).add(id))
+    setAcceptedIds((current) => { const next = new Set(current); next.delete(id); return next })
+    onOpenTransaction(id)
   }
 
   const previewSteps = [
@@ -176,6 +208,8 @@ export default function CategorizationReviewDialog({
     },
     { id: 'combine', label: 'Preparing suggestions for review', state: 'upcoming' as const },
   ]
+
+  if (suspended) return null
 
   return createPortal(
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/35 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) close() }}>
@@ -201,47 +235,65 @@ export default function CategorizationReviewDialog({
         </p>}
 
         {response && !completed && <>
-          <div className="mt-5 grid gap-2 sm:grid-cols-4">
-            {([
-              ['Suggested', suggested.length],
-              ['Unchanged', response.rows.filter((row) => row.status === 'unchanged').length],
-              ['Protected', response.rows.filter((row) => row.status === 'protected').length],
-              ['Unresolved', response.rows.filter((row) => row.status === 'unresolved').length],
-            ] as const).map(([label, value]) => <div key={label} className="rounded-xl border border-[var(--hair)] bg-[var(--input-bg)] p-3"><div className="text-[10px] uppercase tracking-[0.1em] text-muted">{label}</div><div className="mt-1 font-display text-[22px] font-black tabular-nums text-ink">{value}</div></div>)}
+          {invalidated && <p role="alert" className="mt-5 rounded-xl border border-warn/40 bg-[var(--input-bg)] p-4 body-copy">The Ledger changed or a transaction is no longer available. Your other choices are preserved here, but this preview can no longer be applied safely. Close it and start a fresh review before applying.</p>}
+          <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Filter review results">
+            {([['all', 'All'], ['suggested', 'Suggested'], ['unresolved', 'Unresolved'], ['protected', 'Protected'], ['unchanged', 'Unchanged']] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={`min-h-11 rounded-lg border px-3 text-[13px] font-semibold ${filter === value ? 'border-accent bg-[var(--accent-wash)] text-accent-ink' : 'border-[var(--hair)] text-ink2'}`}>{label} ({value === 'all' ? response.rows.length : response.rows.filter((row) => row.status === value).length})</button>)}
+          </div>
+          <label className="mt-4 block text-[13px] font-semibold text-ink2">Search review<input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Merchant, description or account" className="mt-1.5 min-h-11 w-full rounded-lg border border-[var(--hair)] bg-[var(--input-bg)] px-3 text-[14px] text-ink" /></label>
+          <p className="mt-3 detail-copy">Category choices here are staged until you apply them. Opening a transaction in Ledger excludes it from this preview; edits saved there take effect immediately.</p>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+            <p className="detail-copy">{impact.accepted} selected for apply · {suggested.length} engine suggestion{suggested.length === 1 ? '' : 's'} initially preselected</p>
+            <div className="flex gap-2">
+              <button type="button" disabled={invalidated} onClick={() => setAcceptedIds((current) => new Set([...current, ...[...suggestedReviewIds(response.rows)].filter((id) => !excludedIds.has(id))]))} className="min-h-11 px-3 text-[13px] font-semibold text-accent-ink disabled:opacity-40">Select all suggestions</button>
+              <button type="button" onClick={() => setAcceptedIds(new Set())} className="min-h-11 px-3 text-[13px] font-semibold text-muted">Clear selection</button>
+            </div>
           </div>
 
-          {suggested.length > 0 && <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
-            <p className="detail-copy">{acceptedIds.size} of {suggested.length} suggestions accepted</p>
-            <div className="flex gap-2">
-              <button type="button" onClick={() => setAcceptedIds(suggestedReviewIds(response.rows))} className="min-h-11 px-3 text-[11px] font-semibold text-accent-ink">Accept all suggestions</button>
-              <button type="button" onClick={() => setAcceptedIds(new Set())} className="min-h-11 px-3 text-[11px] font-semibold text-muted">Clear</button>
-            </div>
-          </div>}
-
           <div className="mt-3 divide-y divide-[var(--hair-soft)] rounded-xl border border-[var(--hair)]">
-            {response.rows.map((row) => {
-              const selectable = row.status === 'suggested' && Boolean(row.proposed)
-              return <div key={row.transaction_id} className="grid gap-2 p-3 sm:grid-cols-[44px_minmax(120px,0.8fr)_minmax(0,1.6fr)] sm:items-center">
-                <label className={`grid min-h-11 min-w-11 place-items-center ${selectable ? 'cursor-pointer' : 'opacity-35'}`} aria-label={selectable ? `Accept suggestion for ${row.merchant}` : `${row.merchant} is not selectable`}>
-                  <input type="checkbox" disabled={!selectable} checked={acceptedIds.has(row.transaction_id)} onChange={() => toggle(row.transaction_id)} className="h-4 w-4 accent-[var(--color-accent)]" />
-                </label>
-                <div className="min-w-0">
-                  <div className="truncate text-[12.5px] font-semibold text-ink">{row.merchant}</div>
-                  <div className="text-[11px] tabular-nums text-muted">{row.date}</div>
-                  <div className={`mt-1 text-[10.5px] font-semibold ${row.status === 'suggested' ? 'text-accent-ink' : row.status === 'protected' ? 'text-warn' : 'text-muted'}`}>{statusLabel(row)}</div>
+            {visibleRows.length === 0 && <p className="p-4 body-copy">No transactions match this filter.</p>}
+            {visibleRows.map((row) => {
+              const transaction = transactionById.get(row.transaction_id)
+              const choice = choices.get(row.transaction_id)
+              const target = reviewTarget(row, choices)
+              const excluded = excludedIds.has(row.transaction_id)
+              const selectable = Boolean(target) && !excluded && !invalidated
+              const canEdit = row.status !== 'protected' && !excluded && !invalidated
+              const subcategories = [...(FULL_TAXONOMY[draftCategory] ?? []), ...customSubcategories.filter((item) => item.category === draftCategory).map((item) => item.displayName)].filter((item) => !(draftCategory === 'Transfer' && item === 'Reconciliation'))
+              return <article key={row.transaction_id} className="p-4 sm:p-5">
+                <div className="flex items-start gap-2">
+                  <label className={`grid min-h-11 min-w-11 place-items-center ${selectable ? 'cursor-pointer' : 'opacity-40'}`} aria-label={`Select change for ${row.merchant}, ${row.date}, ${transaction?.account ?? 'unknown account'}`}>
+                    <input type="checkbox" disabled={!selectable} checked={acceptedIds.has(row.transaction_id) && !excluded} onChange={() => toggle(row.transaction_id)} className="h-4 w-4 accent-[var(--color-accent)]" />
+                  </label>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2"><h3 className="text-[15px] font-semibold text-ink">{row.merchant}</h3><strong className="text-[15px] tabular-nums text-ink">{transaction ? fmtCents(transaction.amount) : 'Amount unavailable'}</strong></div>
+                    <p className="mt-1 detail-copy">{transaction?.account ?? 'Unknown account'} · {row.date}</p>
+                    {transaction?.originalDescription && transaction.originalDescription !== row.merchant && <p className="mt-1 break-words detail-copy">{transaction.originalDescription}</p>}
+                    <p className="mt-2 text-[13px] font-semibold text-ink2">{excluded ? 'Opened in Ledger — excluded from this preview' : statusLabel(row)}</p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      <div className="rounded-lg bg-[var(--input-bg)] p-3"><span className="block text-[12px] text-muted">Current · {row.current.source ?? 'Unknown source'}</span><strong className="text-[14px] text-ink">{pair(row.current.category, row.current.subcategory)}</strong></div>
+                      <div className="rounded-lg bg-[var(--accent-wash)] p-3"><span className="block text-[12px] text-muted">Engine suggestion{row.proposed ? ` · ${confidence(row.proposed.confidence)}` : ''}</span><strong className="text-[14px] text-ink">{row.proposed ? pair(row.proposed.category, row.proposed.subcategory) : 'No suggestion'}</strong></div>
+                    </div>
+                    {choice && <p className="mt-3 text-[13px] font-semibold text-ink">Your choice: {pair(choice.category, choice.subcategory)}</p>}
+                    {row.status === 'protected' && <p className="mt-2 detail-copy">Protected from engine changes. For an intentional manual correction, open this transaction in the Ledger. System reconciliation entries remain locked.</p>}
+                    {editingId === row.transaction_id && canEdit && <div className="mt-4 grid gap-3 rounded-lg border border-[var(--hair)] p-3 sm:grid-cols-2">
+                      <label className="text-[13px] font-semibold text-ink2">Category<select aria-label="Review category" value={draftCategory} onChange={(event) => { setDraftCategory(event.target.value); setDraftSubcategory('') }} className="mt-1.5 min-h-11 w-full rounded-lg border border-[var(--hair)] bg-[var(--input-bg)] px-3 text-[14px] text-ink">{ALL_CATEGORIES.map((category) => <option key={category}>{category}</option>)}</select></label>
+                      <label className="text-[13px] font-semibold text-ink2">Subcategory<select aria-label="Review subcategory" value={draftSubcategory} onChange={(event) => setDraftSubcategory(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-lg border border-[var(--hair)] bg-[var(--input-bg)] px-3 text-[14px] text-ink"><option value="">No subcategory</option>{subcategories.map((subcategory) => <option key={subcategory}>{subcategory}</option>)}</select></label>
+                      <div className="flex flex-wrap gap-2 sm:col-span-2"><button type="button" onClick={() => { setChoice(row, { category: draftCategory, subcategory: draftSubcategory || null }); setEditingId(null) }} className="min-h-11 rounded-lg bg-ink px-4 text-[13px] font-semibold text-surface">Use this category</button><button type="button" onClick={() => setEditingId(null)} className="min-h-11 px-3 text-[13px] font-semibold text-muted">Cancel</button></div>
+                    </div>}
+                    <div className="mt-3 flex flex-wrap gap-x-4">
+                      {canEdit && <button type="button" onClick={() => { const initial = choice ?? row.proposed ?? row.current; setDraftCategory(initial.category); setDraftSubcategory(initial.subcategory ?? ''); setEditingId(row.transaction_id) }} className="min-h-11 text-[13px] font-semibold text-accent-ink">Change category</button>}
+                      {choice && canEdit && <button type="button" onClick={() => { setChoices((current) => { const next = new Map(current); next.delete(row.transaction_id); return next }); if (row.status !== 'suggested') setAcceptedIds((current) => { const next = new Set(current); next.delete(row.transaction_id); return next }) }} className="min-h-11 text-[13px] font-semibold text-muted">{row.status === 'suggested' && row.proposed ? 'Use engine suggestion' : 'Remove your choice'}</button>}
+                      {transaction && <button type="button" aria-label={`Open ${row.merchant} on ${row.date} in Ledger`} onClick={() => openTransaction(row.transaction_id)} className="min-h-11 text-[13px] font-semibold text-ink2">Open in Ledger</button>}
+                    </div>
+                  </div>
                 </div>
-                <div className="grid gap-1 text-[11.5px] sm:grid-cols-[1fr_18px_1fr] sm:items-center">
-                  <div className="rounded-lg bg-[var(--input-bg)] p-2"><span className="block text-[9.5px] uppercase tracking-[0.08em] text-muted">Current</span><strong className="text-ink2">{pair(row.current.category, row.current.subcategory)}</strong><span className="block text-[10px] text-muted">{confidence(row.current.confidence)}</span></div>
-                  <span className="hidden text-center text-muted sm:block">→</span>
-                  <div className="rounded-lg bg-[var(--accent-wash)] p-2"><span className="block text-[9.5px] uppercase tracking-[0.08em] text-muted">Proposed</span><strong className="text-ink2">{row.proposed ? pair(row.proposed.category, row.proposed.subcategory) : 'No suggestion'}</strong><span className="block text-[10px] text-muted">{row.proposed ? confidence(row.proposed.confidence) : '—'}</span></div>
-                </div>
-              </div>
+              </article>
             })}
           </div>
 
           <div className="mt-4 rounded-xl border border-[var(--hair)] bg-[var(--input-bg)] p-4 text-[12px] text-ink2" aria-live="polite">
             <p className="font-semibold uppercase tracking-[0.08em] text-ink">Accepted impact</p>
-            {impact.accepted === 0 ? <p className="mt-2 text-muted">Choose at least one suggestion to apply.</p> : <ul className="mt-2 grid gap-1.5">
+            {impact.accepted === 0 ? <p className="mt-2 text-muted">Choose at least one category change to apply.</p> : <ul className="mt-2 grid gap-1.5">
               <li><strong>{impact.accepted}</strong> transaction{impact.accepted === 1 ? '' : 's'} will be marked Manual.</li>
               <li>{impact.categoryChanges} categor{impact.categoryChanges === 1 ? 'y' : 'ies'} and {impact.subcategoryChanges} subcategor{impact.subcategoryChanges === 1 ? 'y' : 'ies'} will change; {impact.reviewFlagsCleared} review flag{impact.reviewFlagsCleared === 1 ? '' : 's'} will clear.</li>
               {impact.kindTransitions.map((transition) => <li key={`${transition.from}-${transition.to}`}>{transition.count} derived kind: {KIND_LABELS[transition.from]} → {KIND_LABELS[transition.to]}</li>)}
@@ -252,10 +304,10 @@ export default function CategorizationReviewDialog({
           </div>
         </>}
 
-        {completed && <OperationStatusPanel className="mt-6" state="succeeded" title={`Applied ${updated} accepted suggestion${updated === 1 ? '' : 's'}`} description="The changes share one guarded undo operation. Closing clears the Ledger selection." />}
+        {completed && <OperationStatusPanel className="mt-6" state="succeeded" title={`Applied ${updated} accepted change${updated === 1 ? '' : 's'}`} description="The changes share one guarded undo operation. Closing clears the Ledger selection." />}
 
-        <div className="mt-5 flex flex-wrap gap-2">
-          {!completed && <Button onClick={() => void apply()} disabled={loading || saving || impact.accepted === 0}>{savingAction === 'apply' && <InlineActivity label="Applying accepted suggestions" size="compact" />}{savingAction === 'apply' ? 'Applying accepted suggestions…' : `Apply accepted (${impact.accepted})`}</Button>}
+        <div className="sticky bottom-0 mt-5 flex flex-wrap gap-2 border-t border-[var(--hair)] bg-surface py-4">
+          {!completed && <Button onClick={() => void apply()} disabled={loading || saving || invalidated || impact.accepted === 0}>{savingAction === 'apply' && <InlineActivity label="Applying accepted changes" size="compact" />}{savingAction === 'apply' ? 'Applying accepted changes…' : `Apply accepted (${impact.accepted})`}</Button>}
           {operationId && <Button variant="ghost" onClick={() => void undo()} disabled={saving}>{savingAction === 'undo' && <InlineActivity label="Undoing categorisation review" size="compact" />}{savingAction === 'undo' ? 'Undoing review…' : 'Undo review'}</Button>}
           <Button variant="ghost" onClick={close} disabled={saving}>{completed ? 'Done and clear selection' : 'Close preview'}</Button>
         </div>

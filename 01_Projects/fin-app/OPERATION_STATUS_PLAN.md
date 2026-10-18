@@ -9,7 +9,7 @@ tags:
   - accessibility
   - workflow
 type: implementation-plan
-status: phase-4-complete
+status: phase-5-verification-in-progress
 project: Halcyon
 updated: 2026-10-16
 related:
@@ -292,6 +292,21 @@ import, apply and undo behavior remains foreground and unchanged.
 5. Run `npm test`, `npm run build`, relevant browser tests, and `npm run test:golden` for any
    ingestion/backend interaction change. Remove or hide the concept route once the shared
    primitives are accepted, or retain it only as an explicitly non-production visual fixture.
+
+**Progress record — 2026-10-16:** the pure/component status suite now verifies bounded versus
+indeterminate native progress, live-region/busy/failure roles, compact activity labels and stage
+meaning, durable-background roles, provider-sync checkpoint copy and the reduced-motion static
+icon rule. The Ledger Playwright suite now includes a delayed preview that fails, confirms no
+transaction write, retries from the complete preview and succeeds through a mocked function
+response; it typechecks with the suite. The full unit suite passes (331 tests, 14
+environment-dependent skips), browser-suite TypeScript checks pass, the production build passes,
+and `git diff --check` passes.
+
+The rendered Ledger test has **not** been executed in this working copy: its safety guard rejected
+the personal local Supabase target at port 54321, as intended. It must run only against an explicitly
+identified isolated stack. The owner-led authenticated light/dark visual review at 390px, 768px,
+1024px and 1440px also remains outstanding, as does the final decision to retain or hide the
+review-only concept route.
 
 **Exit gate:** the reference flows have consistent, truthful feedback; an assistive-technology
 user receives equivalent start, meaningful update and finish/error information; no application

@@ -97,7 +97,7 @@ export async function newUserWithAccount(tag = 'ing', accountType = 'Liquid') {
 }
 
 /** Calls an Edge Function the way the browser does. */
-export async function invoke(fn, token, body, { origin = 'http://localhost:5300', ip } = {}) {
+export async function invoke(fn, token, body, { origin = process.env.HALCYON_TEST_ORIGIN ?? 'http://localhost:5300', ip } = {}) {
   const headers = {
     'Content-Type': 'application/json',
     apikey: ANON,

@@ -9,7 +9,7 @@ import { assertSafeTestTarget } from './lib/assertSafeTestTarget.mjs'
 const appDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const repoDir = resolve(appDir, '..')
 const npmCache = process.env.NPM_CONFIG_CACHE ?? resolve(tmpdir(), 'fin-app-npm-cache')
-const suite = process.argv.includes('--gate2') ? 'gate2' : 'golden'
+const suite = process.argv.includes('--gate2') ? 'gate2' : process.argv.includes('--review') ? 'review' : 'golden'
 const projectId = `halcyon-${suite}-isolated-${Date.now()}`
 const workDir = mkdtempSync(resolve(tmpdir(), 'halcyon-golden-'))
 const isolatedSupabase = resolve(workDir, 'supabase')
@@ -75,7 +75,7 @@ function status() {
  * `fin-app` project or another test run.
  */
 function removeResidualProjectContainers() {
-  if (!/^halcyon-(golden|gate2)-isolated-\d+$/.test(projectId)) {
+  if (!/^halcyon-(golden|gate2|review)-isolated-\d+$/.test(projectId)) {
     throw new Error(`Refusing to remove containers for unexpected project ID: ${projectId}`)
   }
   const listed = spawnSync('docker', [
@@ -171,6 +171,12 @@ try {
         HALCYON_GATE2_REPORT: process.env.HALCYON_GATE2_REPORT
           ?? resolve(tmpdir(), 'halcyon-gate2-categorization.json'),
       },
+    })
+  } else if (suite === 'review') {
+    // Deterministic contracts and a mocked preview: no external categorisation provider.
+    run('node', ['scripts/test-categorization-review.mjs'], { cwd: appDir, env: { ...env, HALCYON_TEST_LIVE_GEMINI: '0', HALCYON_TEST_ORIGIN: 'http://localhost:55300' } })
+    run('npx', ['playwright', 'test', '--config', 'playwright.golden.config.ts', '--grep', 'review shows transaction context|review invalidates the batch'], {
+      cwd: appDir, env: { ...env, HALCYON_REVIEW_BROWSER: '1', HALCYON_REVIEW_REPORT_DIR: workDir },
     })
   } else {
     run('npx', ['playwright', 'test', '--config', 'playwright.golden.config.ts'], { cwd: appDir, env })

@@ -70,6 +70,32 @@ async function main() {
   check('the accepted review is guardedly undoable as one operation',
     undone.status === 200 && undone.json?.restored === 2, JSON.stringify(undone.json))
 
+  section('Explicit custom choices and taxonomy boundaries')
+  const custom = await invoke('manage-taxonomy', owner.token, { action: 'create_subcategory', category: 'Shopping', name: 'Review workshop supplies' })
+  if (custom.status !== 200) throw new Error(`custom category fixture failed: ${JSON.stringify(custom.json)}`)
+  const customApply = await invoke('review-categorization', owner.token, {
+    action: 'apply', assignments: [assignment(aiOne, 'Shopping', 'review WORKSHOP supplies')],
+  })
+  const customRow = await owner.client.from('transactions').select('subcategory,custom_subcategory_id').eq('id', aiOne.id).single()
+  check('an active tenant custom choice is canonicalised and keeps its stable identity',
+    customApply.status === 200 && customRow.data?.subcategory === 'Review workshop supplies' && customRow.data?.custom_subcategory_id === custom.json.id,
+    JSON.stringify({ result: customApply.json, row: customRow.data }))
+  const customUndo = await invoke('update-transaction-category', owner.token, { action: 'undo_operation', operation_id: customApply.json.operation_id })
+  check('a custom review choice participates in guarded undo', customUndo.status === 200 && customUndo.json?.restored === 1, JSON.stringify(customUndo.json))
+  const otherRow = await seed(other, `REVIEW OTHER ${crypto.randomUUID()}`, 'ai', 0.6)
+  const foreignCustom = await invoke('review-categorization', other.token, {
+    action: 'apply', assignments: [assignment(otherRow, 'Shopping', 'Review workshop supplies')],
+  })
+  check('another tenant cannot select this custom subcategory', foreignCustom.status === 422, JSON.stringify(foreignCustom.json))
+  const wrongCategory = await invoke('review-categorization', owner.token, {
+    action: 'apply', assignments: [assignment(aiOne, 'Home', 'Review workshop supplies')],
+  })
+  check('a custom subcategory cannot be used under another category', wrongCategory.status === 422, JSON.stringify(wrongCategory.json))
+  const reserved = await invoke('review-categorization', owner.token, {
+    action: 'apply', assignments: [assignment(aiOne, 'Transfer', 'Reconciliation')],
+  })
+  check('manual choices cannot create system reconciliation entries', reserved.status === 422, JSON.stringify(reserved.json))
+
   section('Apply-time protection and stale-state rejection')
   const stale = await seed(owner, `REVIEW STALE ${crypto.randomUUID()}`, 'ai', 0.6)
   const manual = await invoke('update-transaction-category', owner.token, {

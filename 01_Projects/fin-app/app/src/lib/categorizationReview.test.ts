@@ -103,6 +103,33 @@ describe('categorisation review selection', () => {
       }),
     ])
   })
+
+  it('stages manual choices for unresolved rows but never for protected rows', () => {
+    const unresolved = transaction({ cat: 'Uncategorized', subcat: undefined, categorySource: null })
+    const protectedTxn = transaction({ categorySource: 'bank' })
+    const rows = [
+      reviewRow(unresolved, { status: 'unresolved', proposed: null }),
+      reviewRow(protectedTxn, { status: 'protected', proposed: null, protection_reason: 'Bank classification' }),
+    ]
+    const choices = new Map([
+      [unresolved.id, { category: 'Food & drink', subcategory: 'Groceries' }],
+      [protectedTxn.id, { category: 'Transport', subcategory: 'Fuel' }],
+    ])
+    const accepted = new Set([unresolved.id, protectedTxn.id])
+
+    expect(buildReviewAssignments(rows, accepted, choices)).toEqual([
+      expect.objectContaining({ transaction_id: unresolved.id, before_source: null, category: 'Food & drink', subcategory: 'Groceries' }),
+    ])
+    expect(buildCategorizationReviewImpact([unresolved, protectedTxn], rows, accepted, choices)).toMatchObject({ accepted: 1, categoryChanges: 1, subcategoryChanges: 1 })
+  })
+
+  it('uses the user choice, not the engine suggestion, for assignments and impact', () => {
+    const txn = transaction()
+    const row = reviewRow(txn)
+    const choices = new Map([[txn.id, { category: 'Transfer', subcategory: 'Internal' }]])
+    expect(buildReviewAssignments([row], new Set([txn.id]), choices)[0]).toMatchObject({ category: 'Transfer', subcategory: 'Internal' })
+    expect(buildCategorizationReviewImpact([txn], [row], new Set([txn.id]), choices)).toMatchObject({ accepted: 1, expenseDeltaCents: -1200 })
+  })
 })
 
 describe('categorisation review impact', () => {

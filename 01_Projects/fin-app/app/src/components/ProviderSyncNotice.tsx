@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useData } from '../contexts/DataContext'
 import { supabase } from '../lib/supabaseClient'
+import { providerSyncNoticeDetail } from '../lib/providerSyncStatus'
 import { BackgroundOperationNotice } from './OperationStatus'
 
 type RunningSync = {
@@ -52,19 +53,10 @@ export default function ProviderSyncNotice() {
 
   if (!runs.length) return null
 
-  const runningAccountIds = new Set(runs.map((run) => run.account_id))
-  const runningAccounts = accounts.filter((account) => runningAccountIds.has(account.id))
-  const names = runningAccounts.map((account) => account.name)
-  const pages = runs.reduce((sum, run) => sum + run.pages_fetched, 0)
-  const records = runs.reduce((sum, run) => sum + run.rows_seen, 0)
-  const changes = runs.reduce((sum, run) => sum + run.rows_inserted + run.rows_updated, 0)
-  const accountLabel = names.length ? names.join(', ') : `${runs.length} connected account${runs.length === 1 ? '' : 's'}`
-  const detail = [
-    `Checking ${accountLabel}.`,
-    pages > 0 ? `${pages} page${pages === 1 ? '' : 's'} received.` : 'This may take a moment.',
-    records > 0 ? `${records} transaction${records === 1 ? '' : 's'} checked.` : null,
-    changes > 0 ? `${changes} change${changes === 1 ? '' : 's'} recorded.` : null,
-  ].filter(Boolean).join(' ')
+  const detail = providerSyncNoticeDetail(
+    runs.map((run) => ({ accountId: run.account_id, pagesFetched: run.pages_fetched, rowsSeen: run.rows_seen, rowsInserted: run.rows_inserted, rowsUpdated: run.rows_updated })),
+    new Map(accounts.map((account) => [account.id, account.name])),
+  )
 
   return <div className="fixed bottom-[58px] right-4 z-40 w-[min(24rem,calc(100vw-2rem))] sm:right-8"><BackgroundOperationNotice title="Provider sync in progress" detail={detail} /></div>
 }

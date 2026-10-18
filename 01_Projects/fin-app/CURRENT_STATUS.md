@@ -52,7 +52,14 @@ capabilities are:
   decisions, applies individually accepted heterogeneous results atomically,
   rejects stale previews and provides grouped guarded undo (unit/type/build plus
   isolated migration, Edge Function, live-provider and rendered-browser Gate 1
-  verification plus representative-CSV Gate 2 quality validation are green); and
+  verification plus representative-CSV Gate 2 quality validation covered the original workflow).
+  The review now also shows account, amount and original description, supports status/search filters
+  and locally staged category choices, and can hand a transaction to the full Ledger editor. Opening
+  that editor excludes the row from the current preview; a saved editor change invalidates the whole
+  preview before further apply. Active tenant custom subcategories are validated by the Edge Function;
+  the existing atomic protection and guarded-undo boundary is unchanged. On 2026-10-17 the expanded
+  workflow passed 15 deterministic isolated-stack API checks and two browser interaction tests
+  (the browser previews are mocked), as well as the unit suite and production build; and
 - Vanguard managed-investment activity import, NAV valuation, performance/tax
   awareness and bank-to-investment cash-link review;
 - recurring commitment overlays with stop/resume, guarded undo, in-app reminder
@@ -60,6 +67,11 @@ capabilities are:
 - durable, account-scoped financial planning goals, scenarios, planned events,
   month-by-month explainability, completed-month plan review and auditable
   rebaselining.
+
+The application-wide `npx tsc --noEmit` check still reports two pre-existing errors: the
+`PlanningMetric`/`ProjectionMetric` mismatch in `StrategicProjections.tsx` and the
+`dashboard-insight` route-state comparison in `LedgerView.tsx`. The separate browser-test
+typecheck passes. These errors are not part of the categorisation-review change.
 
 The detailed architectural map is [INDEX.md](INDEX.md). The original decision and
 implementation diary is [CONTEXT.md](CONTEXT.md); it is useful background but is
@@ -226,8 +238,11 @@ than a single mandatory sequence.
    underlying mutation/undo behavior; selected data tiles use compact loading activity rather than
    bare loading paragraphs. A single signed-in persistent notice reads durable `sync_runs` records
    for provider work that continues safely across navigation, naming the affected account and only
-   displaying persisted page/transaction/change checkpoints. The next candidate is Phase 5
-   verification, visual review and concept-route disposition.
+   displaying persisted page/transaction/change checkpoints. Phase 5 verification is in progress:
+   status/provider/reduced-motion tests and a delayed no-write/retry Ledger browser regression are
+   implemented and typechecked, while execution of that browser test requires a separately
+   identified isolated Supabase target. The remaining closure tasks are that isolated run, the
+   owner-led authenticated visual review, and the concept-route disposition.
 
 ## First commands when resuming
 

@@ -62,6 +62,10 @@ export default function LedgerView() {
   const [bulkClassificationOpen, setBulkClassificationOpen] = useState(false)
   const [rulesOpen, setRulesOpen] = useState(false)
   const [categorizationReviewOpen, setCategorizationReviewOpen] = useState(false)
+  const [reviewSnapshot, setReviewSnapshot] = useState<Txn[]>([])
+  const [reviewScopeInfo, setReviewScopeInfo] = useState({ count: 0, truncated: false })
+  const [reviewEditorId, setReviewEditorId] = useState<string | null>(null)
+  const [reviewInvalidated, setReviewInvalidated] = useState(false)
   const [categorizationReviewScope, setCategorizationReviewScope] = useState<CategorizationReviewScope>('selected')
   const [incomeSourceScope, setIncomeSourceScope] = useState<IncomeSourceScope | null>(null)
 
@@ -112,14 +116,12 @@ export default function LedgerView() {
   const allSelectableMatchesSelected = isExactMatchingLedgerSelection(selectedIds, filtered)
   const unresolvedReview = useMemo(() => reviewScopeTransactions(transactions, 'unresolved'), [transactions])
   const eligibleReview = useMemo(() => reviewScopeTransactions(transactions, 'eligible'), [transactions])
-  const categorizationReviewTransactions = categorizationReviewScope === 'selected'
-    ? selectedTransactions
-    : categorizationReviewScope === 'unresolved'
-      ? unresolvedReview.selected
-      : eligibleReview.selected
-
   const openCategorizationReview = (scope: CategorizationReviewScope) => {
+    const review = scope === 'unresolved' ? unresolvedReview : scope === 'eligible' ? eligibleReview : null
     setCategorizationReviewScope(scope)
+    setReviewSnapshot(review ? [...review.selected] : [...selectedTransactions])
+    setReviewScopeInfo(review ? { count: review.candidates.length, truncated: review.truncated } : { count: selectedTransactions.length, truncated: false })
+    setReviewInvalidated(false)
     setCategorizationReviewOpen(true)
   }
 
@@ -277,7 +279,10 @@ export default function LedgerView() {
         )}
       </Tile>
 
-      <TransactionCategoryDrawer transaction={selected} onClose={() => setSelectedId(null)} onChanged={refreshData} />
+      <TransactionCategoryDrawer transaction={selected} onClose={() => { setSelectedId(null); setReviewEditorId(null) }} onChanged={async () => {
+        if (reviewEditorId) setReviewInvalidated(true)
+        await refreshData()
+      }} />
       {bulkOpen && <BulkCategoryDialog transactions={selectedTransactions} onClose={(clearSelection) => {
         setBulkOpen(false)
         if (clearSelection) setSelectedIds(new Set())
@@ -287,18 +292,16 @@ export default function LedgerView() {
         if (clearSelection) setSelectedIds(new Set())
       }} onChanged={refreshData} />}
       {categorizationReviewOpen && <CategorizationReviewDialog
-        transactions={categorizationReviewTransactions}
+        transactions={reviewSnapshot}
         scope={categorizationReviewScope}
-        scopeCandidateCount={categorizationReviewScope === 'unresolved'
-          ? unresolvedReview.candidates.length
-          : categorizationReviewScope === 'eligible'
-            ? eligibleReview.candidates.length
-            : selectedTransactions.length}
-        scopeTruncated={categorizationReviewScope === 'unresolved'
-          ? unresolvedReview.truncated
-          : categorizationReviewScope === 'eligible'
-            ? eligibleReview.truncated
-            : false}
+        scopeCandidateCount={reviewScopeInfo.count}
+        scopeTruncated={reviewScopeInfo.truncated}
+        suspended={reviewEditorId !== null}
+        invalidated={reviewInvalidated}
+        onOpenTransaction={(id) => {
+          if (!transactions.some((transaction) => transaction.id === id)) { setReviewInvalidated(true); return }
+          setReviewEditorId(id); setSelectedId(id)
+        }}
         onClose={(clearSelection) => {
         setCategorizationReviewOpen(false)
         if (clearSelection && categorizationReviewScope === 'selected') setSelectedIds(new Set())
