@@ -64,7 +64,7 @@ hand to find the transfer-linker gap.
 
 ## Recent changes
 
-- 2026-10-22 — Implemented and stabilized the M6 assisted-setup production foundation; 107 isolated checks across 91 migrations and focused unit/type/build checks pass, responsive/final M6 gates remain open.
+- 2026-10-22 — Closed M6 assisted setup: 472 isolated checks across 91 migrations and 516 unit tests passed; M7 release verification is next.
 
 - 2026-10-22 — Closed M5 with complete impact preparation and atomic Save/Undo; 451 full/145 focused isolated checks across 90 migrations and 511 unit tests passed, M6 assisted setup is next.
 

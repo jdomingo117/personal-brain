@@ -21,7 +21,7 @@ describe('budget assistance',()=>{
   it('uses real monthly dates and a bounded horizon for goal outcomes',()=>{
     const outcome=goalWhatIfOutcome(result,{amount_cents:10000,destination:'goal',goal_target_cents:30000,goal_needed_by:'2026-12-01'})
     expect(outcome?.estimate).toEqual({state:'estimated',contributionsNeeded:3,estimatedDate:'2026-12-01'})
-    expect(outcome?.deadline.state).toBe('estimated')
+    expect(outcome?.deadline?.state).toBe('estimated')
   })
   it('converts stale evidence to a manual estimate without losing goal or future allocation intent',()=>{
     vi.stubGlobal('crypto',{randomUUID:()=> '00000000-0000-4000-8000-000000000099'})

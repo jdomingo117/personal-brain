@@ -352,7 +352,11 @@ stack query/migration, flag enablement, hosted latency guarantee or M6/M7 closur
 Regression: **432 isolated SQL/Edge/browser checks across 89 migrations; 503 unit tests passed/14
 existing skips; focused Budget TypeScript/build passed**, responsive journeys and cleanup verified.
 
-**M6 assisted setup — production foundation implemented; responsive/final gates remain open, 22 October 2026:**
+**M6 assisted setup — engineering-complete, 22 October 2026:**
+[`BUDGET_M6_ASSISTED_SETUP.md`](BUDGET_M6_ASSISTED_SETUP.md) records the production implementation,
+acceptance traceability and M7 release handoff. The milestone closes deterministic suggestions,
+editable evidence provenance, one bounded what-if, explicit stale/manual conversion and final
+activation without an AI dependency or a new browser-write path.
 Migration `20261022170000_budget_assisted_setup.sql` (91) adds service-only deterministic assistance
 over canonical transaction/split semantics, explicit account-coverage ranges, monthly or
 anchor-aligned fortnightly complete periods, exact-cent medians, confirmed recurring identities,
@@ -368,8 +372,18 @@ one-change what-if and explicit `Use this draft` → save → activation boundar
 Zod and the service RPC remain read-only until normal activation. `test-budget-assistance.mjs`
 extends the positively identified disposable provisioner; focused evidence after Chunk 1 is **107
 isolated SQL/Edge checks across 91 migrations**, 5 focused unit tests, Budget TypeScript and
-production build. Authenticated phone/desktop expansion, full regression and formal M6 closeout are
-still required; no personal migration or feature enablement occurred.
+production build. Chunk 2 expands the authenticated harness to phone assistance focus/labels,
+390px overflow and dark rendering, insufficient-history/manual fallback, no-write preview,
+desktop save/reload, stale-evidence manual conversion and final goal activation. The complete
+workspace run passes **143 SQL/Edge/browser checks across 91 migrations** with no browser runtime
+errors and exact fixture/project cleanup. Chunk 3 completes the broad regression gate: **472
+durable-boundary SQL/Edge/browser checks across 91 migrations; 516 unit tests passed/14 skipped;
+focused Budget and browser TypeScript checks and the production build passed**, with no browser
+runtime errors and exact disposable-project cleanup. Repo-wide TypeScript still reports the known,
+unrelated `StrategicProjections` `net_worth`/`netWorth` metric mismatch, and Vite retains its existing
+large-chunk warning. M6 engineering closeout is complete; M7 retains independent human
+comprehension/accessibility, hosted performance, backup/restore/migration rehearsal and staged
+rollout. No personal migration or feature enablement occurred.
 
 [`BUDGET_SUGGESTIONS_PROPOSAL.md`](BUDGET_SUGGESTIONS_PROPOSAL.md) records the approved assisted
 setup: deterministic history-derived draft, explicit suggestion/data-quality gates and one optional

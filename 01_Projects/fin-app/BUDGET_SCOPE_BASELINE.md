@@ -111,6 +111,10 @@ No production schema, data or application code is changed by recording this appr
 
 The owner subsequently authorized M5 lifecycle/control and its closeout. M5 is engineering-complete;
 [[BUDGET_M5_LIFECYCLE_CONTROL]] and [[BUDGET_M5_IMPACT_PREPARATION]] record all closure gates,
-the final 451-check broad regression and 145-check focused run across 90 migrations. The frozen
-scope is unchanged. M6 assisted setup is the next planned implementation when requested; M7
-human/accessibility, hosted performance, backup/restore/migration rehearsal and rollout remain.
+the final 451-check broad regression and 145-check focused run across 90 migrations. The owner
+then authorized M6 assisted setup; [[BUDGET_M6_ASSISTED_SETUP]] records its deterministic
+covered-history suggestions, one bounded what-if, stale/manual conversion and explicit activation
+boundary, plus the final 472-check broad regression across 91 migrations. M0–M6 are engineering-
+complete and the frozen scope is unchanged. M7 human/accessibility, hosted performance,
+backup/restore/migration rehearsal and rollout remain. This is not a personal-stack migration or
+public-release authorization.

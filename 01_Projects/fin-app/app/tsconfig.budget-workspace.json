@@ -2,5 +2,5 @@
   "extends": "./tsconfig.json",
   "include": ["src/views/Budget.tsx", "src/contexts/BudgetContext.tsx", "src/lib/budgetWorkspace.ts", "src/lib/budgetWorkspace.test.ts", "src/lib/budgetItems.test.ts", "src/lib/budgetLifecycle.test.ts", "src/lib/budgetFrequency.test.ts", "src/lib/budgetAccountPolicy.test.ts", "src/lib/budgetRollover.test.ts", "src/env.d.ts"],
   "exclude": [],
-  "files": ["src/lib/budgetControls.test.ts", "src/lib/budgetAttention.test.ts"]
+  "files": ["src/lib/budgetControls.test.ts", "src/lib/budgetAttention.test.ts", "src/lib/budgetAssistance.test.ts"]
 }

@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect,useRef,useState} from 'react'
 import {Button,DateInput,Select} from './Controls'
 import {useBudget} from '../contexts/BudgetContext'
 import {fmtCents} from '../data'
@@ -7,10 +7,12 @@ import {blankSetup,moneyEntry,parseBudgetMoney,type Setup} from '../lib/budgetWo
 
 export default function BudgetAssistance({onUse,onManual,onClose}:{onUse:(setup:Setup)=>void;onManual:(setup:Setup)=>void;onClose:()=>void}){
   const b=useBudget(),s=b.snapshot!
+  const root=useRef<HTMLElement>(null)
   const base=blankSetup(),[frequency,setFrequency]=useState<Setup['frequency']>('monthly'),[start,setStart]=useState(base.start_date),[anchor,setAnchor]=useState(base.anchor??base.start_date)
   const [accounts,setAccounts]=useState<string[]>([]),[recent,setRecent]=useState(''),[scopeConfirmed,setScopeConfirmed]=useState(false)
   const [result,setResult]=useState<AssistanceResult|null>(null),[checking,setChecking]=useState(false),[error,setError]=useState(''),[reviewed,setReviewed]=useState(false)
   const [tryChange,setTryChange]=useState(false),[amount,setAmount]=useState('0.00'),[destination,setDestination]=useState<WhatIf['destination']>('unassigned'),[goalName,setGoalName]=useState(''),[goalTarget,setGoalTarget]=useState(''),[goalDate,setGoalDate]=useState('')
+  useEffect(()=>root.current?.focus(),[])
   const request={frequency,start_date:start,...(frequency==='fortnightly'?{anchor}:{}),account_ids:accounts}
   function reset(){setResult(null);setReviewed(false);setScopeConfirmed(false);setError('')}
   async function check(){
@@ -32,7 +34,7 @@ export default function BudgetAssistance({onUse,onManual,onClose}:{onUse:(setup:
   }
   const manual=()=>onManual({...blankSetup(),frequency,start_date:start,anchor,account_ids:accounts})
   const reasons=result?assistanceReasons(result):[]
-  return <section className="glass mt-4 p-5 space-y-5" aria-labelledby="assisted-setup-title" aria-busy={checking}>
+  return <section ref={root} tabIndex={-1} className="glass mt-4 p-5 space-y-5 outline-none" aria-labelledby="assisted-setup-title" aria-busy={checking}>
     <div><h2 id="assisted-setup-title" className="font-display text-xl font-bold">Help me build a budget</h2><p className="body-copy mt-2">Use complete account history as an editable starting point. Suggestions are evidence, not rules or predictions.</p></div>
     {!result&&<><div className="grid gap-4 md:grid-cols-2"><label className="grid gap-2"><span className="field-label">Budget rhythm</span><Select value={frequency} onChange={v=>{setFrequency(v as Setup['frequency']);reset()}}><option value="monthly">Monthly</option><option value="fortnightly">Every two weeks</option></Select></label>
       <label className="grid gap-2"><span className="field-label">Start with the period containing</span><DateInput value={start} onChange={v=>{setStart(v);reset()}}/></label>

@@ -6,7 +6,7 @@ tags:
   - projects/fin-app
   - budgeting
 type: implementation-plan
-status: m5-engineering-complete
+status: m6-engineering-complete
 project: Halcyon
 created: 2026-10-20
 updated: 2026-10-22
@@ -20,7 +20,16 @@ related:
 
 # Budget V1 — technical implementation plan
 
-**Plan 1.16 · 22 October 2026 · M0–M5 engineering-complete; M6 is next.**
+**Plan 1.17 · 22 October 2026 · M0–M6 engineering-complete; M7 release verification is next.**
+
+M6 closeout: [[BUDGET_M6_ASSISTED_SETUP]] records migration 91, deterministic covered-history
+suggestions, editable provenance, bounded one-change what-if, stale/manual conversion and the
+existing explicit activation boundary. **472 broad isolated SQL/Edge/browser checks across 91
+migrations**, **516 unit tests passed/14 existing skips**, focused Budget/browser TypeScript and
+production build passed. SG01–SG08 technical evidence is closed. SG09 independent beginner
+comprehension, human accessibility, hosted performance, backup/restore/migration rehearsal and
+staged rollout remain M7 release gates. No personal migration, feature enablement or rollout
+occurred.
 
 M5 closeout: [[BUDGET_M5_IMPACT_PREPARATION]] records migration 90, complete resumable before/after
 impact preparation, exact intent/input proofs and short atomic Save/Undo. Account, rollover,
@@ -34,8 +43,9 @@ checks across 90 migrations** (separate run totals), **511 unit tests passed/14 
 focused Budget TypeScript and production build passed. Phone/desktop captures were inspected,
 fixture cleanup passed and exact project resources were removed. The known unrelated full-app
 projection metric type mismatch/main-chunk warning remain. All current M5 engineering gates are
-closed; capacity and local benchmark qualifications are in the record. M6 assisted setup and
-M7 release verification remain open. No personal migration, feature enablement or rollout occurred.
+closed; capacity and local benchmark qualifications are in the record. At that M5 closeout, M6
+assisted setup and M7 release verification remained open; M6 is subsequently closed above. No
+personal migration, feature enablement or rollout occurred.
 
 Prior continuation: [[BUDGET_M5_HISTORY_PERFORMANCE]] adds exact-projection prefix reuse,
 lean aggregate activity, once-per-projection claim validation, claimed-key evidence resolution,
@@ -568,14 +578,13 @@ silently shipping a reduced feature. Final migration DDL is reviewed after these
 
 ## 15. Immediate next step
 
-M0–M5 engineering implementation and verification are recorded in the phase records. M5 closeout
-is complete in [[BUDGET_M5_IMPACT_PREPARATION]]; no M5 engineering item remains on this plan.
-The next planned implementation is **M6 — assisted setup**: production suggestions using the
-approved history/data-quality gates, editable provenance, one bounded what-if, manual conversion
-and explicit final activation. Start M6 when requested by the owner.
+M0–M6 engineering implementation and verification are recorded in the phase records. M5 closeout
+is complete in [[BUDGET_M5_IMPACT_PREPARATION]] and M6 closeout is complete in
+[[BUDGET_M6_ASSISTED_SETUP]]; no M0–M6 engineering item remains on this plan. The next milestone
+is **M7 — release verification**.
 
 Preserve the distinction between planned allocations, canonical activity and verified per-line/
 funding evidence. The concept remains presentation reference. M7 retains human comprehension and
 accessibility, broader hosted performance, backup/restore and persistent migration rehearsal, and
-staged rollout. Personal migrations require their own approval and backup/preflight. M5 engineering
+staged rollout. Personal migrations require their own approval and backup/preflight. M6 engineering
 completion does not enable Budget or authorise deployment.
