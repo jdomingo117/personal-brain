@@ -37,7 +37,346 @@ progress.
 
 ## Directory Map
 
+The agreed Budget feature baseline is documented in
+[`BUDGET_FEATURE_SPEC.md`](BUDGET_FEATURE_SPEC.md): research evidence, monthly hybrid budgeting,
+required page contents, explicit user controls, allocation/rollover/source reconciliation,
+history and acceptance criteria. The concept and M0–M3 implementation records below track staged
+delivery; Budget is not publicly released or personally migrated. A reconciled spendable-now estimate
+is explicitly a later scope.
+The UI/UX proposal in [`BUDGET_UI_UX_WIREFRAMES.md`](BUDGET_UI_UX_WIREFRAMES.md) compares
+Monthly workspace, Allocation board and Guided check-in, and recommends the workspace with
+contextual inspection, explicit allocation previews and guided setup/monthly review. These are
+wireframes and interaction proposals; the approved concept and phased implementation now follow them.
+The agreed plain-language guidance, assisted-input contract and V1 purchase-goal experience are in
+[`BUDGET_GUIDANCE_AND_GOALS.md`](BUDGET_GUIDANCE_AND_GOALS.md). New concepts must follow that
+copy/input contract; the first interactive wireframe's older labels are structural references only.
+Feature specification v1.5 includes monthly/fortnightly periods and safe frequency changes
+(section 3.1 / AC44–AC49), plus B10 **Save for something**, shared reserve accounting and
+purchase-goal acceptance criteria. It records **BG-L01 — Your progress** as accepted post-V1
+backlog (section 15.1). The concept exit and implementation-readiness checklist is in
+`BUDGET_CONCEPT_REVIEW.md`. The UI/UX document defines the concept review journeys; a
+fictional-data period-aware workspace concept is now implemented for owner review at
+`/budget-concept.html`; its walkthrough, validation and prototype boundaries are in
+[`BUDGET_CONCEPT_REVIEW.md`](BUDGET_CONCEPT_REVIEW.md). The authenticated manual route is implemented
+in M3, separately from this fictional concept and without public exposure.
+
+**Concept approval recorded 20 October 2026.** [`BUDGET_SCOPE_BASELINE.md`](BUDGET_SCOPE_BASELINE.md)
+freezes **BUDGET-V1-2026-10-20**; [`BUDGET_IMPLEMENTATION_PLAN.md`](BUDGET_IMPLEMENTATION_PLAN.md)
+defines the proposed schema/API contracts, M0–M7 delivery, data-readiness/migration gates and full
+AC01–AC49 / SG01–SG09 verification mapping. **M0 contract stage completed 20 October 2026**:
+[`BUDGET_M0_CONTRACTS.md`](BUDGET_M0_CONTRACTS.md) records source/currency/coverage/recurring
+contracts, the mutation inventory, tenant revision-gate/MVCC locking design, normalized schema/API
+review, money/calendar bounds, legacy preservation and explicit downstream verification gates.
+`app/scripts/prove-budget-contracts.mjs` uses a new networkless disposable PostgreSQL container for
+15 source/gate checks (1,008 canonical vectors and a complete 100k-row aggregate).
+`app/scripts/prove-budget-full-schema.mjs` uses its own uniquely labelled Supabase project on 56422
+to replay all 64 migrations and verify fictional source identities/triggers/aggregate/split/RLS
+fixtures, then removes only its test resources. Their fixtures are in `app/scripts/fixtures/` and
+are not migrations. **M1 calculation foundation completed 20 October 2026**:
+[`BUDGET_M1_FOUNDATION.md`](BUDGET_M1_FOUNDATION.md) documents `app/src/lib/budget/` and its
+byte-identical `supabase/functions/_shared/budget/` mirror: checked integer-cent money, injected
+clock, monthly/fortnightly/bridge and contribution schedules, allocation/Flex/carry arithmetic,
+reserves, separate contribution evidence and purchase-goal funding/timing. `foundation.test.ts`
+runs 61 shared golden/property tests plus exact mirror checks; the focused config is
+`app/tsconfig.budget-foundation.json`.
+
+**M2 durable boundary — 20 October 2026:**
+[`BUDGET_M2_DURABLE_BOUNDARY.md`](BUDGET_M2_DURABLE_BOUNDARY.md) records the three additive
+`20261020000000`/`20261020010000`/`20261020020000` migrations and their isolated verification.
+New tables: `budget_source_versions`, `budget_drafts`, `budget_draft_revisions`, `budget_plans`,
+`budget_periods`, `budget_revisions`, `budget_lines`, `budget_allocations`,
+`budget_account_memberships`, `account_activity_coverage`, `budget_operations`. They preserve
+the legacy `budgets` table. Source triggers instrument 17 underlying tables. Account live references
+use enforced ownership/audited invalidation rather than reverse-order source FK locks.
+`manage-budget` / `query-budget` use `_shared/withAuth.ts` and strict `_shared/budgetApi.ts` command
+schemas; SQL rechecks ownership, revisions, safe-cent totals and atomic/idempotent commits. Writes
+are owner-only and disabled unless `BUDGET_V1_ENABLED=true`; reads and receipt recovery survive
+write-disable. History and period boundaries are immutable; undo appends/archives.
+`app/scripts/test-budget-durable.mjs` (`npm run test:budget:durable`) provisions a uniquely labelled
+disposable stack on API 57421 / DB 57422, tests actual JWT-authenticated endpoints, SQL/RLS and
+concurrency, and removes only its fixtures/project. No personal-stack migration or live Budget
+route was installed during M2. M3 manual integration follows below; M4–M6 workflow-specific records remain later.
+Final M2 evidence: 94 isolated integration checks pass across all 67 migrations. One-time opening
+drawdown is current-period only; continuing templates do not repeatedly spend the same cash.
+These documents/proofs do not authorize a personal migration or assert release readiness.
+
+**M3 manual workspace — 21 October 2026:**
+[`BUDGET_M3_MANUAL_WORKSPACE.md`](BUDGET_M3_MANUAL_WORKSPACE.md) records the authenticated
+`app/src/views/Budget.tsx` and `budget.css`, `contexts/BudgetContext.tsx`, and contained
+`lib/budgetWorkspace.ts` adapter/entry helpers with unit tests and focused
+`tsconfig.budget-workspace.json`. The private rail places Budget after Expenses when
+`VITE_BUDGET_V1_ENABLED=true`; direct authenticated reads/recovery remain available with navigation
+hidden. Client and server write exposure default off. Manual setup supports no bank, zero income,
+monthly/anchored fortnightly periods, explicit AUD activity scope, separate save/review/activation,
+overall canonical actuals, My plan and current-only/current-and-future amount edits. A scoped tab
+checkpoint and durable receipt lookup recover interrupted saves without inventing another request.
+No per-line spending, verified goal progress or safe-to-spend figures are fabricated.
+`query-budget` adds a strict `workspace` read for real account currencies/names and membership
+intervals through RLS, with explicit account/history caps. It introduces no new migration/table.
+`app/scripts/test-budget-workspace.mjs` is run only through the guarded disposable M2 provisioner:
+`npm run test:budget:workspace`; its own non-reused Vite port is 57300, proxying only the verified
+test API. The concept and personal database remain unchanged. M4 bills/reserves/goals is next.
+Final M3 validation: 109 combined isolated checks across all 67 migrations, 447 unit tests passed
+(14 existing skips), focused workspace TypeScript/build passed. The known full-app metric type
+error remains; M7 human, performance and rollout gates are not claimed complete.
+
+**M4 bills/reserves/goals — engineering-complete, 21 October 2026:**
+[`BUDGET_M4_BILLS_RESERVES_GOALS.md`](BUDGET_M4_BILLS_RESERVES_GOALS.md) records implementation,
+closure evidence and acceptance traceability. Migrations `20261021000000`, `20261021010000`,
+`20261021020000` add six append-only tables: `budget_item_revisions`, `budget_manual_funding`,
+`budget_source_claims`, `budget_claim_reversals`, `budget_limit_revisions`, `budget_reserve_moves`.
+`20261021030000_budget_investment_evidence.sql` extends `budget_funding_sources` (retaining the
+bank adapter as `budget_funding_sources_bank`) for confirmed exact-value bank/investment purchase
+proof and shared debit capacity. Investment activities/instruments now invalidate sources (19 tables).
+`20261021040000_budget_recurring_evidence.sql` adds service-only `budget_recurring_evidence`:
+complete historical parent counts and explicit bounded/manual fallback, guarded by source/plan versions.
+`20261021050000_budget_item_presentation.sql` extends the owner/receipt command boundary for stable
+recurring context and one optional featured goal; metadata edits preserve period-only additions.
+`app/src/lib/recurringSignal.ts` is the pure shared Expenses/server detector; byte-identical server
+mirrors include `recurringSignal.ts`, `cadence.ts`, `stats.ts`. Edge `budgetRecurring.ts` applies the
+normal/Annual-only evidence passes and excluded early signals. `query-budget` appends that evidence
+to the consistent workspace, with explicit manual fallback on bounded detector timeout.
+`BudgetItems.tsx` adds reviewed bill proposals, goals, evidence/matches, movements, category scopes,
+feature control and compatible undo. `budgetItems.ts` supplies typed calendar/timing contracts.
+`test-budget-items.mjs` and `test-budget-m4-interactions.mjs` run through the guarded disposable
+provisioner/workspace runner: `npm run test:budget:items`. Final: **187 isolated SQL/Edge/browser
+checks**, all **73 migrations**, **470 unit tests passed/14 existing skips**, focused TypeScript/build
+passed. Desktop light/phone dark captures inspected. No personal migration/exposure; M5 is next once
+authorized, while human/performance/backup/rollout gates remain M7.
+
+**M5 lifecycle/control — first slice implemented, phase in progress:**
+[`BUDGET_M5_LIFECYCLE_CONTROL.md`](BUDGET_M5_LIFECYCLE_CONTROL.md) records explicit saved-period
+navigation/opening, immutable completed-period reviews, signed everyday carry into Other, changed
+review evidence and guarded compensation. Additive `20261022000000_budget_period_reviews.sql`
+introduces protected append-only `budget_period_reviews`, service-only `budget_lifecycle` and
+current-period/carry-qualified `budget_query`/`budget_details` wrappers. The retained functions are
+`budget_query_m4` and `budget_details_m4`. `20261022010000_budget_lifecycle_commands.sql` adds
+`save_review`, `reopen_review`, `open_next_period` and review undo around `budget_command_m4`, plus
+period-effective everyday reserve release and negative-carry movement checks. Total migrations: 75.
+`BudgetLifecycle.tsx` supplies the responsive period/review/next-budget controls; `budgetLifecycle.ts`
+supplies typed exact-date/template previews. `BudgetContext` preserves URL period selection and the
+existing unknown-outcome recovery. `test-budget-lifecycle.mjs` and `test-budget-m5-interactions.mjs`
+run only through `npm run test:budget:lifecycle`'s guarded disposable provisioner. **223 isolated
+checks across 75 migrations, 475 unit tests passed/14 existing skips, focused TypeScript/build passed**;
+phone dark/desktop light captures inspected and disposable cleanup verified.
+
+**M5 continuation — guided frequency controls:** migration
+`20261022020000_budget_frequency_changes.sql` (76 repository migrations) adds protected append-only
+`budget_frequency_changes` event history, `schedule_frequency` / `cancel_frequency` /
+`apply_frequency` and guarded compensation. Retained wrappers are `budget_command_lifecycle` and
+`budget_details_lifecycle`. Commands serialize one logical pending intent, keep separate reviewed
+first/bridge and continuing templates, preserve explicit category amounts subject to each pool's
+capacity, and apply exact future boundaries without rewriting old plans, claims or reserves.
+Stale intent requires fresh review; applied periods have no delete undo. Earlier financial mutations
+are now rejected server-side once a later period exists. `BudgetFrequency.tsx` is the responsive
+guided form/pending inspector inside lifecycle; `budgetFrequency.ts` / `.test.ts` supply bounded
+plan/date/schedule previews. `test-budget-frequency.mjs` extends the isolated lifecycle suite;
+`test-budget-m5-interactions.mjs` includes actual phone save/reload/cancel/undo, blank/gap validation
+and unsaved-navigation protection. Final continuation: **253 isolated SQL/Edge/browser checks across
+76 migrations; 482 unit tests passed/14 existing skips; focused Budget TypeScript/build passed**;
+390px/1440px form captures inspected and isolated cleanup verified. The existing unrelated full-app
+metric mismatch and chunk warning remain. See the M5 record for detailed verification limits.
+
+**M5 account-scope policy continuation:**
+[`BUDGET_M5_ACCOUNT_POLICIES.md`](BUDGET_M5_ACCOUNT_POLICIES.md) records the implemented account
+portion of effective policy work. Migration `20261022030000_budget_account_policies.sql` is migration
+77: protected append-only `budget_account_policies`, non-overlapping dated membership projection,
+service-only `budget_replace_account_scope`, `budget_scope_facts`, `budget_scope_impact`,
+`budget_preview_account_scope`, and `set_account_scope` / compensation around
+`budget_command_frequency`. `budget_details_frequency` is retained behind the policy summary.
+Preview evaluates all saved periods plus one provisional next window in rollback-only
+subtransactions, then binds complete effects/intent/versions to a hash that Save recomputes.
+Source/role/date changes cannot reuse a stale effect preview. Current-only edits restore prior
+future choices; future-only edits preserve current dates. Pending frequency intent requires explicit
+cancellation/review rather than hidden rebase. No source row lock/FK or browser write bypass.
+`BudgetAccountPolicy.tsx` supplies the responsive role/date/effect controls inside lifecycle;
+`budgetAccountPolicy.ts` / `.test.ts` supply types, boundary resolution and version/qualification
+checks. `BudgetContext` sends only validated Edge preview/commands. Isolated SQL/browser coverage is
+in `test-budget-account-policies.mjs` and `test-budget-account-policy-interactions.mjs`, run by the
+guarded lifecycle harness. Final: **284 isolated SQL/Edge/browser checks across 77 migrations;
+486 unit tests passed/14 existing skips; focused Budget TypeScript/build passed**, 390px/1440px
+captures inspected and isolated cleanup verified. Detailed limits remain in the account-policy record.
+
+**M5 category/Other continuation — implemented; wider M5 gates open:**
+[`BUDGET_M5_CATEGORY_ROLLOVER.md`](BUDGET_M5_CATEGORY_ROLLOVER.md) records the user contract.
+Migration `20261022040000_budget_category_rollover.sql` (78) adds append-only
+`budget_rollover_policies`, complete dated timelines and service-only `budget_rollover_at`,
+`budget_partition_chain`, `budget_preview_rollover`, limit installation and command/detail wrappers.
+Existing M4 residual details, ordinary period opening and frequency adapters resolve the same
+dated partition. Signed source balances route once to a category/Other, protected money or recorded
+released variance. Protected money is excluded from the spendable everyday pool; shortfalls are
+never labelled savings. Stable identities remain routable after category removal. Complete preview
+hashes, explicit impact/history acceptance, atomic receipts and compatible compensation apply.
+`BudgetRollover.tsx` supplies responsive inline controls inside lifecycle; `budgetRollover.ts` and
+`.test.ts` supply bounded intent/version helpers. Edge `preview_rollover`/`set_rollover` use strict
+Zod/withAuth. `test-budget-rollover.mjs` and `test-budget-rollover-interactions.mjs` extend the guarded
+disposable lifecycle runner. The old current-only limit editor cannot bypass a saved rollover policy;
+reviews record results without a second pool carry choice. Parent controls apply prospective rules
+to active categories/Other while preserving removed identities' dispositions. Server-owned labels
+keep removed categories recognisable after later periods open. Final: **322 isolated checks across
+78 migrations; 490 unit tests passed/14 existing skips; focused Budget TypeScript/build passed**,
+390px/1440px captures inspected and disposable cleanup verified. Existing unrelated full-app
+projection type mismatch/main-chunk warning remain.
+
+**M5 budget/line lifecycle continuation — implemented; wider M5 gates open:**
+[[BUDGET_M5_BUDGET_LINE_CONTROLS]] records pause/resume and archive/disposition contracts.
+Migration `20261022050000_budget_lifecycle_controls.sql` (79) adds immutable tenant-scoped
+`budget_control_events` and signed `budget_control_moves`, service-only operational/gap/delta
+helpers, rollback-only `budget_preview_control` and command/detail/revision adapters. Operational
+pause leaves the active plan readable while blocking period/frequency generation. Resume previews
+uncovered exact date windows and known activity with explicit carry acceptance; it creates no periods.
+Archive retains current history/allocations, zeroes only that line's future refill and explicitly
+keeps/releases/transfers signed reserve rights. Everyday movements enter later carry once; native
+reserve releases use adjusted rights. Voided/archived destinations and archived refill are rejected.
+`BudgetControls.tsx` supplies inline responsive controls inside `BudgetLifecycle`; `budgetControls.ts`
+and its tests bind intent and opaque versions. Existing item/frequency/plan controls expose archived
+and paused states. Strict Edge `preview_control`/`set_control`, full-chain fresh hashes, atomic
+idempotent receipts and compatible append-only Undo apply. `test-budget-controls.mjs` and
+`test-budget-control-interactions.mjs` extend the guarded lifecycle provisioner. Final: **360 isolated
+SQL/Edge/browser checks across 79 migrations; 493 unit tests passed/14 skips; focused Budget
+TypeScript/build passed**, captures inspected and isolated cleanup verified. The known unrelated
+full-app projection metric mismatch/chunk warning remain.
+
+**M5 attention continuation — implemented; wider M5 gates open, 22 October 2026:**
+[[BUDGET_M5_ATTENTION_CONTROLS]] records the counted queue, explicit review/snooze/show-again and
+materiality/evidence contracts. Migration `20261022060000_budget_attention_controls.sql` (80)
+adds immutable `budget_attention_events` with tenant/member RLS, service-only helpers, separate
+attention versions and deferred operation references. `budget_attention_facts` derives complete SQL
+checks and compares saved semantic baselines; private source maps are not exposed in workspace JSON.
+`budget_workspace_details` composes attention after gated financial details without contaminating
+financial review/preview payloads. Strict Edge `set_attention` guards source/financial/attention
+versions, exact issue hash and bounded local dates. Atomic receipts and compatible append-only Undo
+do not edit financial versions, allocations or saved frequency intent. Public `budget_command_controls`
+retains the prior lifecycle boundary. Existing source/plan gates and browser-write prohibitions remain.
+`BudgetAttention.tsx` provides responsive priority/all-check views, persistent signed-gap summaries,
+review/date/acceptance controls, stale-choice recovery, inspection links, dirty navigation and focus.
+`budgetAttention.ts` / `.test.ts` supply typed tokens, date bounds and plain-copy rules; BudgetContext
+distinguishes preference outcomes from financial saves. `test-budget-attention.mjs` and
+`test-budget-attention-interactions.mjs` extend the guarded provisioner/workspace harness. The
+optional `--attention-only --workspace` mode still provisions a fresh protected target and tears it
+down by exact label. Verification: **388 full isolated checks across 80 migrations; 40 focused
+follow-up checks; 496 unit tests passed/14 skips; focused Budget TypeScript/build passed**, captures
+and scoped cleanup verified. Existing unrelated full-app metric mismatch/chunk warning remain.
+
+**M5 temporal integration continuation — 22 October 2026:** [[BUDGET_M5_TEMPORAL_INTEGRATION]]
+adds combined monthly→fortnightly and fortnightly→monthly bridge/full chains with prospective
+account scope, signed category/Other carry, independent goal cadence and explicit period overrides,
+cross-period purchase/refund/source corrections, retained review facts and goal pause/Undo.
+`test-budget-temporal.mjs` returns captured fixture identities for authenticated 1440px/390px
+selection/reload journeys in `test-budget-temporal-interactions.mjs`. The lifecycle runner includes
+both; optional `--temporal-only --workspace` retains new-target provisioning/guards/scoped cleanup.
+Migration `20261022070000_budget_saved_period_navigation.sql` (81) wraps the authorized lifecycle
+calculation as `budget_lifecycle_before_navigation` and returns all same-tenant/plan saved-period
+metadata. Historical calculations previously omitted later dropdown options after reload; selected
+facts and immutable reviews are unchanged. Helpers remain service-only with grant assertions.
+Verification: **432 full isolated checks across 81 migrations; 44 focused temporal checks;
+496 unit tests passed/14 skips; focused Budget TypeScript/build passed**, responsive captures and
+exact-project cleanup verified. Existing unrelated full-app metric mismatch/chunk warning remain.
+At that checkpoint realistic carry-chain performance/resumption remained an M5 gate.
+General budget pause/resume, line archive and attention controls are implemented. Forecast/payday/
+detector-dependent queue reasons require their real production inputs/adapters; they are not invented.
+No personal migration or flag enablement; do not advance to M6 on the strength of this slice alone.
+
+**Prior M5 long-history continuation — workspace resumption implemented; impact-scale gate open, 22 October 2026:**
+[[BUDGET_M5_HISTORY_PERFORMANCE]] records measured complete-history reads, exact version-bound
+resumption and fresh-projection impact reuse. Migration `20261022080000_budget_history_preparation.sql`
+(82) adds private/rebuildable `budget_history_facts` with tenant/period/actor references, RLS and no
+browser grants; `budget_history_status` and `budget_prepare_history` expose counts and bounded
+complete-period batches through strict authenticated `query-budget` `prepare_history`. Source,
+plan, actor role, method and expiry guard every hit. Cached base wrappers retain `*_uncached`
+kernels; live Undo/Planning names and current attention are not checkpoint authority. Long workspace
+responses carry count-only preparation until the entire prefix is ready. BudgetContext bounds
+continuation calls, preserves verified figures with a stale warning and disables edits; the page
+reuses OperationProgress and one plain-language continuation action.
+Migration `20261022090000_budget_scope_fact_reuse.sql` (83) freshly derives saved base facts for each
+exact impact projection, then reuses them in `budget_scope_impact_before_history`. Hypothetical
+checkpoints roll back with the hypothetical projection; financial preview/save remains atomic.
+`test-budget-performance.mjs`, `test-budget-history.mjs`, `test-budget-history-interactions.mjs`
+and `budgetHistory.test.ts` cover timing/plans, equivalence, invalidation, failure/expiry and real
+responsive interruption/reload. `--performance-only --stress --workspace` retains the guarded
+fresh-project provisioner; it cannot target the personal stack. Verification: **432 full isolated
+checks across 83 migrations; 55 focused workload/recovery checks; 503 unit tests passed/14 skips;
+focused Budget TypeScript/build passed**, responsive captures and exact-project cleanup verified.
+Measured prepared API reads: 133 ms / 265 ms for 60/120 periods. The ten-year financial scope
+preview still times out at 8 seconds; complete impact/atomic commit scale remains the next M5 gate.
+Benchmark timing/outlier qualifications are in the record. No hosted guarantee or M5/M6/M7 closure.
+
+**M5 complete impact preparation — engineering-complete, 22 October 2026:**
+[[BUDGET_M5_IMPACT_PREPARATION]] records migration 90,
+`20261022160000_budget_impact_preparation.sql`. Private `budget_impact_preparations` has RLS,
+no browser grants and at most one intent slot per plan/actor/change kind. `budget_begin_impact`
+and `budget_review_impact` prepare complete before/after projections in separate requests, then
+return the authoritative review. `budget_impact_proof` binds stable financial inputs while
+excluding incidental hypothetical IDs. Existing preview helpers retain validation; the command
+wrapper proves the actual applied state before atomic audit/receipt completion and preserves
+same-key recovery and guarded Undo. Archive pre-validation can reuse the existing guarded saved
+base facts; hypothetical scope calculations still rebuild independently. Source/plan/owner/role/
+method/local-date/expiry checks, service-only grants and migration assertions protect every hit.
+Strict Zod `query-budget` preview actions call the service helper; the browser never calls SQL.
+`app/src/lib/budgetImpact.ts` / `.test.ts` bound continuation to three identical requests,
+reject stale/malformed responses and never submit a financial command. `BudgetContext` and
+`Budget.tsx` reuse shared progress UI with counts and an explicit no-change-saved explanation.
+`scripts/budget-test-impact.mjs`, `test-budget-impact-preparation.mjs`, the existing account/
+rollover/control suites and history/stress/browser harnesses cover authority, rollback, raw parity,
+strict mixed save/Undo and responsive interruption/reload. Final verification: **451 broad isolated
+SQL/Edge/browser checks and 145 focused workload/recovery checks across 90 migrations**, separate
+run totals; **511 unit tests passed/14 existing skips**, focused Budget TypeScript/build passed.
+Captures, fixture cleanup and exact project resource removal were verified. M5 engineering gates
+are closed; M6 assisted setup and M7 release verification remain. See the record for measured
+capacity, benchmark qualifications and the known unrelated full-app type/chunk findings.
+
+**Prior M5 impact-scale continuation — dense commits implemented; mixed commit gate open, 22 October 2026:**
+[[BUDGET_M5_HISTORY_PERFORMANCE]] records migrations 84–89:
+`20261022100000_budget_chain_prefix_reuse.sql` adds exact-invocation pool/partition prefix state
+to private `budget_history_facts`, retaining full `*_reference` kernels;
+`20261022110000_budget_aggregate_activity.sql` adds source-equivalent `budget_activity_amounts`
+and retains `budget_details_m4_evidence_reference`;
+`20261022120000_budget_projection_claims.sql` adds bounded, private/RLS/no-browser-grants
+`budget_projection_claims` and a guarded once-per-projection `budget_live_claims` wrapper;
+`20261022130000_budget_account_validation_once.sql` removes only the duplicate outer validation
+after account save/Undo has already validated the actual new version and complete next partition;
+`20261022140000_budget_claimed_evidence.sql` narrows fingerprint resolution to live claimed
+transaction/split keys, retaining `budget_live_claims_full_source_reference`;
+`20261022150000_budget_grouped_claim_usage.sql` groups exact source/line claim usage and cumulative
+allocations instead of repeated correlated scans. All new helpers are service-only with migration
+assertions. Before/after/actual contexts are fresh, independently guarded and restored; hypothetical
+derived writes roll back. No source-row lock/FK, client total authority or split financial commit.
+`test-budget-history.mjs` now strictly requires dense five-/ten-year full preview/save/replay/Undo.
+`test-budget-impact-scale.mjs`, invoked by `--performance-only --stress`, adds three accounts,
+twelve lines, 240 split children and 240 linked claims, full resolver/raw-fact equivalence and real
+authenticated preview/recovery assertions. The dense ten-year gate passes; the mixed complete
+preview is correct but its accepted save still times out. **The strict mixed gate remains red and
+M5 remains open** for durable/version-bound impact preparation plus short atomic acceptance/commit.
+Detailed verification and measured-environment limitations are in the phase record. No personal
+stack query/migration, flag enablement, hosted latency guarantee or M6/M7 closure.
+Regression: **432 isolated SQL/Edge/browser checks across 89 migrations; 503 unit tests passed/14
+existing skips; focused Budget TypeScript/build passed**, responsive journeys and cleanup verified.
+
+[`BUDGET_SUGGESTIONS_PROPOSAL.md`](BUDGET_SUGGESTIONS_PROPOSAL.md) records the approved assisted
+setup: deterministic history-derived draft, explicit suggestion/data-quality gates and one optional
+what-if. Implemented in the fictional concept; production assisted-setup/scenario integration remains M6.
+
 ### `app/` (Frontend)
+- `budget-concept.html` / `src/budget-concept-main.tsx` / `src/concept/budget/` — Standalone,
+  fictional-data Budget design review. Includes guided setup with local draft resume, monthly/fortnightly
+  workspace, purchase goals with amount/date planning and impact previews, category reallocation,
+  guarded input, latest-operation undo, goal adjustment/pause, existing savings and purchase
+  simulation, scoped current/future plan changes, dated bills/goals, guided frequency switches with
+  bridge/shortfall review and saved future previews, and completed-review/incomplete-data states.
+  `Comprehension.tsx` adds the optional guide, setup-ready screen, evidence-separated goal tracks
+  and explicit carry-forward review preview; section 4.3 of the spec records the plain-language contract.
+  `suggestions.ts` / `suggestions.test.ts` provide fixture aggregation, gates, exact medians,
+  fingerprints and bounded what-if math; `SuggestionFlow.tsx` implements the inline assisted path.
+  Native modal tasks and responsive layout support light/dark desktop/phone review. Dedicated
+  concept storage never mounts app providers or calls Supabase. `model.test.ts` covers money/date
+  invariants; `frequency.ts` / `frequency.test.ts` cover local-date periods, dated occurrences and
+  transitions, with `FrequencyFlow.tsx` providing their setup/change previews. `e2e/budget-concept.spec.ts`, `playwright.budget-concept.config.ts` and
+  `tsconfig.budget-concept.json` verify the standalone surface without auth/database fixtures.
+- `ledger-review-concept.html` / `src/concept/LedgerWorkspaceConcept.tsx` - Standalone,
+  development-only Ledger action-design comparison at `/ledger-review-concept.html`. It uses
+  fictional data and local component state, without application providers, engine requests or
+  transaction writes. It compares the approved quiet toolbar with a review strip and sidebar,
+  including attention, session, phone-width and theme states plus simulated batch review.
 - `playwright.golden.config.ts` / `e2e/golden-pass.spec.ts` / `scripts/run-golden-pass.mjs` - Self-contained isolated release harness. `npm run test:golden` copies Supabase into a temporary directory, assigns a unique project ID and non-personal ports, migrates from zero, serves the real Edge Functions, and starts the app on a dedicated non-reused browser port through a same-origin isolated proxy. The rendered test creates Macquarie transaction/savings accounts, uploads the current 565+234 row CSV corpus, waits for live categorisation, resolves the 202-review-plus-one-auto result across the enforced 200-item mutation boundary, previews a fresh categorisation review, and checks exact row/batch/balance invariants. Direct API cases cover source/server caps, custom taxonomy isolation, sequential partial overlap plus reconciliation replacement, rollback, connected cutover, saved-profile upsert persistence and denied direct browser transaction writes. `npm run test:gate2` uses the identical generated-stack lifecycle for the six-file quality corpus and retains only an aggregate report outside the repository. Shutdown waits for the function server, then removes only containers carrying that run's exact Compose project label; fail-closed guards reject the personal `54321` project.
 - `playwright.config.ts` / `e2e/ledger-bulk.spec.ts` - Real Chromium regression harness for the Ledger repair sequence. The runner uses one serial, schema-complete 512-row tenant fixture (507 cap rows plus mixed category, mixed attribute and protected reconciliation cases), authenticates through the real UI, exercises mutations through the app/Edge Functions, retains traces/screenshots only on failure, and deletes its tenant/auth user after success or partial fixture construction failure. Coverage includes mixed leave-unchanged semantics, explicit impact/change gating, cross-page selection and global clearing, exact 500-row apply/undo with seven disabled overflow rows, safe kind/attribute impact/apply/undo/protection, and focus wrapping/restoration across every Ledger dialog.
 - `src/`
@@ -56,6 +395,10 @@ progress.
     - `ConnectBankModal.tsx` - Up Bank connect flow: token → map every returned Up account at once → one shared chunked backfill → success. Each account gets its own new/existing-account choice and a "History to import" preset (All history / 12mo / 90d / 30d / custom for a new account, defaulting to All history via the account's real `created_at`; "No overlap"/recommended plus the same presets for an existing account). Backfill displays saved `pages_fetched`/`rows_inserted` checkpoints as counts, never a percentage with unknown total pages. Calling `refreshData()` mid-flow would unmount this modal (see `contexts/DataContext.tsx` note below), so it's deferred to the modal's own close.
     - `EditAccountModal.tsx` - Identifiers + danger zone, plus (when the account is connected) a bank-connection card: status chip, last-synced, "Sync now", "Extend history" (calls `extend-provider-history` then re-runs the same backfill loop as `ConnectBankModal`), checkpoint counts while that loop runs, "Disconnect" (`keep_transactions` choice, default keep), collapsible recent `sync_runs` history.
     - `Controls.tsx` - Reusable UI components (Buttons, Inputs).
+    - `CategorizationReviewActions.tsx` - Compact category-review toolbar and focused setup dialog.
+      Presents unclassified/existing-category scope choices, bounded batch selection, empty states,
+      contextual filter/selection copy, session continuation/reset and help. Candidate snapshots
+      and mutations remain owned by the Ledger and existing preview dialog.
     - `OperationStatus.tsx` - Shared truthful asynchronous-feedback primitives: compact inline
       activity, foreground status panels, named stages, native-progress-backed countable work and
       persistent notices for genuinely background-safe operations. They present state only; a
@@ -110,7 +453,7 @@ progress.
   - `decide-investment-cash-link/` - Validated/audited confirm or reject boundary for one cross-ledger funding match; the service-only RPC records content identity so the verdict survives source deletion and re-import.
   - `categorize-merchants/` - The **CSV** categorisation path: resolves merchants for rows the caller has staged but not yet committed, and returns the answers for the caller to apply. Thin wrapper over `_shared/categorize.ts`.
   - `categorize-pending/` - The **provider** categorisation path: sweeps rows already in the ledger that have never been through the tiers (`category_source IS NULL`), resolves their merchants, and writes categories back via the `apply_merchant_categories` RPC. Exists because `sync-provider` deliberately never calls Gemini (Law 5) and `upCategoryMap` only covers what Up's own category ids label — everything else arrived Uncategorized with nothing to pick it up. Chunked at PostgREST's `max_rows` (1000) with the same `done`/`progress` contract as `sync-provider`; the client loops via `app/src/lib/categorizePending.ts`, called after every sync.
-  - `review-categorization/` - Preview/apply boundary for an intentional Ledger selection of up to 500 transactions. Preview RLS-proves the rows, protects manual/user-rule/bank/system decisions, bypasses non-user cache for a fresh AI opinion and never writes suggestions or cache entries. Apply validates fixed pairs and active, tenant-scoped custom subcategories, rejects reserved reconciliation, and calls a service-only heterogeneous RPC that rechecks protections and the exact previewed before-state, records one category-history operation, marks accepted rows Manual and remains compatible with the existing guarded operation undo. The dialog shows account/amount/description, offers status and text filters, and stages individual category choices without writing. Opening a transaction in its full editor excludes it from that preview; any resulting edit invalidates the batch while retaining the displayed choices until the user starts a fresh review.
+  - `review-categorization/` - Preview/apply boundary for an intentional Ledger selection of up to 500 transactions. Preview RLS-proves the rows, protects manual/user-rule/bank/system decisions, bypasses non-user cache for a fresh AI opinion and never writes suggestions or cache entries. Apply validates fixed pairs and active, tenant-scoped custom subcategories, rejects reserved reconciliation, and calls a service-only heterogeneous RPC that rechecks protections and the exact previewed before-state, records one category-history operation, marks accepted rows Manual and remains compatible with the existing guarded operation undo. The dialog shows account/amount/description, defaults to suggested changes with an explicit zero-suggestions state, offers status and text filters, and stages individual category choices without writing. Opening a transaction in its full editor excludes it from that preview; any resulting edit invalidates the batch while retaining the displayed choices until the user starts a fresh review.
   - `_shared/categorize.ts` - The tier resolution core both paths share (user rule → cache → Gemini, batched ~50/call, enum-constrained, cached back as `source='ai'`). Shared so the same merchant can never categorise differently depending on whether it arrived by CSV or API. Guards the reserved `Transfer > Reconciliation` subcategory against AI assignment — `transfer_candidates` excludes it by name, so an AI-assigned Reconciliation would silently drop a real transaction out of transfer matching.
   - `apply-merchant-rule/` - Validates canonical merchant identity and taxonomy, returns an exact read-only historical impact preview, then atomically records a permanent `source='user'` rule and back-fills matching rows with scoped history.
   - `update-transaction-category/` - Validated single/selected category boundary plus guarded undo. It proves every target through the caller's RLS client, rejects invented pairs and protected reconciliation anchors, then invokes service-only atomic RPCs. The RLS visibility proof reads UUIDs in bounded parallel chunks so the documented 500-row maximum cannot exceed PostgREST URL limits. Selected changes use explicit per-field update flags so omitted category/subcategory values are preserved; category changes require a deliberate subcategory choice. Changes share an operation id and undo together; every action is audit logged.
@@ -215,7 +558,7 @@ announced through status/alert semantics.
 
 `npm run test:golden` / `npm run test:gate2` (disposable Supabase, in `app/`) - The release-confidence and six-file categorisation-quality paths described above. Each owns a generated database lifecycle and must remain isolated; no personal-stack credentials are accepted. Both call the external categorisation provider and therefore require approval before sample merchant/description data is sent.
 
-`npm run test:browser` (Playwright, in `app/`) - Ledger browser regressions require explicit credentials and a positively identified disposable Supabase target, never the personal local stack; see [SYSTEM_INTEGRITY.md](SYSTEM_INTEGRITY.md). Run `npm run test:browser:install` once per machine. The fixture uses its service role only for scoped setup/teardown, while interactions sign in through the rendered app; individual tests may mock a preview/apply response where noted. `npm run test:browser:typecheck` checks the Playwright config and suite separately from the Vitest source tree. The dedicated `--review` disposable runner above exercises the two new review handoff tests without an AI-provider call.
+`npm run test:browser` (Playwright, in `app/`) - Ledger browser regressions require explicit credentials and a positively identified disposable Supabase target, never the personal local stack; see [SYSTEM_INTEGRITY.md](SYSTEM_INTEGRITY.md). Run `npm run test:browser:install` once per machine. The fixture uses its service role only for scoped setup/teardown, while interactions sign in through the rendered app; individual tests may mock a preview/apply response where noted. `npm run test:browser:typecheck` checks the Playwright config and suite separately from the Vitest source tree. The dedicated `--review` disposable runner above exercises review filtering and handoff tests without an AI-provider call.
 
 `app/scripts/` integration harnesses — use a separately identified isolated stack and credentials,
 with the target guards in [SYSTEM_INTEGRITY.md](SYSTEM_INTEGRITY.md) enabled:

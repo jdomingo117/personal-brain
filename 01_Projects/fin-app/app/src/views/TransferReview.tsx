@@ -2,7 +2,7 @@ import { Screen, ViewHeader, Grid } from '../components/Screen'
 import Tile from '../components/Tile'
 import OskoLinker from '../components/OskoLinker'
 import { Button } from '../components/Controls'
-import { useView } from '../router'
+import { useView, navNumber } from '../router'
 
 /** Dedicated decision inbox for bank-to-bank and bank-to-investment movements.
  * Statement import deliberately lives elsewhere: this page can be revisited
@@ -14,7 +14,7 @@ export default function TransferReview() {
     <Screen>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <ViewHeader
-          index="06 — Reconciliation"
+          index={`${navNumber('transfers')} — Reconciliation`}
           title="Transfer review"
           sub="Resolve movements between accounts without distorting income or spending"
         />

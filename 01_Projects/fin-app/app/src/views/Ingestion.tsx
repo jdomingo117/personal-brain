@@ -4,7 +4,7 @@ import Tile from '../components/Tile'
 import CSVUploader from '../components/CSVUploader'
 import InvestmentCSVUploader from '../components/InvestmentCSVUploader'
 import { useData } from '../contexts/DataContext'
-import { useView } from '../router'
+import { useView, navNumber } from '../router'
 import {
   INITIAL_TARGET_ACCOUNT_ID,
   accountIdentityLabel,
@@ -37,7 +37,7 @@ export default function Ingestion() {
   return (
     <Screen>
       <ViewHeader
-        index="05 — Ingestion"
+        index={`${navNumber('ingestion')} — Ingestion`}
         title="Ingestion"
         sub="Import statements, categorise, reconcile balances"
       />

@@ -111,6 +111,80 @@ test.describe.serial('Ledger bulk browser regressions', () => {
   })
   test.beforeEach(async ({ page }) => { await loginToLedger(page) })
 
+  test('review action section keeps broad preview scopes independent of filters and selection', async ({ page }) => {
+    const { data: rows, error } = await fixture.service.from('transactions')
+      .select('id,merchant,category,subcategory,category_source')
+      .eq('tenant_id', fixture.tenantId)
+      .in('merchant', ['E2E CAP 001', 'E2E CAP 002'])
+    if (error || rows?.length !== 2) throw new Error(`review action fixture lookup failed: ${error?.message}`)
+    const unclassified = rows.find((row) => row.merchant === 'E2E CAP 001')!
+    const ai = rows.find((row) => row.merchant === 'E2E CAP 002')!
+    try {
+      const firstUpdate = await fixture.service.from('transactions')
+        .update({ category: 'Uncategorized', subcategory: null, category_source: null })
+        .eq('tenant_id', fixture.tenantId).eq('id', unclassified.id)
+      if (firstUpdate.error) throw firstUpdate.error
+      const secondUpdate = await fixture.service.from('transactions')
+        .update({ category_source: 'ai' }).eq('tenant_id', fixture.tenantId).eq('id', ai.id)
+      if (secondUpdate.error) throw secondUpdate.error
+
+      const previews: string[][] = []
+      await page.route('**/functions/v1/review-categorization', async (route) => {
+        const body = route.request().postDataJSON() as { action: string; transaction_ids?: string[] }
+        expect(body.action).toBe('preview')
+        const ids = body.transaction_ids ?? []
+        previews.push(ids)
+        return route.fulfill({ contentType: 'application/json', body: JSON.stringify({
+          rows: [], stats: { requested: ids.length, fromCache: 0, fromBank: 0, fromAi: 0, geminiCalls: 0, selected: ids.length, eligible: ids.length },
+        }) })
+      })
+      await page.reload()
+      const trigger = page.getByRole('button', { name: /^(Review categories|Continue review)/ })
+      await expect(trigger).toBeVisible()
+      await page.getByRole('button', { name: /More views/ }).click()
+      await page.getByRole('button', { name: 'Bank', exact: true }).click()
+      await page.getByRole('button', { name: 'All', exact: true }).click()
+      await page.getByLabel('Filter ledger by account').selectOption({ label: 'Ledger browser regression' })
+      await page.getByLabel('Filter ledger by account').selectOption('')
+      await page.getByLabel('Filter ledger by category').selectOption('Income')
+      await page.getByLabel('Filter ledger by category').selectOption('')
+      await page.getByLabel('Filter ledger by transaction kind').selectOption('income')
+      await page.getByLabel('Filter ledger by transaction kind').selectOption('')
+      await filterLedger(page, 'E2E ATTR EXPENSE', 1)
+      await page.getByRole('checkbox').check()
+      await expect(page.getByRole('button', { name: 'Review selected (1)' })).toBeVisible()
+      await trigger.click()
+      let setup = page.getByRole('dialog', { name: 'Find suggestions worth a look' })
+      await expect(setup.getByText(/Your Ledger filters do not limit it/)).toBeVisible()
+      await expect(setup.getByText(/Use Review selected in the Ledger/)).toBeVisible()
+      await setup.getByText('How review works').click()
+      await expect(setup.getByText(/reconciliation entries stay protected/)).toBeVisible()
+      await setup.getByRole('radio', { name: /Review unclassified/ }).check()
+      await setup.getByRole('button', { name: 'Preview suggestions' }).click()
+      let dialog = page.getByRole('dialog', { name: 'Review with categorisation engine' })
+      await expect(dialog.getByRole('button', { name: 'Suggested (0)' })).toBeVisible()
+      expect(previews).toEqual([[unclassified.id]])
+      await dialog.getByRole('button', { name: 'Close preview' }).last().click()
+      await expect(trigger).toBeFocused()
+      await trigger.click()
+      setup = page.getByRole('dialog', { name: 'Find suggestions worth a look' })
+      await setup.getByRole('radio', { name: /Check existing categories/ }).check()
+      await setup.getByRole('button', { name: 'Preview suggestions' }).click()
+      dialog = page.getByRole('dialog', { name: 'Review with categorisation engine' })
+      await expect(dialog.getByRole('button', { name: 'Suggested (0)' })).toBeVisible()
+      expect(new Set(previews[1])).toEqual(new Set([unclassified.id, ai.id]))
+      await dialog.getByRole('button', { name: 'Close preview' }).last().click()
+      await expect(trigger).toBeFocused()
+    } finally {
+      for (const row of rows) {
+        const restored = await fixture.service.from('transactions')
+          .update({ category: row.category, subcategory: row.subcategory, category_source: row.category_source })
+          .eq('tenant_id', fixture.tenantId).eq('id', row.id)
+        if (restored.error) throw restored.error
+      }
+    }
+  })
+
   test('mixed fields remain unchanged until an explicit impact is chosen', async ({ page }) => {
     await filterLedger(page, 'E2E MIXED', 2)
     await page.getByRole('button', { name: 'Select all matching (2)' }).click()
@@ -275,6 +349,9 @@ test.describe.serial('Ledger bulk browser regressions', () => {
     await page.getByRole('button', { name: 'Select all matching (2)' }).click()
     await page.getByRole('button', { name: 'Review selected (2)' }).click()
     const dialog = page.getByRole('dialog', { name: 'Review with categorisation engine' })
+    await expect(dialog.getByRole('button', { name: 'Suggested (1)' })).toHaveAttribute('aria-pressed', 'true')
+    await expect(dialog.locator('article')).toHaveCount(1)
+    await expect(dialog.locator('article').filter({ hasText: 'E2E MIXED COFFEE' })).toBeVisible()
     await expect(dialog.getByText('Ledger browser regression').first()).toBeVisible()
     await expect(dialog.getByText('-$12.00')).toBeVisible()
     await dialog.getByRole('button', { name: 'Unresolved (1)' }).click()
@@ -299,6 +376,30 @@ test.describe.serial('Ledger bulk browser regressions', () => {
     await expect(groceries.getByText('Your choice: Shopping · General retail')).toBeVisible()
     await dialog.getByRole('button', { name: 'Apply accepted (1)' }).click()
     expect(submitted).toEqual([expect.objectContaining({ transaction_id: rows.find((row) => row.merchant.endsWith('GROCERIES'))?.id, category: 'Shopping', subcategory: 'General retail' })])
+  })
+
+  test('review defaults to suggestions and explains when none are available', async ({ page }) => {
+    const { data: row, error } = await fixture.service.from('transactions')
+      .select('id,date,merchant,category,subcategory,category_source,category_confidence,needs_review')
+      .eq('merchant', 'E2E ATTR EXPENSE').single()
+    if (error || !row) throw new Error(`review fixture lookup failed: ${error?.message}`)
+    await page.route('**/functions/v1/review-categorization', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({
+      rows: [{
+        transaction_id: row.id, date: row.date, merchant: row.merchant,
+        current: { category: row.category, subcategory: row.subcategory, source: row.category_source, confidence: row.category_confidence, needs_review: row.needs_review },
+        proposed: null, status: 'protected', protection_reason: 'Bank classification is protected by default',
+      }],
+      stats: { requested: 1, fromCache: 0, fromBank: 0, fromAi: 0, geminiCalls: 0, selected: 1, eligible: 0 },
+    }) }))
+    await filterLedger(page, 'E2E ATTR EXPENSE', 1)
+    await page.getByRole('checkbox').check()
+    await page.getByRole('button', { name: 'Review selected (1)' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Review with categorisation engine' })
+    await expect(dialog.getByRole('button', { name: 'Suggested (0)' })).toHaveAttribute('aria-pressed', 'true')
+    await expect(dialog.getByText('No suggested changes. Use the other filters to inspect unresolved, protected or unchanged transactions.')).toBeVisible()
+    await expect(dialog.getByRole('button', { name: 'Apply accepted (0)' })).toBeDisabled()
+    await dialog.getByRole('button', { name: 'Protected (1)' }).click()
+    await expect(dialog.locator('article').filter({ hasText: 'E2E ATTR EXPENSE' })).toBeVisible()
   })
 
   test('review invalidates the batch after an actual Ledger editor change', async ({ page }) => {

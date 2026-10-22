@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/lib/budget/**/*.ts", "../supabase/functions/_shared/budget/**/*.ts"],
+  "exclude": []
+}

@@ -109,6 +109,27 @@ export function reviewScopeTransactions(
   }
 }
 
+/** Snapshot candidate IDs once, so applying an earlier batch cannot move later rows. */
+export function reviewBatchIds(candidates: Pick<Txn, 'id'>[], limit = MAX_CATEGORIZATION_REVIEW_ROWS): string[][] {
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_CATEGORIZATION_REVIEW_ROWS) throw new RangeError('Invalid categorisation review batch size')
+  const batches: string[][] = []
+  for (let index = 0; index < candidates.length; index += limit) {
+    batches.push(candidates.slice(index, index + limit).map((transaction) => transaction.id))
+  }
+  return batches
+}
+
+/** Recheck local eligibility at the start of each batch; the server checks protections again. */
+export function resolveReviewBatch(ids: string[], transactions: Txn[], scope: Exclude<CategorizationReviewScope, 'selected'>): { transactions: Txn[]; skipped: number } {
+  const byId = new Map(transactions.map((transaction) => [transaction.id, transaction]))
+  const eligible = scope === 'unresolved' ? isUnresolvedReviewCandidate : isEligibleReviewCandidate
+  const available = ids.flatMap((id) => {
+    const transaction = byId.get(id)
+    return transaction && eligible(transaction) ? [transaction] : []
+  })
+  return { transactions: available, skipped: ids.length - available.length }
+}
+
 /** Keep all rows for one merchant in the same preview request so one fresh AI
  * answer cannot diverge across pages. The row cap still matches atomic apply. */
 export function categorizationPreviewPages(

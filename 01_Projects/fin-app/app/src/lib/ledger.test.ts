@@ -18,6 +18,14 @@ describe('ledger review filtering', () => {
     expect(filterLedger(rows, { query: '', accountId: '', category: '', review: 'uncategorized' }).map((row) => row.id)).toEqual(['2'])
   })
 
+  it('matches the attention count exactly, including flagged, uncategorized, and overlapping rows', () => {
+    const candidates = [rows[0], rows[1], { ...rows[2], id: 'uncategorized-only', cat: 'Uncategorized' }, { ...rows[3], id: 'flagged-only', needsReview: true }]
+    const attention = filterLedger(candidates, { query: '', accountId: '', category: '', review: 'needs-attention' })
+    expect(attention.map((row) => row.id)).toEqual(['2', 'uncategorized-only', 'flagged-only'])
+    expect(reviewCount(candidates)).toBe(attention.length)
+    expect(filterLedger(candidates, { query: '', accountId: '', category: '', review: 'needs-review' }).map((row) => row.id)).toEqual(['2', 'flagged-only'])
+  })
+
   it('detects categories whose vocabulary expects a subcategory', () => {
     expect(isMissingSubcategory(rows[2])).toBe(true)
     expect(filterLedger(rows, { query: '', accountId: '', category: '', review: 'missing-subcategory' }).map((row) => row.id)).toEqual(['3'])

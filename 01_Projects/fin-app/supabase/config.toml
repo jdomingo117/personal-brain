@@ -134,6 +134,12 @@ verify_jwt = true
 [functions.manage-planning]
 verify_jwt = true
 
+[functions.manage-budget]
+verify_jwt = true
+
+[functions.query-budget]
+verify_jwt = true
+
 [functions.manage-transaction-split]
 verify_jwt = true
 

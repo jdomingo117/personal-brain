@@ -13,11 +13,12 @@
    and the calendar's only input, would be inexpressible. Day-gap analysis is the
    only way to compute this. The volatility maths is genuinely shared, though, and
    lives in `lib/stats.ts` so "fixed cost" has one definition, not two. */
+import { detectRecurringSignal } from './recurringSignal'
 import type { Txn, Account, Glow } from '../data'
 import { TODAY, iso } from './period'
-import { CADENCES, CADENCE_DAYS, CADENCE_MONTHS, CADENCE_PER_MONTH, CADENCE_TOLERANCE } from './cadence'
+import { CADENCE_DAYS, CADENCE_MONTHS, CADENCE_PER_MONTH, CADENCE_TOLERANCE } from './cadence'
 import type { Cadence } from './cadence'
-import { ERRATIC_CV, STEADY_CV, cv, mean, median } from './stats'
+import { ERRATIC_CV, cv } from './stats'
 import { normalizeMerchant } from './csv/normalizeMerchant'
 
 /** Below this, an AI hint's own confidence is too weak to bother surfacing —
@@ -31,19 +32,10 @@ const DAY = 86400000
  *  each other. Two observations give one gap, and a single gap is a coincidence,
  *  not a pattern. Same spirit as pacing.ts's MIN_BAND_PERIODS. */
 const MIN_OBSERVATIONS = 3
-/** A median inside a cadence window isn't enough — the gaps have to mostly sit
- *  there too. 0.6 tolerates a skipped charge (gaps [30, 61, 30, 30] → 0.75, still
- *  obviously monthly) while rejecting a merchant whose median only lands in a
- *  bucket by accident. Deliberately not `cv(gaps)`: that same skipped-charge
- *  series scores cv 0.355 and would be thrown out. */
-const MIN_CONFORMANCE = 0.6
 /** Silent for more than a cycle and a half → the series has stopped. Derived from
  *  `lastCharged` rather than from `nextExpected`, so there's one derivation
  *  instead of two that can drift apart. */
 const DORMANT_CYCLES = 1.5
-/** Below this many observations the cadence is real but thinly evidenced — a
- *  quarterly series can only ever show 4 charges in a 12-month ledger. */
-const CONFIDENT_OBSERVATIONS = 6
 /** Annual commitments need a deliberately longer, isolated look-back. This is
  * only evidence for the Annual detector: all recurring reporting, pressure,
  * and normal cadence detection remain bounded to `bounds` below. The small
@@ -240,17 +232,6 @@ export function nextChargeDate(fromIso: string, cadence: Cadence): string {
   return iso(new Date(y, m, Math.min(d.getDate(), lastDay)))
 }
 
-/** The go-forward obligation for one series.
- *
- *  Asymmetric on purpose. For a fixed cost the last amount IS the current price:
- *  rent's 12-month mean is $2,070.83, but you owe $2,100 next month — averaging
- *  would under-report the obligation and quietly erase the price creep. For a
- *  variable cost the last amount is one draw from a distribution: July's power
- *  bill doesn't forecast August's, whereas the mean averages the seasonality out
- *  by construction, which is exactly what an annualized run-rate wants. */
-const expectedFor = (kind: RecurringKind, amounts: number[]) =>
-  kind === 'fixed' ? amounts[amounts.length - 1] : mean(amounts)
-
 /** Every charge a series is projected to make inside `[from, to]`.
  *
  *  Walks forward from `lastCharged` rather than from `nextExpected` so a dormant
@@ -267,115 +248,17 @@ export function upcomingCharges(s: Series, from: string, to: string): Charge[] {
   return out
 }
 
-/** Looks for a single clean step in the charge amounts — e.g. a subscription
- *  that was $15.99 for months, then $17.99 ever since. Scans split points
- *  left to right (earliest first) so it finds the widest possible "new
- *  price" run rather than a late subset of it. Requires at least 2 charges
- *  on each side — a 1-charge "segment" has zero spread and would trivially
- *  look steady. Returns null when the amounts don't cleanly split into two
- *  steady runs (genuine variability, not a step). */
-function detectStepChange(charges: Charge[]): { from: number; to: number; date: string } | null {
-  for (let split = 2; split <= charges.length - 2; split++) {
-    const before = charges.slice(0, split).map((c) => c.amount)
-    const after = charges.slice(split).map((c) => c.amount)
-    if (cv(before) >= STEADY_CV || cv(after) >= STEADY_CV) continue
-    const beforeMean = mean(before)
-    const afterMean = mean(after)
-    // A real step, not the two segments' own natural wobble happening to
-    // land on either side of an arbitrary split point.
-    if (Math.abs(afterMean - beforeMean) / beforeMean < STEADY_CV) continue
-    return { from: beforeMean, to: afterMean, date: charges[split].date }
-  }
-  return null
-}
-
-/** `reportingFrom` deliberately remains the normal trailing-year boundary even
- * when `txns` contains the longer Annual-only evidence history. That prevents
- * three years of annual payments from being mistaken for this year's actual
- * spend. */
+/** Pure signal detection; reporting totals remain bounded to the normal year. */
 function detect(id: string, txns: Txn[], today: string, reportingFrom: string): Series | null {
-  if (txns.length < MIN_OBSERVATIONS) return null
-
-  const charges: Charge[] = txns
-    .map((t) => ({ transactionId: t.id, date: t.date, amount: Math.abs(t.amount) }))
-    .sort((a, b) => (a.date < b.date ? -1 : 1))
-
-  const gaps = charges.slice(1).map((c, i) => daysBetween(charges[i].date, c.date))
-  const medianGap = median(gaps)
-
-  const cadence = CADENCES.find((c) => Math.abs(medianGap - CADENCE_DAYS[c]) <= CADENCE_TOLERANCE[c])
-  if (!cadence) return null // gap sits in a dead zone → genuinely not periodic
-
-  const tol = CADENCE_TOLERANCE[cadence]
-  const conformance = gaps.filter((g) => Math.abs(g - CADENCE_DAYS[cadence]) <= tol).length / gaps.length
-  if (conformance < MIN_CONFORMANCE) return null
-
-  // A commitment is predictable in AMOUNT as well as in date. Without this, a
-  // hardware store visited most months reads as a monthly commitment: the cadence
-  // is real, but $45 one month and $210 the next is shopping, not a standing
-  // charge. `ERRATIC_CV` is the same threshold the pacing rail bands on.
-  const amounts = charges.map((c) => c.amount)
-  const amountCv = cv(amounts)
-  if (amountCv >= ERRATIC_CV) return null
-
-  let kind: RecurringKind = amountCv < STEADY_CV ? 'fixed' : 'variable'
-  // A single price step (e.g. a subscription's one-time price rise) makes
-  // the whole run look "variable" by CV alone, losing the more useful signal
-  // that this is a fixed cost which changed price once. Only worth checking
-  // when the plain CV test didn't already call it fixed.
-  let priceChange: Series['priceChange']
-  if (kind === 'variable') {
-    const step = detectStepChange(charges)
-    if (step) {
-      kind = 'fixed'
-      priceChange = step
-    }
-  }
-  const lastCharged = charges[charges.length - 1].date
-  const silentFor = daysBetween(lastCharged, today)
-  const status: RecurringStatus = silentFor > DORMANT_CYCLES * CADENCE_DAYS[cadence] ? 'dormant' : 'active'
-  const expected = expectedFor(kind, amounts)
-
-  const t0 = txns[0]
-  return {
-    id,
-    merchantKey: t0.merchantKey ?? normalizeMerchant(t0.merchant).key,
-    accountId: t0.account_id,
-    merchant: t0.merchant,
-    label: shortMerchant(t0.merchant),
-    cat: t0.cat,
-    subcat: t0.subcat ?? 'Other',
-    cadence,
-    detectedCadence: cadence,
-    kind,
-    status,
-    // Three annual charges provide two agreeing year-sized gaps: enough to
-    // confirm cautiously, but not to call high confidence. A fourth annual
-    // renewal inside the bounded look-back earns the usual strong signal.
-    confidence: cadence === 'Annual'
-      ? (charges.length >= 4 ? 'high' : 'medium')
-      : charges.length >= CONFIDENT_OBSERVATIONS ? 'high' : charges.length > MIN_OBSERVATIONS ? 'medium' : 'low',
-    charges,
-    expected,
-    detectedExpected: expected,
-    monthly: expected * CADENCE_PER_MONTH[cadence],
-    amountCv,
-    medianGap,
-    conformance,
-    lastCharged,
-    nextExpected: nextChargeDate(lastCharged, cadence),
-    detectedNextExpected: nextChargeDate(lastCharged, cadence),
-    trailingTotal: charges
-      .filter((charge) => charge.date >= reportingFrom)
-      .reduce((total, charge) => total + charge.amount, 0),
-    fundingAccount: t0.account || 'Unknown account',
-    // Placeholder — resolved against the real account list in buildRecurring(),
-    // which is the only place that has it.
-    fundingAccountGlow: 'cyan',
-    trackingState: 'detected',
-    reminderDaysBefore: null,
-    priceChange,
-  }
+ const signal=detectRecurringSignal(txns.map(t=>({transactionId:t.id,date:t.date,amount:Math.abs(t.amount)})),today)
+ if(!signal)return null
+ const t0=txns[0]
+ return {...signal,id,merchantKey:t0.merchantKey??normalizeMerchant(t0.merchant).key,accountId:t0.account_id,
+ merchant:t0.merchant,label:shortMerchant(t0.merchant),cat:t0.cat,subcat:t0.subcat??'Other',
+ detectedCadence:signal.cadence,detectedExpected:signal.expected,detectedNextExpected:signal.nextExpected,
+ monthly:signal.expected*CADENCE_PER_MONTH[signal.cadence],
+ trailingTotal:signal.charges.filter(c=>c.date>=reportingFrom).reduce((sum,c)=>sum+c.amount,0),
+ fundingAccount:t0.account||'Unknown account',fundingAccountGlow:'cyan',trackingState:'detected',reminderDaysBefore:null}
 }
 
 /** Two annual-sized, stable charges are useful context, but one gap cannot

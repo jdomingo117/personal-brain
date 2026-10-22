@@ -3,9 +3,10 @@ import { AnimatePresence } from 'framer-motion'
 import {
   BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate,
 } from 'react-router-dom'
-import { ViewContext, VIEW_PATHS, pathToView, type View } from './router'
+import { ViewContext, VIEW_PATHS, pathToView, navNumber, type View } from './router'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { DataProvider } from './contexts/DataContext'
+import { BudgetProvider } from './contexts/BudgetContext'
 import { RequireAnon, RequireAuth, RequireOnboarded } from './components/Guards'
 import ViewDataBoundary, { ViewLoadingState } from './components/ViewDataBoundary'
 import SceneBackground from './three/SceneBackground'
@@ -24,6 +25,7 @@ import Dashboard from './views/Dashboard'
 const Accounts = lazy(() => import('./views/Accounts'))
 const Income = lazy(() => import('./views/Income'))
 const Expenses = lazy(() => import('./views/Expenses'))
+const Budget = lazy(() => import('./views/Budget'))
 const LedgerView = lazy(() => import('./views/LedgerView'))
 const Ingestion = lazy(() => import('./views/Ingestion'))
 const TransferReview = lazy(() => import('./views/TransferReview'))
@@ -141,9 +143,10 @@ function AppFrame({
             <Route path="/accounts" element={<LazyDataRoute index="02 — Accounts" title="Accounts" sub="Balances, activity & connections"><Accounts /></LazyDataRoute>} />
             <Route path="/income" element={<LazyDataRoute index="03 — Income" title="Income" sub="Inflow analysis & patterns"><Income /></LazyDataRoute>} />
             <Route path="/expenses" element={<LazyDataRoute index="04 — Expenses" title="Expenses" sub="Outflow analysis, category changes & recurring costs"><Expenses /></LazyDataRoute>} />
-            <Route path="/ledger" element={<LazyDataRoute index="05 — Ledger" title="Ledger" sub="Inspect, review and correct every transaction"><LedgerView /></LazyDataRoute>} />
-            <Route path="/ingestion" element={<LazyDataRoute index="06 — Ingestion" title="Ingestion" sub="Import statements, categorise, reconcile balances"><Ingestion /></LazyDataRoute>} />
-            <Route path="/transfers" element={<LazyDataRoute index="07 — Reconciliation" title="Transfer review" sub="Resolve movements between accounts"><TransferReview /></LazyDataRoute>} />
+            <Route path="/budget" element={<Suspense fallback={<ViewLoadingState index="05 — Budget" title="Budget" />}><Budget /></Suspense>} />
+            <Route path="/ledger" element={<LazyDataRoute index={`${navNumber('ledger')} — Ledger`} title="Ledger" sub="Inspect, review and correct every transaction"><LedgerView /></LazyDataRoute>} />
+            <Route path="/ingestion" element={<LazyDataRoute index={`${navNumber('ingestion')} — Ingestion`} title="Ingestion" sub="Import statements, categorise, reconcile balances"><Ingestion /></LazyDataRoute>} />
+            <Route path="/transfers" element={<LazyDataRoute index={`${navNumber('transfers')} — Reconciliation`} title="Transfer review" sub="Resolve movements between accounts"><TransferReview /></LazyDataRoute>} />
             <Route path="/settings" element={<LazyDataRoute index="⚙ — Configuration" title="Settings" sub="Interface, identity & preferences"><Settings /></LazyDataRoute>} />
             <Route path="/concept/operation-status" element={<LazyDataRoute index="LAB — Feedback" title="Operation status patterns" sub="Concept review — not connected to live operations"><OperationStatusConcept /></LazyDataRoute>} />
           </Route>
@@ -199,12 +202,14 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <DataProvider>
-          <AppFrame
-            booted={booted} setBooted={setBooted}
-            dark={dark} setDark={setDark}
-            motionOn={motionOn} setMotionOn={setMotionOn}
-            toast={toast} fireToast={fireToast}
-          />
+          <BudgetProvider>
+            <AppFrame
+              booted={booted} setBooted={setBooted}
+              dark={dark} setDark={setDark}
+              motionOn={motionOn} setMotionOn={setMotionOn}
+              toast={toast} fireToast={fireToast}
+            />
+          </BudgetProvider>
         </DataProvider>
       </AuthProvider>
     </BrowserRouter>

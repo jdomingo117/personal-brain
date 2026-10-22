@@ -1,0 +1,50 @@
+import {randomUUID} from 'node:crypto'
+import {expect} from '@playwright/test'
+
+export async function budgetAttentionInteractions({newUser,sql,quote,check,signedPage,snapshotSQL,settled}){
+ const u=await newUser(),line=randomUUID(),start=sql(`SELECT date_trunc('month',now() AT TIME ZONE 'Australia/Sydney')::date;`)
+ const account=sql(`INSERT INTO public.accounts(user_id,tenant_id,name,type,balance,currency) VALUES(${quote(u.id)},${quote(u.tenant)},'Attention browser fictional','Liquid',0,'AUD') RETURNING id;`).split('\n')[0]
+ for(const i of [{action:'save_draft',expected_draft:'0',payload:{currency:'AUD',timezone:'Australia/Sydney',frequency:'monthly',start_date:start,account_ids:[account],destination_account_ids:[],income_cents:10000,opening_drawdown_cents:0,lines:[{id:line,kind:'everyday',name:'Everyday',allocation_cents:10000,opening_cents:0}]}},{action:'activate',expected_draft:'1',accept_gap:false}]){
+  const s=snapshotSQL(u);sql(`SELECT public.budget_command(${quote(u.tenant)},${quote(u.id)},${quote(randomUUID())},${quote(JSON.stringify({expected_method:'budget-foundation-v1',expected_source:s.source_revision,plan_id:s.plan?.id,period_id:s.period?.id,expected_plan:s.plan?.version,...i}))}::jsonb,true);`)
+ }
+ const tx=amount=>sql(`INSERT INTO public.transactions(user_id,tenant_id,account_id,date,original_description,merchant,merchant_key,category,amount,kind,kind_source,pending) VALUES(${quote(u.id)},${quote(u.tenant)},${quote(account)},${quote(start)},'Attention browser fixture','Attention fixture','attention fixture','Shopping',${amount},'expense','user',false);`)
+ tx(-11000)
+ const phone=await signedPage(u,390,true),region=phone.getByRole('region',{name:'Budget checks',exact:true}),row=region.getByRole('listitem',{name:'Budget check: Everyday',exact:true}),form=region.getByRole('form',{name:'Review budget check',exact:true})
+ const version=snapshotSQL(u).plan.version
+ await row.getByRole('button',{name:'Inspect allowance',exact:true}).click();await expect(phone.locator(`[data-budget-line="${line}"]`)).toBeFocused()
+ check('inspect jumps to the actual everyday balance without losing period context',true)
+ await expect(region).toContainText('2 to check');await row.getByRole('button',{name:'Review this check',exact:true}).click()
+ await expect(form.getByRole('button',{name:'Save review preference',exact:true})).toBeDisabled()
+ await form.getByRole('checkbox',{name:/I understand the budget amounts/}).check();await form.getByRole('button',{name:'Save review preference',exact:true}).click()
+ await expect(region).toContainText('1 to check');await expect(region).toContainText('These gaps still remain');await expect(region).toContainText('-$10.00')
+ check('phone review quiets the reminder while keeping the signed gap and financial version',snapshotSQL(u).plan.version,version)
+ await phone.reload();await expect(region).toContainText('These gaps still remain')
+ await region.getByRole('button',{name:/See all .* budget checks/}).click()
+ phone.once('dialog',d=>d.accept());await row.getByRole('button',{name:'Show this again now',exact:true}).click();await expect(region).toContainText('2 to check')
+ await row.getByRole('button',{name:'Review this check',exact:true}).click();await form.getByRole('radio',{name:'Remind me on a date I choose.',exact:true}).check()
+ const date=form.getByLabel('Show this again on',{exact:true})
+ await date.fill(start);await form.getByRole('checkbox',{name:/I understand the budget amounts/}).check();await expect(form.getByRole('button',{name:'Save review preference',exact:true})).toBeDisabled()
+ await date.fill(snapshotSQL(u).period.end_date);await form.getByRole('checkbox',{name:/I understand the budget amounts/}).check()
+ tx(-1);await phone.getByRole('button',{name:'Refresh saved data',exact:true}).click();await expect(form).toContainText('saved facts changed');await expect(date).toHaveValue(snapshotSQL(u).period.end_date)
+ await form.getByRole('button',{name:'Review latest check',exact:true}).click();await expect(form.getByRole('button',{name:'Save review preference',exact:true})).toBeDisabled();await form.getByRole('checkbox',{name:/I understand the budget amounts/}).check()
+ phone.once('dialog',d=>d.dismiss());await phone.getByRole('button',{name:'Return to current budget',exact:true}).click();await expect(form).toBeVisible()
+ await form.getByRole('button',{name:'Save review preference',exact:true}).click();await expect(region).toContainText('Snoozed until')
+ check('phone snooze validates dates, retains choices on stale refresh and protects unsaved period navigation',true)
+ await phone.reload();await expect(region).toContainText('show again')
+ phone.once('dialog',d=>d.accept());await region.getByRole('button',{name:'Undo last review preference',exact:true}).click();await expect(region).toContainText('2 to check')
+ tx(-2500);await phone.getByRole('button',{name:'Refresh saved data',exact:true}).click();await expect(region).toContainText('-$35.01')
+ await region.scrollIntoViewIfNeeded();await settled(phone);await phone.screenshot({path:'/tmp/halcyon-budget-attention-phone.png',fullPage:true})
+ check('attention and persistent gap summary do not overflow the phone workspace',await phone.locator('.budget-workspace').evaluate(el=>el.scrollWidth>el.clientWidth),false)
+ await phone.setViewportSize({width:1440,height:1050});await row.getByRole('button',{name:'Review this check',exact:true}).click();await form.scrollIntoViewIfNeeded();await settled(phone);await phone.screenshot({path:'/tmp/halcyon-budget-attention-desktop.png',fullPage:true})
+ phone.once('dialog',d=>d.dismiss());await form.getByRole('button',{name:'Leave review choice',exact:true}).click();await expect(form).toBeVisible()
+ phone.once('dialog',d=>d.accept());await form.getByRole('button',{name:'Leave review choice',exact:true}).click();await expect(row.getByRole('button',{name:'Review this check',exact:true})).toBeFocused()
+ check('desktop review supports cancelled exit and restores keyboard focus',true)
+ const data=region.getByRole('listitem',{name:'Budget check: Check the history behind this budget',exact:true});await data.getByRole('button',{name:'Review this check',exact:true}).click();await expect(form).toContainText('A meaningful change in the relevant evidence');await expect(form).not.toContainText('A shortfall that grows')
+ check('non-monetary review copy does not invent a money gap',true)
+ phone.once('dialog',d=>d.accept());await form.getByRole('button',{name:'Leave review choice',exact:true}).click()
+ const s=snapshotSQL(u);sql(`SELECT public.budget_command(${quote(u.tenant)},${quote(u.id)},${quote(randomUUID())},${quote(JSON.stringify({action:'set_limits',plan_id:s.plan.id,period_id:s.period.id,expected_plan:s.plan.version,expected_source:s.source_revision,expected_method:'budget-foundation-v1',limits:[{id:randomUUID(),category_id:'shopping',subcategory_id:null,custom_subcategory_id:null,amount_cents:3000}]}))}::jsonb,true);`)
+ await phone.getByRole('button',{name:'Refresh saved data',exact:true}).click()
+ await region.getByRole('listitem',{name:'Budget check: Shopping',exact:true}).getByRole('button',{name:'Inspect allowance',exact:true}).click()
+ await expect(phone.getByRole('region',{name:'Bills and savings goals',exact:true})).toBeFocused()
+ check('category inspection targets the existing allowance controls instead of a dead link',true)
+}

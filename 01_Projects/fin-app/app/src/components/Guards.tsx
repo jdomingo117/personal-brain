@@ -38,8 +38,10 @@ export function RequireAuth({ children }: { children: ReactNode }) {
  */
 export function RequireOnboarded({ children }: { children: ReactNode }) {
   const { loadState, accounts } = useData()
+  const location=useLocation()
 
-  if (loadState === 'ready' && accounts.length === 0) return <Navigate to="/onboarding" replace />
+  // Manual Budget setup deliberately does not require a bank or an onboarding account.
+  if (loadState === 'ready' && accounts.length === 0 && location.pathname!=='/budget') return <Navigate to="/onboarding" replace />
   return <>{children}</>
 }
 

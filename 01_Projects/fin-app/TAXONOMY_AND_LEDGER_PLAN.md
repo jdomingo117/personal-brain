@@ -707,6 +707,26 @@ checkpoint in `SYSTEM_INTEGRITY.md`; destructive/live validation remains
 isolated-project-only; the completed Gate 1 followed that constraint, and
 future destructive/live harness work must do the same.
 
+**Session batch navigation and attention shortcut — 2026-10-19.** Ledger
+captures an ordered in-memory snapshot of candidate IDs for unclassified and
+broader review, exposes a batch selector and next-batch action, and rechecks
+locally available candidates when each batch opens. Each preview and apply
+remains independently limited to 500 rows; server-side protections and guarded
+undo remain authoritative. Moving to another batch warns before discarding
+staged choices or the current undo control. A session is replaced by another
+scope or reset, and does not survive page navigation or refresh. The Ledger
+attention shortcut shows the same union counted by the badge (review-flagged
+or Uncategorized), temporarily clears other filters with a restore action, and
+preserves selected transaction IDs. It does not automatically run the engine.
+
+**Quiet toolbar design — approved and implemented 2026-10-19.** Review scope
+and batch selection now open from one toolbar action. The attention count lives
+in the transaction view control; additional lenses expand under More views.
+An existing session offers Continue review and defaults setup to the next batch
+not yet previewed. The same in-memory snapshots, protections, apply and undo
+contracts remain in effect. Setup is local only; Preview suggestions initiates
+the engine request. Keyboard focus returns to the toolbar after setup/preview.
+
 ## Decisions deferred beyond this plan
 
 1. Whether a future product needs private member-only classification alongside

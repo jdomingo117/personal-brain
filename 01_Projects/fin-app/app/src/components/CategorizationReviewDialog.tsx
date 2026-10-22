@@ -30,7 +30,7 @@ function delta(label: string, cents: number) {
 }
 
 export default function CategorizationReviewDialog({
-  transactions, scope = 'selected', scopeCandidateCount, scopeTruncated = false, suspended = false, invalidated = false, onOpenTransaction, onClose, onChanged,
+  transactions, scope = 'selected', scopeCandidateCount, scopeTruncated = false, suspended = false, invalidated = false, batch, onPreviewComplete, onNextBatch, onOpenTransaction, onClose, onChanged,
 }: {
   transactions: Txn[]
   scope?: CategorizationReviewScope
@@ -39,6 +39,9 @@ export default function CategorizationReviewDialog({
   scopeTruncated?: boolean
   suspended?: boolean
   invalidated?: boolean
+  batch?: { index: number; total: number; skipped: number; nextSize?: number }
+  onPreviewComplete?: () => void
+  onNextBatch?: () => void
   onOpenTransaction: (id: string) => void
   onClose: (clearSelection?: boolean) => void
   onChanged: () => Promise<void>
@@ -51,7 +54,7 @@ export default function CategorizationReviewDialog({
   const [draftCategory, setDraftCategory] = useState('')
   const [draftSubcategory, setDraftSubcategory] = useState('')
   const [excludedIds, setExcludedIds] = useState<Set<string>>(new Set())
-  const [filter, setFilter] = useState<ReviewStatus | 'all'>('all')
+  const [filter, setFilter] = useState<ReviewStatus | 'all'>('suggested')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [savingAction, setSavingAction] = useState<'apply' | 'undo' | null>(null)
@@ -60,14 +63,15 @@ export default function CategorizationReviewDialog({
   const [completedPreviewPages, setCompletedPreviewPages] = useState(0)
   const [operationId, setOperationId] = useState<string | null>(null)
   const [updated, setUpdated] = useState<number | null>(null)
-  const dialogRef = useDialogFocus({ active: !suspended })
+  const [confirmNext, setConfirmNext] = useState(false)
+  const dialogRef = useDialogFocus({ active: !suspended, fallbackSelector: '[data-category-review-trigger], [data-dialog-focus-fallback]' })
   const completed = updated !== null && updated > 0
   const saving = savingAction !== null
   const transactionKey = transactions.map((transaction) => transaction.id).join(',')
   const previewPages = useMemo(() => categorizationPreviewPages(transactions), [transactionKey])
   const previewProgress = categorizationPreviewProgress(previewPages.length, completedPreviewPages)
-  const scopeLabel = scope === 'unresolved' ? 'Unresolved transactions'
-    : scope === 'eligible' ? 'Eligible transactions' : 'Selected transactions'
+  const scopeLabel = scope === 'unresolved' ? 'Unclassified transactions'
+    : scope === 'eligible' ? 'Check existing categories' : 'Selected transactions'
 
   const close = () => onClose(completed)
 
@@ -106,6 +110,8 @@ export default function CategorizationReviewDialog({
         setLoading(false)
         setResponse(next)
         setAcceptedIds(suggestedReviewIds(next.rows))
+        const returnedIds = new Set(next.rows.map((row) => row.transaction_id))
+        if (transactions.length > 0 && transactions.every((transaction) => returnedIds.has(transaction.id))) onPreviewComplete?.()
       } catch (previewError) {
         if (cancelled) return
         setLoading(false)
@@ -128,6 +134,7 @@ export default function CategorizationReviewDialog({
     [transactions, response, acceptedIds, choices],
   )
   const transactionById = useMemo(() => new Map(transactions.map((transaction) => [transaction.id, transaction])), [transactions])
+  const missingPreviewRows = response ? transactions.length - new Set(response.rows.filter((row) => transactionById.has(row.transaction_id)).map((row) => row.transaction_id)).size : 0
   const visibleRows = (response?.rows ?? []).filter((row) => {
     const transaction = transactionById.get(row.transaction_id)
     const text = `${row.merchant} ${transaction?.originalDescription ?? ''} ${transaction?.account ?? ''}`.toLocaleLowerCase()
@@ -223,6 +230,10 @@ export default function CategorizationReviewDialog({
           <button type="button" aria-label="Close preview" disabled={saving} onClick={close} className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-[var(--hair)] disabled:opacity-40">×</button>
         </header>
 
+        {batch && batch.total > 1 && <p className="mt-4 text-[14px] font-semibold text-ink2">Batch {batch.index + 1} of {batch.total} · {transactions.length} available to preview{batch.nextSize !== undefined ? ` · ${batch.nextSize} originally in the next batch` : ''}</p>}
+        {batch && batch.skipped > 0 && <p role="status" className="mt-3 rounded-xl border border-warn/40 bg-[var(--input-bg)] p-4 body-copy">{batch.skipped} transaction{batch.skipped === 1 ? ' is' : 's are'} no longer available for this review and will be skipped. Other transactions are checked again when the preview is prepared.</p>}
+        {missingPreviewRows > 0 && <p role="status" className="mt-3 rounded-xl border border-warn/40 bg-[var(--input-bg)] p-4 body-copy">The preview did not return {missingPreviewRows} transaction{missingPreviewRows === 1 ? '' : 's'}. They were not included in these results or any changes.</p>}
+
         {loading && <OperationStatusPanel className="mt-6" state="working" title="Preparing your review" description="Fresh suggestions are a preview only. No transaction changes are being made.">
           <OperationSteps steps={previewSteps} label="Categorisation preview stages" />
           {previewProgress.totalPages > 0 && <div className="mt-4"><OperationProgress label="Merchant groups reviewed" progress={{ kind: 'determinate', current: previewProgress.completedPages, total: previewProgress.totalPages }} detail={`${previewProgress.completedPages} of ${previewProgress.totalPages} bounded merchant groups complete.`} /></div>}
@@ -250,7 +261,9 @@ export default function CategorizationReviewDialog({
           </div>
 
           <div className="mt-3 divide-y divide-[var(--hair-soft)] rounded-xl border border-[var(--hair)]">
-            {visibleRows.length === 0 && <p className="p-4 body-copy">No transactions match this filter.</p>}
+            {visibleRows.length === 0 && <p className="p-4 body-copy">{filter === 'suggested' && suggested.length === 0 && !search.trim()
+              ? 'No suggested changes. Use the other filters to inspect unresolved, protected or unchanged transactions.'
+              : 'No transactions match this filter.'}</p>}
             {visibleRows.map((row) => {
               const transaction = transactionById.get(row.transaction_id)
               const choice = choices.get(row.transaction_id)
@@ -304,11 +317,17 @@ export default function CategorizationReviewDialog({
           </div>
         </>}
 
-        {completed && <OperationStatusPanel className="mt-6" state="succeeded" title={`Applied ${updated} accepted change${updated === 1 ? '' : 's'}`} description="The changes share one guarded undo operation. Closing clears the Ledger selection." />}
+        {completed && <OperationStatusPanel className="mt-6" state="succeeded" title={`Applied ${updated} accepted change${updated === 1 ? '' : 's'}`} description={scope === 'selected' ? 'The changes share one guarded undo operation. Closing clears the Ledger selection.' : 'The changes share one guarded undo operation for this batch.'} />}
+
+        {confirmNext && <div role="alert" className="mt-5 rounded-xl border border-warn/40 bg-[var(--input-bg)] p-4 body-copy">
+          <p>{operationId ? 'Moving on closes this batch and its Undo review button. Undo now if you want to reverse these changes.' : 'Moving on discards the changes selected in this preview. Apply them first if you want to keep them.'}</p>
+          <div className="mt-3 flex flex-wrap gap-2"><Button onClick={onNextBatch}>Continue to next batch</Button><Button variant="ghost" onClick={() => setConfirmNext(false)}>Stay on this batch</Button></div>
+        </div>}
 
         <div className="sticky bottom-0 mt-5 flex flex-wrap gap-2 border-t border-[var(--hair)] bg-surface py-4">
           {!completed && <Button onClick={() => void apply()} disabled={loading || saving || invalidated || impact.accepted === 0}>{savingAction === 'apply' && <InlineActivity label="Applying accepted changes" size="compact" />}{savingAction === 'apply' ? 'Applying accepted changes…' : `Apply accepted (${impact.accepted})`}</Button>}
           {operationId && <Button variant="ghost" onClick={() => void undo()} disabled={saving}>{savingAction === 'undo' && <InlineActivity label="Undoing categorisation review" size="compact" />}{savingAction === 'undo' ? 'Undoing review…' : 'Undo review'}</Button>}
+          {batch?.nextSize !== undefined && response && !loading && !confirmNext && <Button variant="ghost" disabled={saving} onClick={() => { if (operationId || impact.accepted > 0 || choices.size > 0 || editingId) setConfirmNext(true); else onNextBatch?.() }}>Review next batch ({batch.nextSize})</Button>}
           <Button variant="ghost" onClick={close} disabled={saving}>{completed ? 'Done and clear selection' : 'Close preview'}</Button>
         </div>
       </section>

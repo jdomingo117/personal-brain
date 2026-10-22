@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import { BUDGET_ENABLED } from './lib/budgetWorkspace'
 
 export type View =
   | 'login'
@@ -8,6 +9,7 @@ export type View =
   | 'accounts'
   | 'income'
   | 'expenses'
+  | 'budget'
   | 'ledger'
   | 'ingestion'
   | 'transfers'
@@ -20,10 +22,14 @@ export const NAV: { id: View; n: string; label: string }[] = [
   { id: 'accounts', n: '02', label: 'Accounts' },
   { id: 'income', n: '03', label: 'Income' },
   { id: 'expenses', n: '04', label: 'Expenses' },
-  { id: 'ledger', n: '05', label: 'Ledger' },
-  { id: 'ingestion', n: '06', label: 'Ingestion' },
-  { id: 'transfers', n: '07', label: 'Transfers' },
+  ...(BUDGET_ENABLED ? [{ id: 'budget' as const, n: '05', label: 'Budget' }] : []),
+  { id: 'ledger', n: BUDGET_ENABLED?'06':'05', label: 'Ledger' },
+  { id: 'ingestion', n: BUDGET_ENABLED?'07':'06', label: 'Ingestion' },
+  { id: 'transfers', n: BUDGET_ENABLED?'08':'07', label: 'Transfers' },
 ]
+
+/** Keep view and loading-state indices aligned with optional navigation entries. */
+export const navNumber = (view:View) => NAV.find(item=>item.id===view)?.n??'—'
 
 /**
  * Views are now backed by real URLs. `useView()` keeps its old shape so that
@@ -38,6 +44,7 @@ export const VIEW_PATHS: Record<View, string> = {
   accounts: '/accounts',
   income: '/income',
   expenses: '/expenses',
+  budget: '/budget',
   ledger: '/ledger',
   ingestion: '/ingestion',
   transfers: '/transfers',

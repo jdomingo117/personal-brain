@@ -14,7 +14,7 @@ export function wrappedFocusIndex(currentIndex: number, count: number, backwards
 
 function focusableElements(dialog: HTMLElement) {
   return [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)]
-    .filter((element) => element.getClientRects().length > 0 && element.getAttribute('aria-hidden') !== 'true')
+    .filter((element) => !element.matches(':disabled') && element.getClientRects().length > 0 && element.getAttribute('aria-hidden') !== 'true')
 }
 
 /**
@@ -35,7 +35,10 @@ export function useDialogFocus({
     if (!active) return
     const dialog = dialogRef.current
     if (!dialog) return
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const opener = document.activeElement instanceof HTMLElement
+      && document.activeElement !== document.body
+      && document.activeElement !== document.documentElement
+      ? document.activeElement : null
     dialog.focus({ preventScroll: true })
 
     const onKeyDown = (event: KeyboardEvent) => {

@@ -64,22 +64,22 @@ hand to find the transfer-linker gap.
 
 ## Recent changes
 
-- 2026-10-17 — Expanded Ledger categorisation review with transaction context, staged category choices and a guarded handoff to the full editor.
+- 2026-10-22 — Closed M5 with complete impact preparation and atomic Save/Undo; 451 full/145 focused isolated checks across 90 migrations and 511 unit tests passed, M6 assisted setup is next.
 
-- 2026-10-16 — Began Phase 5 operation-feedback verification: strengthened unit/ARIA/reduced-motion and provider-checkpoint coverage, plus a guarded delayed no-write/retry Ledger browser regression awaiting an isolated stack run.
+- 2026-10-22 — Optimized complete impact prefixes, source/claim and allocation aggregates; dense ten-year save/Undo and 432 regression checks across 89 migrations pass, mixed-history atomic-save gate remains open.
 
-- 2026-10-16 — Completed Phase 4 operation feedback: routine writes and known-shape tile reads now use named activity cues, while one durable provider-sync notice safely survives navigation.
+- 2026-10-22 — Implemented protected long-history workspace preparation/resumption and fresh impact-fact reuse; 432 full/55 focused checks across 83 migrations and 503 unit tests passed, ten-year impact-preview scale remains open.
 
-- 2026-10-16 — Completed Phase 3 operation feedback: ingestion, investment, provider and transfer-review waits now show real checkpoints or explicit indeterminate stages without changing service behavior.
+- 2026-10-22 — Verified M5 cross-period frequency/policy/goal integration and fixed historical period dropdown inventory; 432 full/44 focused isolated checks across 81 migrations, performance/resumption remains open.
 
-- 2026-10-16 — Completed Phase 2 operation feedback: Ledger categorisation previews now show real merchant-group progress, safe retry/close copy and inline apply/undo activity without changing mutation rules.
+- 2026-10-22 — Implemented M5 attention review/snooze/materiality with separate versions, persistent gaps and guarded Undo; 388 full/40 focused isolated checks and 496 unit tests passed, wider M5 gates remain open.
 
-- 2026-10-16 — Completed Phase 1 of operation feedback: reusable truthful-status primitives, review fixtures and focused contract tests are live; production workflows remain unchanged.
+- 2026-10-21 — Implemented M5 budget pause/resume and signed line archive/disposition with guarded Undo; 360 isolated checks/493 unit tests passed, attention and wider M5 gates remain open.
 
-- 2026-10-16 — Added an authenticated operation-status concept route and completed its shared, truthful loading/progress contract and workflow inventory; no production workflow behavior changed.
+- 2026-10-21 — Implemented M5 category/Other signed rollover, protected/transfer/release disposition and next-category controls; 322 isolated checks/490 unit tests passed, wider M5 gates remain open.
 
-- 2026-10-05 — Backed up and forward-migrated the persistent local stack through the ingestion hardening migrations; identity/ledger counts are unchanged and direct browser transaction mutations are now denied.
+- 2026-10-21 — Implemented M5 effective account scope with full SQL previews/save/undo; 284 isolated checks and 486 unit tests passed, category/Other rollover and wider M5 gates remain open.
 
-- 2026-10-04 — Completed Phase 4 ingestion hardening: isolated golden coverage verifies overlap/reconciliation, rollback, connected cutover, profile persistence and direct-write denial; hung chunks recover safely, test-stack cleanup is project-scoped, and the full golden plus six-file Gate 2 gates are green.
+- 2026-10-21 — Continued M5 with durable frequency intent, separate bridge/full templates, boundary application/cancel/undo and historical-write protection; 253 isolated checks/482 unit tests passed, full phase remains open.
 
-- 2026-10-04 — Completed Phase 3 ingestion hardening: imports now canonicalize and validate global and active tenant custom taxonomy pairs before the atomic write; isolated golden coverage verifies custom, inactive, mismatched, unknown and cross-tenant cases plus denied direct browser writes.
+- 2026-10-21 — Implemented M5 saved-period/review/signed-carry foundation; 223 isolated checks and 475 unit tests passed, full M5 policy/frequency/performance gates remain open.

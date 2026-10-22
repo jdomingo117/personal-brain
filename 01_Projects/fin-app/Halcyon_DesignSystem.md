@@ -363,6 +363,25 @@ rows do not. The grouped mutation can be undone as one operation. Compact shell 
 collapses below `sm`, and the rail/content grid uses `minmax(0,1fr)` so the dialog and ledger retain a
 390px canvas without horizontal overflow.
 
+The Ledger uses the **quiet toolbar** layout. “Transactions” and one sentence-case “Review categories”
+button sit above the transaction views. The separate header attention statistic and review card
+are removed. All, Needs attention (with a count), and Uncategorized use underlined view controls;
+“More views” expands the remaining review, source and attribute lenses on their own row. Opening
+Needs attention clears narrowing filters with a restore action and preserves selection. Its badge
+counts the global attention union until active, then follows the narrowed attention result.
+
+“Review categories” opens a labelled, focus-trapped setup dialog. Two radio choices explain
+“Review unclassified” (source-less `Uncategorized`) and “Check existing categories” (the broader
+candidate scope); unavailable choices have an explicit empty state. A native batch selector allows
+direct access to every bounded batch, followed by “Preview suggestions.” Contextual scope copy and
+a “How review works” disclosure live here. An existing session changes the toolbar action to
+“Continue review,” displays actual batches previewed, and initially selects the next unpreviewed
+batch (or the last active batch when all have been previewed). The setup also offers session reset.
+The preview retains its protected decisions, staged choices, 500-row apply/undo boundary and
+next-batch warnings. Closing returns focus to the toolbar trigger; “Review selected” stays with
+selection controls. All controls use theme tokens, visible focus and 44px targets; narrower screens
+stack search controls and retain account/date/category context within transaction rows.
+
 ### 8.5 Account / stream row (`AccountRow.tsx`)
 Accent bar (3px) + name (600) + type (micro) + balance (tabular; `neg` if negative).
 

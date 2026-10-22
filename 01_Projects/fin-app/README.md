@@ -65,6 +65,10 @@ MANAGED_INVESTMENTS.md        managed-fund implementation, operations, and known
 MVP_SCOPE.md                  the thin-slice MVP + deferred phases (plan of record)
 ONBOARDING_PLAN.md            shelved onboarding/tutorial strategy and future implementation gates
 PLANNING_EXPERIENCE_PLAN.md   phased durable goals, scenarios and plan-vs-actual delivery plan
+BUDGET_FEATURE_SPEC.md       agreed Budget features, purchase goals, behaviour and acceptance criteria
+BUDGET_UI_UX_WIREFRAMES.md   Budget layout alternatives, wireframes and recommended interaction design
+BUDGET_GUIDANCE_AND_GOALS.md agreed plain language/input guidance and researched purchase-goal requirements
+BUDGET_CONCEPT_REVIEW.md    interactive Budget concept, walkthrough, validation and prototype boundaries
 Halcyon_DesignSystem.md       definitive design system
 System requirements - SRD.md  full product vision + security model (reconciled to the build; missing a data model + API contract)
 MIGRATION_PLAN.md             historical (vanilla → React port)

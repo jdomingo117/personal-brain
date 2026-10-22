@@ -3,6 +3,7 @@ import { isEarnedIncome } from './classification'
 
 export type LedgerReviewFilter =
   | 'all'
+  | 'needs-attention'
   | 'needs-review'
   | 'uncategorized'
   | 'missing-subcategory'
@@ -91,6 +92,7 @@ export function isMissingSubcategory(transaction: Txn): boolean {
 
 export function matchesLedgerReview(transaction: Txn, filter: LedgerReviewFilter): boolean {
   switch (filter) {
+    case 'needs-attention': return needsLedgerAttention(transaction)
     case 'needs-review': return transaction.needsReview === true
     case 'uncategorized': return transaction.cat === UNCATEGORIZED
     case 'missing-subcategory': return isMissingSubcategory(transaction)
@@ -133,7 +135,9 @@ export function filterLedger(transactions: Txn[], filters: LedgerFilters): Txn[]
 }
 
 export function reviewCount(transactions: Txn[]): number {
-  return transactions.filter((transaction) =>
-    transaction.needsReview === true || transaction.cat === UNCATEGORIZED,
-  ).length
+  return transactions.filter(needsLedgerAttention).length
+}
+
+export function needsLedgerAttention(transaction: Txn): boolean {
+  return transaction.needsReview === true || transaction.cat === UNCATEGORIZED
 }

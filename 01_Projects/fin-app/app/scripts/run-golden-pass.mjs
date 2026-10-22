@@ -175,7 +175,7 @@ try {
   } else if (suite === 'review') {
     // Deterministic contracts and a mocked preview: no external categorisation provider.
     run('node', ['scripts/test-categorization-review.mjs'], { cwd: appDir, env: { ...env, HALCYON_TEST_LIVE_GEMINI: '0', HALCYON_TEST_ORIGIN: 'http://localhost:55300' } })
-    run('npx', ['playwright', 'test', '--config', 'playwright.golden.config.ts', '--grep', 'review shows transaction context|review invalidates the batch'], {
+    run('npx', ['playwright', 'test', '--config', 'playwright.golden.config.ts', '--grep', 'review action section|review shows transaction context|review defaults to suggestions|review invalidates the batch'], {
       cwd: appDir, env: { ...env, HALCYON_REVIEW_BROWSER: '1', HALCYON_REVIEW_REPORT_DIR: workDir },
     })
   } else {

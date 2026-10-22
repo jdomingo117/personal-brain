@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Txn } from '../data'
 import {
   buildCategorizationReviewImpact, buildReviewAssignments, categorizationPreviewPages, categorizationPreviewProgress, suggestedReviewIds,
-  reviewScopeTransactions,
+  reviewScopeTransactions, reviewBatchIds, resolveReviewBatch,
   type CategorizationReviewRow,
 } from './categorizationReview'
 
@@ -54,6 +54,26 @@ describe('categorisation review selection', () => {
 
     expect(result.selected).toHaveLength(500)
     expect(result.truncated).toBe(true)
+  })
+
+  it('snapshots all candidate ids into stable, bounded batches and rechecks later rows', () => {
+    const rows = Array.from({ length: 570 }, (_, index) => transaction({ id: `id-${index}` }))
+    const batches = reviewBatchIds(rows)
+    expect(batches.map((batch) => batch.length)).toEqual([500, 70])
+    expect(new Set(batches.flat()).size).toBe(570)
+    const changed = rows.slice(500).map((row, index) => index === 0 ? { ...row, categorySource: 'bank' as const } : row).slice(0, 69)
+    const second = resolveReviewBatch(batches[1], changed, 'eligible')
+    expect(second.transactions.map((row) => row.id)).toEqual(rows.slice(501, 569).map((row) => row.id))
+    expect(second.skipped).toBe(2)
+    expect(() => reviewBatchIds(rows, 0)).toThrow(RangeError)
+    expect(() => reviewBatchIds(rows, 501)).toThrow(RangeError)
+  })
+
+  it('does not recalculate later batch membership when earlier candidates change', () => {
+    const rows = Array.from({ length: 502 }, (_, index) => transaction({ id: `id-${index}` }))
+    const batches = reviewBatchIds(rows)
+    const afterApply = rows.map((row, index) => index < 500 ? { ...row, categorySource: 'user' as const } : row)
+    expect(resolveReviewBatch(batches[1], afterApply, 'eligible').transactions.map((row) => row.id)).toEqual(['id-500', 'id-501'])
   })
 
   it('keeps one merchant together while bounding distinct merchants per preview', () => {

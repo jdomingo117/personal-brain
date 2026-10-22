@@ -18,6 +18,7 @@ const VIEW_SHIFT: Record<View, number> = {
   accounts: -22,
   income: -10,
   expenses: 24,
+  budget: 12,
   ledger: 4,
   ingestion: -8,
   transfers: 8,
