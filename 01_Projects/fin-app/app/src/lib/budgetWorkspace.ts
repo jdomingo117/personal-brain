@@ -7,6 +7,7 @@ export type PlanLine = { id: string; kind: 'everyday'|'fixed'|'reserve'|'contrib
 export type Setup = {
   currency: 'AUD'; timezone: string; frequency: 'monthly'|'fortnightly'; start_date: string; anchor?: string;
   account_ids: string[]; destination_account_ids: string[]; income_cents: number; opening_drawdown_cents: number; lines: PlanLine[];
+  assistance?:{method:string;fingerprint:string;source_revision:string;manual:boolean;periods:{start_date:string;end_date:string}[];provenance:Record<string,string>;goal_intent?:{line_id:string;name:string;target_cents:number|null;needed_by:string|null}};
 }
 export type Snapshot = {
   details?:(BudgetDetails&{taxonomy_scopes:import('./budgetItems').BudgetTaxonomyScope[];frequency_change?:import('./budgetFrequency').FrequencyChange|null;account_policy?:import('./budgetAccountPolicy').AccountPolicy|null;rollover?:import('./budgetRollover').RolloverFacts;rollover_policy?:import('./budgetRollover').RolloverPolicy|null;controls?:import('./budgetControls').ControlState;control_event?:import('./budgetControls').ControlEvent|null})|null;

@@ -5,6 +5,14 @@ import { budgetRecurring } from '../_shared/budgetRecurring.ts'
 Deno.serve(withAuth({schema:BudgetQuery,requireRole:'viewer',maxBodyBytes:262144,
   rateLimit:{limit:30,windowSec:60,onError:'closed'}},async ctx => {
   const workspace = ctx.body.action === 'workspace'
+  if(ctx.body.action==='assisted_setup'){
+    const {data,error}=await ctx.admin().rpc('budget_assisted_setup',{p_tenant:ctx.tenantId,p_actor:ctx.user.id,p_input:ctx.body})
+    if(error){
+      if(['57014','55P03'].includes(error.code))throw new SafeHttpError(503,{code:'assistance_unavailable',message:'The complete history check could not finish. Your manual setup is still available; try assistance again later.',retryable:true})
+      budgetFailure(error)
+    }
+    return data
+  }
   if(ctx.body.action==='prepare_history'){
     const {data,error}=await ctx.admin().rpc('budget_prepare_history',{p_tenant:ctx.tenantId,p_actor:ctx.user.id,p_plan:ctx.body.plan_id,p_period:ctx.body.period_id,p_source:ctx.body.expected_source,p_version:ctx.body.expected_plan})
     if(error){

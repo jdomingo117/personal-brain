@@ -12,6 +12,8 @@ import './budget.css'
 import BudgetItems from '../components/BudgetItems'
 import BudgetLifecycle from '../components/BudgetLifecycle'
 import BudgetAttention from '../components/BudgetAttention'
+import BudgetAssistance from '../components/BudgetAssistance'
+import {convertAssistanceToManual} from '../lib/budgetAssistance'
 
 const purposeNames={everyday:'Everyday spending',fixed:'Regular bills',reserve:'Set money aside',contribution:'Planned transfer'}
 function Field({label,children,hint}:{label:string;children:ReactNode;hint?:string}) {
@@ -38,6 +40,7 @@ export default function Budget() {
   const budget=useBudget(),{role,tenantId,refreshMembership}=useAuth()
   const {snapshot:s,draft,editing,setEditing,loading,busy,error,notice,pending,canWrite}=budget
   const [view,setView]=useState<'overview'|'plan'>('overview')
+  const [assisting,setAssisting]=useState(false)
   const root=useRef<HTMLDivElement>(null),wasBusy=useRef(false)
   const savedSetup=readSavedSetup(draft?.draft)
   useEffect(()=>{void budget.refresh()},[budget.refresh])
@@ -46,7 +49,7 @@ export default function Budget() {
   const outdated=s?.details?.lifecycle?s.details.lifecycle.state!=='current':s?.plan&&s.period?today({now:()=>now},s.plan.timezone)>=s.period.end_date:false
   return <Screen><div ref={root} className="budget-workspace">
     <ViewHeader index="05 — Budget" title="Budget" sub="Give your money a plan, one step at a time." />
-    <p className="detail-copy mt-2 text-muted">Private preview · Manual planning, dated bills and savings goals. Automatic period changes and assisted setup are still being built.</p>
+    <p className="detail-copy mt-2 text-muted">Private preview · Manual or history-assisted planning, dated bills and savings goals.</p>
     {!tenantId&&<OperationStatusPanel state="failed" title="Your workspace isn’t available yet" description="We haven’t loaded a workspace membership, so no Budget information has been read or changed." action={<Button variant="ghost" onClick={()=>void refreshMembership()}>Retry workspace connection</Button>} className="mt-4"/>}
     <div className="mt-4 flex flex-wrap gap-2"><Button variant="ghost" onClick={()=>void budget.refresh()} disabled={loading||busy}>Refresh saved data</Button></div>
     {!BUDGET_ENABLED&&<p className="outcome-panel mt-4">The Budget preview is not enabled on this build. Saved data and interrupted-save recovery remain available here.</p>}
@@ -68,7 +71,7 @@ export default function Budget() {
     {pending&&<div className="outcome-panel mt-4"><h3 className="font-semibold">Let’s check that save first</h3><p className="body-copy my-2">The connection ended before we could confirm the result. Your original request is kept in this tab, including after a reload. We’ll check the saved result, then retry that same request only if needed.</p><Button disabled={busy} onClick={()=>void budget.recover()}>Check saved result</Button></div>}
     {s&&!s.write_enabled&&<p className="outcome-panel mt-4">Budget changes are currently paused. Saved information and result checks are still available.</p>}
     {role&&role!=='owner'&&<p className="outcome-panel mt-4">You can view this budget. Only its owner can change the plan or view setup drafts.</p>}
-    {editing&&s?<BudgetEditor key={s.plan?.id??'setup'} setup={editing} active={!!s.plan} />:s?.plan?<>
+    {editing&&s?<BudgetEditor key={s.plan?.id??'setup'} setup={editing} active={!!s.plan} />:assisting&&s&&!s.plan?<BudgetAssistance onUse={setup=>{setAssisting(false);setEditing(setup)}} onManual={setup=>{setAssisting(false);setEditing(setup)}} onClose={()=>setAssisting(false)}/>:s?.plan?<>
       <p className="body-copy mt-5">{s.period!.start_date} – {addDays(s.period!.end_date,-1)} · {s.period!.timezone} · {s.period!.frequency==='monthly'?'Monthly':'Every two weeks'}</p>
       {outdated&&<p className="outcome-panel mt-3 text-warn">These dates have ended. Review the saved results or plan the next budget below. History is retained; more schedule and policy controls are still being built.</p>}
       <BudgetLifecycle/>
@@ -89,7 +92,7 @@ export default function Budget() {
       {s.details?.lifecycle?.state!=='current'&&<p className="outcome-panel mt-4">Saved history is read-only here. Review and carry controls remain available; correct recorded activity in Ledger. Changing past plans and account settings is not available in this preview.</p>}
       <fieldset disabled={!!s.details?.lifecycle&&s.details.lifecycle.state!=='current'} className="min-w-0"><BudgetItems/></fieldset>
     </>:s&&!loading?<><Grid><Tile title="A plan that starts with you" span={2}><p className="body-copy">Start with what you expect to receive, choose a monthly or two-week budget, and decide what you want your money to do. No bank connection is needed.</p>
-      <div className="mt-4 flex flex-wrap gap-3"><Button disabled={!canWrite} onClick={()=>{if(!draft?.draft||window.confirm('Start a new setup? Your saved draft stays unchanged until you explicitly save a replacement.'))setEditing(blankSetup())}}>Build my budget</Button>{savedSetup&&<Button disabled={!canWrite} variant="ghost" onClick={()=>setEditing(savedSetup)}>Continue saved draft</Button>}</div>
+      <div className="mt-4 flex flex-wrap gap-3"><Button disabled={!canWrite} onClick={()=>setAssisting(true)}>Help me build a budget</Button><Button disabled={!canWrite} variant="ghost" onClick={()=>{if(!draft?.draft||window.confirm('Start a new setup? Your saved draft stays unchanged until you explicitly save a replacement.'))setEditing(blankSetup())}}>Enter my own amounts</Button>{savedSetup&&<Button disabled={!canWrite} variant="ghost" onClick={()=>setEditing(savedSetup)}>Continue saved draft</Button>}</div>
       {!!draft?.draft&&!savedSetup&&<p className="detail-copy mt-3 text-warn">A partial or older setup is saved safely, but this preview cannot open its format yet. It has not been replaced or activated. You can start a new setup explicitly.</p>}
       {draft?.stale&&<p className="detail-copy mt-3 text-warn">Your account information changed since this draft was saved. Review it before starting your budget.</p>}</Tile></Grid><SavedDraftReview/></>:null}
   </div></Screen>
@@ -105,12 +108,13 @@ function BudgetEditor({setup,active}:{setup:Setup;active:boolean}) {
   const [review,setReview]=useState(false),[accepted,setAccepted]=useState(false),[scope,setScope]=useState<'period'|'period-and-future'>('period')
   const [localError,setLocalError]=useState('')
   useEffect(()=>{setReview(false);setAccepted(false)},[s,b.draft?.draft_version])
-  function change(next:Setup){b.setEditing(next);setAccepted(false);setReview(false)}
+  function change(next:Setup){b.setEditing(next.assistance?convertAssistanceToManual(next):next);setAccepted(false);setReview(false)}
   function lineChange(id:string,patch:Partial<Setup['lines'][number]>) {change({...setup,lines:setup.lines.map(l=>l.id===id?{...l,...patch}:l)})}
   let period:ReturnType<typeof setupPeriod>|null=null,gap=false
   try{period=setupPeriod(setup);const sums=setupSummary(setup,s.details?.controls?.archives.map(a=>a.line_id));gap=sums.current.fundingGap>0||((!active||scope==='period-and-future')&&sums.future.fundingGap>0)}catch{}
   const unavailable=setup.account_ids.some(id=>!s.accounts.some(a=>a.id===id&&a.currency==='AUD'))
-  const disabled=!b.canWrite||unavailable
+  const staleAssistance=!!setup.assistance&&!setup.assistance.manual&&setup.assistance.source_revision!==s.source_revision
+  const disabled=!b.canWrite||unavailable||staleAssistance
   function preview(){
     if(!form.current?.reportValidity())return
     try{validateSetup(setup);setReview(true);setLocalError('')}catch(e){setLocalError(e instanceof Error?e.message:'Check your plan.')}
@@ -123,6 +127,7 @@ function BudgetEditor({setup,active}:{setup:Setup;active:boolean}) {
   // Activation is a separate explicit action on a saved, reviewed draft; never auto-activate after save.
   return <form ref={form} onSubmit={e=>e.preventDefault()} className="mt-5 space-y-4" aria-busy={b.busy}>
     <fieldset disabled={!b.canWrite} className="space-y-4 min-w-0">
+    {staleAssistance&&<div className="outcome-panel text-warn space-y-2"><p>The history behind these suggestions changed. Your edited amounts and goal are still here, but the old evidence cannot authorize a new draft.</p><Button variant="ghost" onClick={()=>change(convertAssistanceToManual(setup))}>Keep as manual estimates</Button></div>}
     <div className="glass p-5"><h3 className="font-display text-xl font-bold">{active?'Adjust your plan':'Let’s build your budget'}</h3><p className="body-copy mt-2">{active?'Change the amounts, then review exactly which periods they apply to.':'Choose your rhythm, estimate what’s coming in, then give that money a job. You stay in control.'}</p></div>
     {!active&&<div className="glass p-5 space-y-4"><h3 className="font-semibold">1. Choose your rhythm and accounts</h3><div className="grid gap-4 md:grid-cols-2">
       <Field label="Budget rhythm"><Select value={setup.frequency} onChange={frequency=>change({...setup,frequency:frequency as Setup['frequency']})}><option value="monthly">Monthly · calendar months</option><option value="fortnightly">Every two weeks · 14 days</option></Select></Field>
@@ -171,7 +176,7 @@ export function SavedDraftReview() {
   return <div className="glass mt-4 p-5 space-y-3"><h3 className="font-semibold">Your saved setup draft</h3><p className="body-copy">Nothing is active yet. Review the saved amounts before starting.</p><Button variant="ghost" disabled={!valid||!b.canWrite} onClick={()=>setReview(!review)}>Review saved draft</Button>
     {review&&<><Balance setup={setup} both/><p className="body-copy">{setupPeriod(setup).start} – {addDays(setupPeriod(setup).end,-1)} · {setup.timezone} · {setup.frequency==='monthly'?'Monthly':'Every two weeks'} · {setup.account_ids.length} activity accounts</p>
       <ul>{setup.lines.map(l=><li key={l.id} className="flex justify-between gap-3 py-2"><span>{l.name}</span><span>{fmtCents(l.allocation_cents)}</span></li>)}</ul>
-      {stale?<p className="text-warn">Your source information changed. Continue this draft, review it, and save it again before starting.</p>:<>{gap&&<label className="flex min-h-11 items-start gap-3 py-3"><input type="checkbox" checked={accepted} onChange={e=>setAccepted(e.target.checked)}/><span>I understand the current and future funding gaps shown above.</span></label>}<Button disabled={!b.canWrite||(gap&&!accepted)} onClick={()=>void b.run({action:'activate',expected_draft:b.draft!.draft_version,accept_gap:accepted})}>Start this budget</Button><p className="detail-copy text-muted">This activates your saved plan. It does not move money.</p></>}
+      {stale?<div className="space-y-2"><p className="text-warn">Your source information changed. Recheck the suggestions, or explicitly keep these edited amounts as manual estimates before saving again.</p>{setup.assistance&&!setup.assistance.manual&&<Button variant="ghost" onClick={()=>b.setEditing(convertAssistanceToManual(setup))}>Keep as manual estimates</Button>}</div>:<>{gap&&<label className="flex min-h-11 items-start gap-3 py-3"><input type="checkbox" checked={accepted} onChange={e=>setAccepted(e.target.checked)}/><span>I understand the current and future funding gaps shown above.</span></label>}<Button disabled={!b.canWrite||(gap&&!accepted)} onClick={()=>void b.run({action:'activate',expected_draft:b.draft!.draft_version,accept_gap:accepted})}>Start this budget</Button><p className="detail-copy text-muted">This activates your saved plan. It does not move money.</p></>}
     </>}
   </div>
 }

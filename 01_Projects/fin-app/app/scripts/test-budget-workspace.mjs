@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import {budgetM4Interactions} from './test-budget-m4-interactions.mjs'
 import {budgetM5Interactions} from './test-budget-m5-interactions.mjs'
 
-export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,check,edge,attentionOnly=false,temporalOnly=false,temporalFixtures=[],historyFixture}) {
+export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,check,edge,attentionOnly=false,temporalOnly=false,temporalFixtures=[],historyFixture,assistanceFixture}) {
  const url='http://127.0.0.1:57300'
  // Never reuse a dev server whose environment/identity could belong to the personal stack.
  try{await fetch(url);throw Error('Private Budget browser port is already occupied')}catch(e){if(!String(e).includes('fetch failed'))throw e}
@@ -22,7 +22,7 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
    const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message))
    await page.goto(`${url}/budget`)
    await expect(page.getByRole('heading',{name:'Budget',exact:true})).toBeVisible({timeout:30000})
-   try{await expect(page.getByRole('button',{name:hasPlan?'My plan':'Build my budget',exact:true})).toBeVisible({timeout:15000})}catch(e){
+   try{await expect(page.getByRole('button',{name:hasPlan?'My plan':'Enter my own amounts',exact:true})).toBeVisible({timeout:15000})}catch(e){
     await page.screenshot({path:'/tmp/halcyon-budget-m3-failure.png',fullPage:true})
     console.log('Fictional UI failure:',await page.locator('.budget-workspace').innerText(),errors)
     throw e
@@ -38,6 +38,40 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
    return
   }
   async function settled(page){await expect.poll(()=>page.locator('.budget-workspace .glass').evaluateAll(els=>els.every(el=>Number(getComputedStyle(el).opacity)>.99&&!/blur\((?!0px)/.test(getComputedStyle(el).filter))),{timeout:10000}).toBe(true)}
+  if(assistanceFixture){
+   const assisted=await signedPage(assistanceFixture.user)
+   await assisted.getByRole('button',{name:'Help me build a budget',exact:true}).click()
+   await assisted.getByRole('checkbox',{name:/Assistance fictional account/}).check()
+   await assisted.getByRole('button',{name:'Check my history',exact:true}).click()
+   await expect(assisted.getByRole('heading',{name:'Enough complete history for a starting point'})).toBeVisible()
+   await assisted.getByRole('checkbox',{name:/These are the accounts and dated periods/}).check()
+   await assisted.getByLabel(/Have your income/).selectOption('no')
+   await assisted.getByRole('checkbox',{name:/I checked the income/}).check()
+   await assisted.getByRole('checkbox',{name:/Try one optional change/}).check()
+   await assisted.getByLabel('Amount to redirect from everyday spending').fill('10')
+   await assisted.getByLabel('Leave room for').selectOption('goal')
+   await assisted.getByLabel('Goal name').fill('Bike fund')
+   await assisted.getByLabel('Estimated target (optional)').fill('120')
+   await assisted.getByLabel('Needed by (optional)').fill('2027-12-01')
+   await assisted.getByRole('button',{name:'Use this draft',exact:true}).click()
+   await expect(assisted.getByLabel('Expected income this period (AUD)',{exact:true})).toHaveValue('500.00')
+   await expect(assisted.getByLabel('Planned for Everyday spending (AUD)',{exact:true})).toHaveValue('80.00')
+   await expect(assisted.getByLabel('Planned for Bike fund (AUD)',{exact:true})).toHaveValue('10.00')
+   check('assisted browser draft conserves the optional one-change allocation',true)
+   check('using assistance does not activate a budget',snapshotSQL(assistanceFixture.user).plan,null)
+   await assisted.getByRole('button',{name:'Review my plan'}).click()
+   await assisted.getByRole('button',{name:'Save setup draft'}).click()
+   check('assisted draft still requires separate activation',snapshotSQL(assistanceFixture.user).plan,null)
+   await assisted.reload()
+   await assisted.getByRole('button',{name:'Review saved draft'}).click()
+   await assisted.getByRole('button',{name:'Start this budget'}).click()
+   await expect(assisted.getByRole('button',{name:'My plan',exact:true})).toBeVisible()
+   const activated=snapshotSQL(assistanceFixture.user)
+   check('assisted activation preserves the named goal target, date and future contribution',
+    [activated.details.items.find(i=>i.name==='Bike fund')?.config?.type,activated.details.items.find(i=>i.name==='Bike fund')?.config?.target_cents,activated.details.items.find(i=>i.name==='Bike fund')?.config?.due_date,activated.future_template.allocations.find(a=>a.line_id===activated.details.items.find(i=>i.name==='Bike fund')?.line_id)?.amount_cents],
+    ['goal',12000,'2027-12-01',1000])
+   await assisted.close()
+  }
   if(temporalFixtures.length){
    const {budgetTemporalInteractions}=await import('./test-budget-temporal-interactions.mjs')
    await budgetTemporalInteractions({fixtures:temporalFixtures,check,signedPage,settled})
@@ -55,7 +89,7 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
   check('workspace returns tenant-bound account names and real currencies',workspace.body.accounts.map(a=>a.currency).sort(),['AUD','USD'])
   check('workspace exposes no balances or raw transactions',workspace.body.accounts.every(a=>Object.keys(a).sort().join(',')==='currency,id,name'))
   const page=await signedPage(user)
-  await page.getByRole('button',{name:'Build my budget'}).click()
+  await page.getByRole('button',{name:'Enter my own amounts'}).click()
   await expect(page.getByRole('checkbox',{name:/overseas/})).toBeDisabled()
   await page.getByRole('checkbox',{name:/daily account/}).check()
   await page.getByLabel('Expected income this period (AUD)',{exact:true}).fill('2000')
@@ -130,7 +164,7 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
   check('authenticated viewer has a read-only tablet workspace',true)
   // Small-screen manual setup with no accounts and no income is a first-class path.
   const phone=await signedPage(phoneUser,390)
-  await phone.getByRole('button',{name:'Build my budget'}).click()
+  await phone.getByRole('button',{name:'Enter my own amounts'}).click()
   await phone.getByLabel('Budget rhythm').selectOption('fortnightly')
   await phone.getByRole('button',{name:'Review my plan'}).click()
   await phone.getByRole('button',{name:'Save setup draft'}).click()

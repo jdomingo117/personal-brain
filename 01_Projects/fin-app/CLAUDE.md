@@ -64,6 +64,8 @@ hand to find the transfer-linker gap.
 
 ## Recent changes
 
+- 2026-10-22 — Implemented and stabilized the M6 assisted-setup production foundation; 107 isolated checks across 91 migrations and focused unit/type/build checks pass, responsive/final M6 gates remain open.
+
 - 2026-10-22 — Closed M5 with complete impact preparation and atomic Save/Undo; 451 full/145 focused isolated checks across 90 migrations and 511 unit tests passed, M6 assisted setup is next.
 
 - 2026-10-22 — Optimized complete impact prefixes, source/claim and allocation aggregates; dense ten-year save/Undo and 432 regression checks across 89 migrations pass, mixed-history atomic-save gate remains open.
@@ -79,7 +81,5 @@ hand to find the transfer-linker gap.
 - 2026-10-21 — Implemented M5 category/Other signed rollover, protected/transfer/release disposition and next-category controls; 322 isolated checks/490 unit tests passed, wider M5 gates remain open.
 
 - 2026-10-21 — Implemented M5 effective account scope with full SQL previews/save/undo; 284 isolated checks and 486 unit tests passed, category/Other rollover and wider M5 gates remain open.
-
-- 2026-10-21 — Continued M5 with durable frequency intent, separate bridge/full templates, boundary application/cancel/undo and historical-write protection; 253 isolated checks/482 unit tests passed, full phase remains open.
 
 - 2026-10-21 — Implemented M5 saved-period/review/signed-carry foundation; 223 isolated checks and 475 unit tests passed, full M5 policy/frequency/performance gates remain open.

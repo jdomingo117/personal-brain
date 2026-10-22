@@ -352,9 +352,29 @@ stack query/migration, flag enablement, hosted latency guarantee or M6/M7 closur
 Regression: **432 isolated SQL/Edge/browser checks across 89 migrations; 503 unit tests passed/14
 existing skips; focused Budget TypeScript/build passed**, responsive journeys and cleanup verified.
 
+**M6 assisted setup — production foundation implemented; responsive/final gates remain open, 22 October 2026:**
+Migration `20261022170000_budget_assisted_setup.sql` (91) adds service-only deterministic assistance
+over canonical transaction/split semantics, explicit account-coverage ranges, monthly or
+anchor-aligned fortnightly complete periods, exact-cent medians, confirmed recurring identities,
+source fingerprints and stale-evidence guards. Historical everyday values subtract only matching
+canonical recurring activity; an upcoming confirmed bill is never falsely removed from unrelated
+history. Invalid/foreign-currency scope fails closed without exposing a monetary suggestion.
+Validated assistance provenance can survive the existing versioned draft and guarded activation;
+an optional named goal becomes the matching M4 goal/reserve intent atomically, while any editor
+change or stale-evidence conversion relabels the amounts as manual estimates and preserves the
+goal line/future contribution. `BudgetAssistance.tsx`, `budgetAssistance.ts`, `BudgetContext` and
+the existing Budget editor provide the inline evidence review, recent-change confirmation, bounded
+one-change what-if and explicit `Use this draft` → save → activation boundary. Strict `query-budget`
+Zod and the service RPC remain read-only until normal activation. `test-budget-assistance.mjs`
+extends the positively identified disposable provisioner; focused evidence after Chunk 1 is **107
+isolated SQL/Edge checks across 91 migrations**, 5 focused unit tests, Budget TypeScript and
+production build. Authenticated phone/desktop expansion, full regression and formal M6 closeout are
+still required; no personal migration or feature enablement occurred.
+
 [`BUDGET_SUGGESTIONS_PROPOSAL.md`](BUDGET_SUGGESTIONS_PROPOSAL.md) records the approved assisted
 setup: deterministic history-derived draft, explicit suggestion/data-quality gates and one optional
-what-if. Implemented in the fictional concept; production assisted-setup/scenario integration remains M6.
+what-if. The fictional concept remains the design reference; the production M6 foundation above is
+implemented but the remaining M6 verification gates are still open.
 
 ### `app/` (Frontend)
 - `budget-concept.html` / `src/budget-concept-main.tsx` / `src/concept/budget/` — Standalone,

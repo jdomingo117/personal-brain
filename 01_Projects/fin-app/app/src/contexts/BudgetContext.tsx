@@ -8,6 +8,7 @@ import type {RolloverIntent,RolloverPreview} from '../lib/budgetRollover'
 import type {ControlIntent,ControlPreview} from '../lib/budgetControls'
 import {isPreparing,historyRequest,type HistoryPreparation,type PreparingWorkspace} from '../lib/budgetHistory'
 import {prepareImpact,type ImpactPreparation} from '../lib/budgetImpact'
+import type {AssistanceRequest,AssistanceResult} from '../lib/budgetAssistance'
 
 class BudgetApiError extends Error {
   constructor(message:string,readonly definitive:boolean){super(message)}
@@ -35,6 +36,7 @@ type Workspace = {
   previewAccountScope:(intent:AccountScopeIntent)=>Promise<AccountScopePreview>;
   previewRollover:(intent:RolloverIntent)=>Promise<RolloverPreview>;
   previewControl:(intent:ControlIntent)=>Promise<ControlPreview>;
+  assistedSetup:(input:AssistanceRequest)=>Promise<AssistanceResult>;
 }
 const BudgetContext=createContext<Workspace|null>(null)
 export function useBudget(){const ctx=useContext(BudgetContext);if(!ctx)throw new Error('Budget workspace is unavailable');return ctx}
@@ -137,7 +139,12 @@ function BudgetSession({children,identity,tenantId,owner}:{children:ReactNode;id
     catch(e){if(e instanceof BudgetApiError&&!e.definitive)throw Error('We couldn’t finish checking the budget effects. Completed checks are saved. Review the effects again to continue; no budget change has been saved.');throw e}
   }
   return <BudgetContext.Provider value={{snapshot,draft,editing,setEditing,loading,busy,error,notice,pending,preparation,impactPreparation,canWrite:BUDGET_ENABLED&&owner&&!!snapshot?.write_enabled&&!pending&&!preparation&&!busy&&!loading,
-    refresh,run,sources,previewControl:async intent=>{
+    refresh,run,sources,assistedSetup:async input=>{
+      if(!owner||pending||working.current||loading)throw Error('Load the latest Budget workspace before checking history.')
+      const result=await invoke<AssistanceResult>('query-budget',{action:'assisted_setup',...input})
+      if(!mounted.current||result.source_revision!==snapshot?.source_revision)throw Error('Account activity changed while suggestions were being prepared. Check history again.')
+      return result
+    },previewControl:async intent=>{
       if(!owner||!snapshot?.plan||!snapshot.period||pending||working.current||loading)throw Error('Load the latest budget before reviewing a lifecycle change.')
       const result=await review<ControlPreview>({action:'preview_control',...intent,plan_id:snapshot.plan.id,period_id:snapshot.period.id,expected_plan:snapshot.plan.version,expected_source:snapshot.source_revision,expected_method:BUDGET_METHOD})
       if(!mounted.current||result.source_revision!==snapshot.source_revision||result.plan_version!==snapshot.plan.version)throw Error('Your budget changed. Review a fresh control preview.')

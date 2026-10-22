@@ -18,7 +18,7 @@ let functions,attempted=false,anon,checks=0,temporalFixtures=[],historyFixture
 const users=[]
 function run(cmd,args,input,timeout=60_000) {
  const r=spawnSync(cmd,args,{cwd:repo,input,encoding:'utf8',timeout,maxBuffer:16*1024*1024})
- if(r.status!==0)throw new Error(`${cmd} failed: ${r.error?.message??r.stderr}${cmd===cli&&args[0]==='start'?String(r.stdout).slice(-6000):''}`)
+ if(r.status!==0)throw new Error(`${cmd} failed: ${r.error?.message??r.stderr}${cmd===cli&&args[0]==='start'?String(r.stdout).slice(-20000):''}`)
  return r.stdout.trim()
 }
 const quote=v=>`'${String(v).replaceAll("'","''")}'`
@@ -106,6 +106,8 @@ enable_confirmations = false
  assert.equal(stack.API_URL,api);anon=stack.ANON_KEY
  check('all migrations replayed',Number(sql('SELECT count(*) FROM supabase_migrations.schema_migrations;')),readdirSync(resolve(repo,'supabase/migrations')).filter(n=>n.endsWith('.sql')).length)
  await startFunctions()
+ const {runBudgetAssistanceChecks}=await import('./test-budget-assistance.mjs')
+ const assistanceFixture=await runBudgetAssistanceChecks({newUser,sql,quote,check,edge,source})
  if(process.argv.includes('--performance-only')){
   const {runBudgetImpactPreparationChecks}=await import('./test-budget-impact-preparation.mjs')
   await runBudgetImpactPreparationChecks({newUser,sql,quote,check,edge,source,commandSQL})
@@ -337,7 +339,7 @@ enable_confirmations = false
  }
  if(process.argv.includes('--workspace')) {
   const {runBudgetWorkspaceChecks}=await import('./test-budget-workspace.mjs')
-  await runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,check,edge,temporalFixtures})
+  await runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,check,edge,temporalFixtures,assistanceFixture})
  }
  // Roll back exposure at the real Edge layer without hiding committed outcomes.
  await stopFunctions()
@@ -353,7 +355,7 @@ enable_confirmations = false
  check('disabled Edge exposes durable outcome lookup',(await edge(a,'query-budget',{action:'operation',request_id:savedBody.request_id})).body.outcome,saved.body)
  }else if(process.argv.includes('--workspace')){
   const {runBudgetWorkspaceChecks}=await import('./test-budget-workspace.mjs')
-  await runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,check,edge,attentionOnly:process.argv.includes('--attention-only'),temporalOnly:process.argv.includes('--temporal-only'),temporalFixtures,historyFixture})
+  await runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,check,edge,attentionOnly:process.argv.includes('--attention-only'),temporalOnly:process.argv.includes('--temporal-only'),temporalFixtures,historyFixture,assistanceFixture})
  }
  // Auth/tenant deletion cascades must not resurrect source gates or fail on immutable history.
  for(const u of users)sql(`DELETE FROM auth.users WHERE id=${quote(u.id)};`)
