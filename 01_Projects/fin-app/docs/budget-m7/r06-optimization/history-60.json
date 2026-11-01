@@ -1,0 +1,79 @@
+{
+  "periods": 60,
+  "transactions": 18000,
+  "base": {
+    "ms": 75,
+    "complete": true
+  },
+  "complete": {
+    "ms": 1024,
+    "complete": true
+  },
+  "source_plan": [
+    {
+      "Plan": {
+        "Node Type": "Index Scan",
+        "Parallel Aware": false,
+        "Async Capable": false,
+        "Scan Direction": "Forward",
+        "Index Name": "budget_transactions_scope_date",
+        "Relation Name": "transactions",
+        "Alias": "transactions",
+        "Startup Cost": 0.41,
+        "Total Cost": 437.56,
+        "Plan Rows": 286,
+        "Plan Width": 24,
+        "Actual Startup Time": 0.018,
+        "Actual Total Time": 0.42,
+        "Actual Rows": 300,
+        "Actual Loops": 1,
+        "Index Cond": "((tenant_id = '5cdf5405-7529-48c6-aaa5-c6006bac1b56'::uuid) AND (account_id = '76dc18cd-6688-47e0-9c23-38a5ac880c12'::uuid) AND (date >= '2026-10-01'::date) AND (date < '2026-11-01'::date))",
+        "Rows Removed by Index Recheck": 0,
+        "Shared Hit Blocks": 306,
+        "Shared Read Blocks": 0,
+        "Shared Dirtied Blocks": 0,
+        "Shared Written Blocks": 0,
+        "Local Hit Blocks": 0,
+        "Local Read Blocks": 0,
+        "Local Dirtied Blocks": 0,
+        "Local Written Blocks": 0,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0
+      },
+      "Planning": {
+        "Shared Hit Blocks": 342,
+        "Shared Read Blocks": 0,
+        "Shared Dirtied Blocks": 0,
+        "Shared Written Blocks": 0,
+        "Local Hit Blocks": 0,
+        "Local Read Blocks": 0,
+        "Local Dirtied Blocks": 0,
+        "Local Written Blocks": 0,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0
+      },
+      "Planning Time": 0.384,
+      "Triggers": [],
+      "Execution Time": 0.459
+    }
+  ],
+  "warm_edge_ms": 149,
+  "batch_ms": [
+    247,
+    217,
+    292,
+    247,
+    244,
+    211
+  ],
+  "scope_prepare_ms": [
+    620,
+    625
+  ],
+  "scope_preview": {
+    "ms": 88,
+    "complete": true
+  },
+  "scope_commit_ms": 90,
+  "scope_undo_ms": 199
+}

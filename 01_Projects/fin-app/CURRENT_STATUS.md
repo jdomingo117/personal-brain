@@ -9,7 +9,7 @@ tags:
 type: handoff
 status: current
 project: Halcyon
-updated: 2026-10-22
+updated: 2026-10-29
 related:
   - "[[README]]"
   - "[[INDEX]]"
@@ -20,6 +20,258 @@ related:
 # Halcyon — Current status
 
 ## Resume here
+
+**M7.7 local candidate verified — 29 October 2026.** [[BUDGET_M7_CANDIDATE_OPERATIONS]] records final patched-installation passes: 560 lifecycle, 391 forecast/assistance/candidate assertions, eight provider-disabled golden tests, 78 passing WCAG scans, 609 unit passes/14 existing skips, types/build and eight telemetry-summary assertions. Budget now has fixed-field privacy-safe request metrics and redacted audit/error diagnostics. Compatible development dependency updates (Vite 6.4.5 / Vitest 4.1.12 in the lock) clear 17 npm advisory entries; no runtime dependency version or financial SQL changed. All sixteen M7.7 test projects, including the two live attempts, are cleaned up. [[BUDGET_OPERATIONS_RUNBOOK]] supplies private-exposure/monitoring/recovery procedures. The owner subsequently authorized the live Gemini categorization test; [[BUDGET_M7_LIVE_CATEGORIZATION]] records two isolated attempts and a definitive generation HTTP402 / RESOURCE_EXHAUSTED response: prepayment credits are depleted. Live classification/fresh-review remains unpassed pending owner-restored credits and a rerun; no billing change was attempted. Human/hosted/M7.8 gates remain open; No-Go. No deployment or personal migration.
+
+**Installation/preview resume note:** source package files contain the validated security updates; primary `app/node_modules` and preview parent PID 80255 remain unchanged to preserve `halcyon-budget-m2-c65dd04871874dcb` / schema96 / port57300. Stopping its Vite child triggers fixture cleanup. Use a fresh patched install for candidate work; the successful isolated install is retained at `/var/folders/9x/g5gs98n95kj0m53j3g8dcypw0000gn/T/halcyon-m77-patched-source-b_vxbgaq/app`. Synchronize the primary install only when retiring that preview deliberately. The local candidate proof is complete; the next provider-dependent check is the already-authorized live-provider golden variant after credits are restored, followed by M7.8 reconciliation of all still-open gates.
+
+**M7.6 isolated migration/recovery rehearsal complete — 29 October 2026.** [[BUDGET_M7_MIGRATION_RECOVERY]] records 164 passing final assertions: populated forward migration from 64 to 104 migrations, pre-/post-Budget auth/application backups restored into separate databases, exact 81/108-table content and sequence parity, original-user password sign-in, tenant RLS, signed-cent totals, recorded review/reserves/edited drafts and receipt preservation with writes disabled/re-enabled. The focused workspace suite passes 25 tests. All three rehearsal projects are cleaned up; private fictional backups remain ignored outside Docker, and preview96/personal data are unchanged. Next engineering: M7.7 final candidate cross-feature/security/operations review. M7.3/M7.4 human, M7.5 hosted/cold/load and M7.8 release gates remain open; No-Go.
+
+**R06 local performance admission verified — 29 October 2026.** [[BUDGET_M7_R06_OPTIMIZATION]] records schema 104 and passing original 10k/100k/1m targets: at 1m, workspace SQL p95 744.926ms, five warm API samples maximum 835ms, assistance API maximum 2,635ms. The first same-generation checkpoint miss was 4,325.854ms SQL; warm p95 is not a first-load/hosted guarantee. Separate suites pass 187 capacity, 142 history and 537 backend assertions; unit 595/14 existing skips, types and script syntax pass. Money/API/UI semantics are preserved, all fourteen run projects are cleaned up, and preview96/personal data are unchanged. M7.5 hosted/cold/load qualification remains pending; next M7.6 isolated migration/restore preparation. Human and release gates remain open / No-Go.
+
+**M7.5 local measurements complete with findings — 29 October 2026.** [[BUDGET_M7_CAPACITY]] records 10k/100k/1m mixed-ledger measurements and the corrected-schema five-/ten-year history proof. Migration 97 restores the history guard bypassed by R01; it is verified only on disposable targets. New finding R06 remains open: 100k workspace SQL misses 1s; 1m workspace times out at 8s and assistance slightly exceeds 3s. The benchmark correctly fails admission. Next is SQL profiling/optimization and the same benchmark rerun. Hosted checks remain pending by explicit owner instruction. Preview retained on schema 96; personal database untouched. Human/operational/release gates remain open / No-Go.
+
+**Approved Overview copy refinement complete — 28 October 2026.** [[BUDGET_OVERVIEW_COPY_REFINEMENT]] records the positive pending-overage sentence, explicit everyday-spending forecast heading/period end, and threshold policy retained in details. Six width/theme browser accessibility checks, future/stale guards, full TypeScript and production build pass; zero Budget writes. Only two presentation components differ from the pass-three source baseline. Prior owner acceptance remains recorded; this follow-up has engineering verification. Human and operational release gates remain open / No-Go.
+
+**Owner Overview comparison accepted — 28 October 2026.** The owner confirmed all three clarity questions: “All 3 questions are a yes. We can resume to the next steps”. The three production passes and owner presentation checkpoint are complete. [[BUDGET_M7_HUMAN_VALIDATION]] now provides the observed accessibility protocol and independent beginner walkthrough. A human beginner tester is no longer available; screen-reader observation is not yet arranged. The owner requested an AI beginner-perspective critique, which does not close either human gate. M7.3/M7.4 results remain pending; M7.5–M7.8 and release remain open / No-Go.
+
+**Overview simplification pass 3 engineering verified — 28 October 2026.** [[BUDGET_OVERVIEW_PASS_3_VERIFICATION]] records 472 fresh lifecycle checks and 442 final assembled checks across 96 migrations, with 131 passing automated accessibility scans and all 70 candidate cases. 595 unit passes/14 skips, types and build pass. A phone funding notice now precedes the positive allowance, using the existing qualified value; backend/calculations remain unchanged. The restored real preview received owner acceptance on 28 October 2026. M7 human/operational/release gates remain open; No-Go.
+
+**Overview simplification pass 2 complete — 28 October 2026.** [[BUDGET_OVERVIEW_PASS_2_ATTENTION_COMMITMENTS_GOALS]] records the canonical single-priority decision beside the hero, retained reminder controls, compact bill/goal disclosures and optional ordinary income detail with visible funding gaps. 595 unit passes/14 skips, types/build, 30 full-workspace WCAG cases and original task checks pass. A real fictional-account reminder acknowledgement/Undo restored its state and preserved financial facts. Next is pass three assembled verification and owner comparison.
+
+**Overview simplification pass 1 complete — 28 October 2026.** [[BUDGET_OVERVIEW_PASS_1_SUMMARY_FORECAST]] records the real hero/forecast composition, amount-based headline, solid/hatched comparison and preserved evidence/staleness guards. 595 unit passes/14 skips, types/build and 30 production presentation WCAG cases plus seven boundary/guard cases pass; zero Budget writes. The owner authorized this first pass only and requested a handback before pass two. Next: attention/bills/goals simplification, then assembled verification; no second-pass work has started.
+
+**Current next step — Overview simplification study, 28 October 2026.** The owner says the R01 checks pass but finds the assembled page text-heavy and directionally overwhelming. [[BUDGET_OVERVIEW_SIMPLIFICATION_STUDY]] contains the separately authorized hierarchy and desktop/phone mockups with five states. Review at `http://127.0.0.1:57300/budget-overview-study.html`; production `/budget` remains intact. Owner mockup feedback precedes implementation and resumed human walkthroughs. Earlier R01 engineering evidence remains valid within its recorded scope; release remains No-Go.
+
+**R01 engineering complete — 28 October 2026.** [[BUDGET_R01_SPENDING_FORECAST]] records forward migration 96 and the owner-approved median of three monthly daily gross rates, date-aware fixed bills, separate pending warnings and conservative unavailable states. Verification: 79 final forecast checks, 243 combined forecast/affected-candidate checks with 78 passing WCAG scans plus eight final threshold-explanation scans, 472 lifecycle checks, 589 unit passes/14 existing skips, full/focused/browser types and production build. These are separate runs, not additive unique checks. All 17 BUI presentation bursts remain delivered; R01–R05 engineering findings are now corrected. Next is the R01 affected-flow owner checkpoint and M7.3 observed human accessibility/M7.4 independent beginner walkthroughs, followed by M7.5–M7.8 operational/release gates. Release remains **No-Go**. No personal migration, deployment or commit occurred.
+
+**Current direction — Budget concept-to-production presentation, 27 October 2026.**
+The owner finds the production Budget visually overwhelming and prefers the approved concept.
+[[BUDGET_UI_IMPLEMENTATION_HANDOFF]] is the engineer handover: context, visual/data/interaction
+specifications, selective shadcn guidance and 17 bounded implementation bursts.
+**BUI-04 is complete, with owner visual sign-off on 26 October 2026,** in [[BUDGET_BUI_04_HEADER_HERO]]: compact saved-period
+header, Overview/My plan/Look back navigation, canonical everyday/income hero and
+retained detail/settings links. Dates and money lead; lifecycle controls follow the
+healthy overview. **Owner header/hero visual review is accepted**: “All visual tests pass my visual tests
+at this point.” No visual changes were requested. Captures remain under `docs/budget-ui/bui-04/`.
+**121 focused and 472 full lifecycle isolated checks across 91 migrations** pass
+(separate targets/totals), plus 22 axe scans, 31 captures, 559 unit passes/14 skips,
+full/focused/browser types, syntax and build. Exact targets
+`halcyon-budget-m2-9ea2f0641b754dfd` / `halcyon-budget-m2-b11dc1ac993a4a86` cleaned.
+That UI phase made no financial command/schema change or personal migration.
+**Next engineering: R01 forecast implementation.** BUI-11 is complete in [[BUDGET_BUI_11_OWNER_HANDBACK]]: on 27 October 2026 the owner explicitly replied “Accept the visual presentation”. The engineering handback removes two unused Look back placeholder CSS rules; all other 440 BUI-10 source hashes match. Fresh 586 unit passes/14 skips, full/focused/browser types and build pass. BUI-10 remains the live-test baseline, rather than being claimed as a new BUI-11 run. Presentation acceptance does not close R01 or M7 human/release gates. BUI-10 is complete in [[BUDGET_BUI_10_CANDIDATE_VERIFICATION]]: 263 accessibility checks/64 states, 187 candidate checks/70 state-width-theme scans, and 472 lifecycle checks on separate fresh targets across 95 migrations. All 134 axe scans pass; 144 captures and manifests record seven financial/recovery states and the assembled UI. 586 unit passes/14 skips, full/focused/browser types and build pass. A phone theme-control overlap was fixed by reusing the shared toggle in the Budget header; other routes retain their floating control. No personal migration or exposure. BUI-09b is complete in [[BUDGET_BUI_09B_ASSISTANCE]]: retained native assistance task, numbered evidence/amounts/review sections, preserved optional-change controller, signed planning receipt, explicit fresh review and Close/Back focus recovery. 221 combined presentation/R02–R05 and 472 lifecycle checks pass on separate fresh targets across 95 migrations, with 42 combined WCAG scans, 30 presentation captures, 586 unit passes/14 skips and types/build. No personal migration. R05 is complete in [[BUDGET_R05_SIGNED_ESTIMATOR]]: signed median/range and canonical refund/split/transfer parity, explicit nonnegative manual allowance for negative observations, separate unassigned current credits, method-v2 compatibility and exact-cent guards. 73 reference / 98 dependency / 472 lifecycle checks pass on separate fresh targets across 95 migrations, four focused WCAG scans, 586 unit passes/14 skips and types/build. No personal migration. R04 is complete in [[BUDGET_R04_INPUT_REVIEW]]: chosen income and pay dates, individual costs/reserves/deadlines, selective application to edited/saved drafts, durable configurations and receipt-safe activation. 98 final combined / 472 lifecycle checks on separate fresh targets across 94 migrations, eight WCAG scans, 583 unit passes/14 skips and types/build pass. Paid observations use the manual matching route; unknown essential inputs do not support goal timing. Personal data remains untouched. R03 is complete in [[BUDGET_R03_READINESS]]: complete current-period usage bounds redirection, explicit future intent, reviewed reserve/schedule/capacity gates for goal outcomes, and exact deadline shortfalls. 39 focused / 472 lifecycle checks across 93 migrations, four accessibility scans, 574 unit passes/14 skips and types/build pass. R02 is corrected in [[BUDGET_R02_ELIGIBILITY]]: an additive query migration requires both three complete calendar months and six aligned fortnightly windows; client draft/outcome gates enforce the same rule. The personal database remains untouched. BUI-09a is complete in [[BUDGET_BUI_09A_MANUAL_SETUP]]: retained native setup with numbered sections and a separate saved-draft activation task; original financial bodies remain. 193 focused / 472 lifecycle checks pass on separate fresh targets, with 72 axe scans, 73 captures, 565 unit passes/14 skips and types/build. **All 17 presentation bursts are delivered, with owner visual acceptance recorded.** R01 engineering is complete; M7 human/operational/release work remains separate. This phase count excludes separate R01–R05 correctness work and M7 human/release gates. BUI-08b is complete in [[BUDGET_BUI_08B_LOOK_BACK]]: distinct original/latest/recorded facts, immutable review comparison, qualified manual activity, and original carry/reopen/Undo/next-period controller. 180 focused / 472 lifecycle checks pass on separate fresh disposable targets, with 70 axe scans, 70 captures, 8 keyboard-scroll checks, 565 unit passes/14 skips and types/build. BUI-08a is complete in [[BUDGET_BUI_08A_MY_PLAN]]: canonical saved current/future allocation summary, separate one-off cash/reserves, existing edit entry/controller and activity route. 68 focused / 472 lifecycle checks pass on separate fresh disposable targets, with 20 axe scans, 20 captures, 561 unit passes/14 skips and types/build. BUI-07c is complete in [[BUDGET_BUI_07C_ROLLOVER_LIFECYCLE]]: clearer category/rule and lifecycle/disposition review, preserved signed effects and native in-form preparation counts. 320 focused / 472 full lifecycle checks pass on separate disposable targets, with 112 axe scans, 113 captures, 32 keyboard-scroll checks, 559 unit passes/14 skips and types/build. BUI-07b is implemented in [[BUDGET_BUI_07B_FREQUENCY_ACCOUNTS]]: separate first/full frequency windows with three groups each, clearer dated account/role selection and preserved effect previews. 171 focused / 472 full lifecycle checks pass on separate fresh disposable targets, with 62 axe scans, 63 captures, 559 unit passes/14 skips and types/build. Exact test projects cleaned. BUI-07a is complete in [[BUDGET_BUI_07A_SETTINGS_HOST]]: one native settings host, preserved dirty drafts/refresh and save recovery. 91 focused / 472 lifecycle / 263 accessibility checks across 64 audited states pass on separate disposable targets, plus 22 focused axe scans, 23 captures, 559 unit passes/14 skips and types/build. BUI-06b is engineering-complete in
+[[BUDGET_BUI_06B_CHECKS_GUIDANCE]]: primary everyday/commitments beside goals/checks,
+optional recorded figures/guide, canonical priority/all-checks, persistent gaps and
+exact allowance focus. **Owner assembled-overview visual review was accepted on 26 October 2026. R01
+forecast remains explicitly unavailable and open before final checks acceptance.**
+87 attention / 121 overview-recovery / 472 lifecycle checks pass on separate fresh
+targets, plus 33 axe scans, 62 captures, unit/types/build. Exact projects cleaned.
+The owner said “happy with the visual checkpoint” and authorized BUI-07a. R01 remains independently open.
+BUI-06a is complete in [[BUDGET_BUI_06A_GOALS]]:
+featured card/compact peers, separate reserve/bank/user evidence and reserve-only
+track, qualified existing timing and original forms/recovery. 88 focused / 208
+item-workspace isolated checks on separate targets, 22 axe scans, 24 captures,
+559 unit passes/14 skips and static/build checks pass. Both exact projects cleaned.
+The planned owner checkpoint after BUI-06b is accepted. BUI-05b is complete in [[BUDGET_BUI_05B_COMMITMENTS]]:
+bills, upcoming costs and planned transfers use compact per-line disclosures with
+canonical planned amounts, exact occurrences, distinct reserve/funding evidence and
+retained task forms. 45 focused / 208 item-workspace checks pass on separate isolated
+targets, plus ten axe scans, 11 captures, 559 unit passes/14 skips and static/build
+checks. Both exact test projects cleaned. BUI-05a everyday rows are complete in
+[[BUDGET_BUI_05A_EVERYDAY_ROWS]]: canonical category/Other rows, signed overages,
+optional details, single-pool limits-off mode and preserved move/limit/activity forms.
+51 focused and 208 existing item/workspace checks pass on separate isolated targets,
+plus ten axe scans, 14 captures and unit/types/build. Both test projects are cleaned. The BUI-04 visual
+checkpoint is closed. BUI-03 adapter and BUI-02
+navigation/recovery contracts remain authoritative. The existing chunk advisory and R01 remain; R02–R05 are corrected.
+BUI-01's 24 action families and 36 concept captures remain in [[BUDGET_BUI_01_REFERENCE_MAP]].
+Owner visual checkpoints follow
+BUI-04/06b; R01 precedes final checks acceptance and R02–R05 precede final assistance acceptance.
+Complete the presentation work before final M7.3/M7.4 human validation of changed flows. Earlier
+M7.2 results remain historical evidence; fresh automated checks are required after the UI changes.
+R02–R05 are corrected; R01 and broader M7 release gates remain open. No app-wide redesign or personal rollout is
+implied by this handover. Preview availability below is a historical launch record, not a health check.
+
+**BUI-11 accepted visual handback — 27 October 2026.**
+The owner explicitly selected “Accept the visual presentation”. See
+[[BUDGET_BUI_11_OWNER_HANDBACK]] for the scope, exact two-rule unused CSS cleanup,
+586 fresh unit passes/14 skips, types/build and next R01/M7 actions. All 17
+presentation bursts are delivered; forecast and release acceptance remain open.
+The existing fictional review runner `halcyon-budget-m2-f76a234b3e374c95` (PID
+86115) is verified alive at `http://127.0.0.1:57300/budget`. The owner’s existing
+session/page position was preserved, with no edit or save during inspection.
+Screenshot: `/private/tmp/halcyon-bui11-ready.png`. No personal-stack inspection,
+fixtures, migration or exposure occurred.
+
+**BUI-10 owner-review site — launched 27 October 2026.**
+Fresh disposable project `halcyon-budget-m2-f76a234b3e374c95`, runner PID 86115,
+serves `http://127.0.0.1:57300/budget` (API/DB 57421/57422). Seven fictional
+accounts pass normal password sign-in and their controls. The existing in-app tab
+is signed into the healthy sample and reloaded with current candidate assets:
+$290 everyday remaining, $6,000 expected income, $3,000 received and $200 Still
+to plan. The quick theme control is now in the header; no edit/save was performed
+in final inspection. See [[BUDGET_BUI_10_CANDIDATE_VERIFICATION]] and the capture
+index under `docs/budget-ui/bui-10/`. The BUI-09b runner was retired and cleaned.
+Runtime credentials remain private. Older launch records below are historical.
+No personal-stack inspection, fixtures, migration or exposure occurred.
+
+**BUI-09b assistance review preview — launched 27 October 2026.**
+Fresh disposable project `halcyon-budget-m2-d142599a4ea34e92`, runner PID 59405,
+serves `http://127.0.0.1:57300/budget` (API/DB 57421/57422). Seven fictional
+accounts pass normal password sign-in. The existing in-app tab shows the new native
+assistance final review, with $100 expected income, $25 chosen everyday allowance
+and $75 Still to plan. History/input sections retain the signed evidence and
+reviewed choices. Use this draft is enabled; nothing is saved or activated.
+See [[BUDGET_BUI_09B_ASSISTANCE]] for 221 focused/472 lifecycle proof, exact cleanup,
+screenshot and runtime handling. The R05 runner was retired and cleaned; older
+preview launch records below are historical. Runtime credentials remain private.
+Personal app/API 5300/54321 remain untouched.
+
+**R05 signed-estimator review preview — launched 26 October 2026.**
+Fresh disposable project `halcyon-budget-m2-880c033143ee46e5`, runner PID 43805,
+serves `http://127.0.0.1:57300/budget` (API/DB 57421/57422). Seven fictional
+accounts pass normal password sign-in and their controls. The existing in-app tab
+shows signed observations: −$0.51 median and −$8 unassigned credits, with a separately
+reviewed $25 everyday allowance/$100 expected income. Use this draft is enabled;
+no draft was saved or plan activated. See [[BUDGET_R05_SIGNED_ESTIMATOR]] for proof,
+cleanup audit and runtime handling. The R04 runner was retired and cleaned.
+Credentials remain private in temporary runtime files. Personal app/API 5300/54321
+remain untouched. Older preview entries below are historical launch records.
+
+**BUI-09a manual setup review preview — launched 26 October 2026.**
+Guarded disposable project `halcyon-budget-m2-18e5a35cc5754aa0`, runner PID 35933,
+serves `http://127.0.0.1:57300/budget` (API/DB 57421/57422). Normal password sign-in
+passes for healthy, fresh setup and recorded-review examples. The in-app browser
+is signed into the fresh account with unsaved manual setup open; no draft or plan
+was created in the final inspection. Runtime credentials
+remain private, outside docs. Stop this exact verified runner before conflicting
+tests; availability lasts while it remains alive. Personal app/API 5300/54321 are untouched.
+
+**BUI-08b Look back review preview — launched and stopped 26 October 2026.**
+Guarded disposable project `halcyon-budget-m2-31a581534b68422c`, runner PID 21119,
+serves `http://127.0.0.1:57300/budget` (API/DB 57421/57422). Normal password sign-in
+passes for the healthy sample, fresh setup and a recorded-review/late-correction
+example. The in-app browser is signed into that review example with September
+selected in Look back. Runtime credentials remain private, outside docs. Stop this exact verified
+runner before conflicting tests; availability lasts while it remains alive. This exact runner/resources were removed before BUI-09a tests.
+Personal app/API 5300/54321 are untouched.
+
+**BUI-08a My plan review preview — launched and stopped 26 October 2026.**
+Guarded disposable project `halcyon-budget-m2-0c01ef049aae48ee`, runner PID 96484,
+serves `http://127.0.0.1:57300/budget` (API/DB 57421/57422). Normal sample/fresh-setup
+password sign-in checks pass. The in-app browser is signed into the sample with
+My plan open. Runtime credentials remain private, outside docs.
+Stop this exact verified runner before conflicting tests; availability lasts while
+it remains alive. This exact runner/resources were removed before BUI-08b tests. Personal app/API 5300/54321 are untouched.
+
+**BUI-07c rollover/lifecycle review preview — launched and stopped 26 October 2026.**
+Guarded disposable project `halcyon-budget-m2-b3e19bfef6644c49`, runner PID 76747,
+serves `http://127.0.0.1:57300/budget` (API/DB 57421/57422). Sample/fresh-setup
+password sign-in checks pass. The in-app browser is signed into the sample with
+the lifecycle form open. Runtime credentials remain private, outside docs.
+Stop this exact verified runner before conflicting tests; availability lasts while
+it remains alive. This exact runner/resources were removed before BUI-08a tests. Personal app/API 5300/54321 are untouched.
+
+**BUI-07b forms review preview — launched and stopped 26 October 2026.**
+Guarded disposable project `halcyon-budget-m2-f74f7102d1084cb8`, runner PID 63823,
+serves `http://127.0.0.1:57300/budget` (API/DB 57421/57422). Normal password sign-in
+passes for sample and fresh-setup accounts. The in-app browser is signed into the
+sample with the grouped frequency form open. Runtime credentials remain private,
+outside repository docs. Stop this exact verified runner before conflicting tests;
+This exact runner and its resources were removed before BUI-07c tests. Personal app/API 5300/54321 are untouched.
+
+**BUI-07a settings review preview — launched and stopped 26 October 2026.**
+Guarded disposable project `halcyon-budget-m2-d12d3c834afa4a4a`, runner PID 52643,
+serves `http://127.0.0.1:57300/budget` (API/DB 57421/57422). Normal password sign-in
+and sample/fresh-setup controls pass. The in-app browser is signed into the sample with
+Budget settings open. Runtime credentials remain private, outside
+repository docs. Stop this exact verified runner before conflicting fixture runs;
+This exact runner was stopped and its guarded resources removed before BUI-07b tests. Personal port 5300/API 54321 are untouched.
+
+**BUI-06b assembled-overview review preview — launched and stopped 26 October 2026.**
+Guarded disposable project `halcyon-budget-m2-50730786d31a460f` serves
+`http://127.0.0.1:57300/budget` (API/DB 57421/57422). Normal sample/fresh-setup
+sign-in passed; the in-app browser is signed into the new sample and showing the
+assembled everyday/goal columns. The healthy sample has zero active checks; issue
+and review-form examples are in `docs/budget-ui/bui-06b/captures/`. Runtime
+credentials remain private and outside docs. Availability lasts while this retained
+runner lives. This runner was stopped and its exact disposable resources removed before BUI-07a tests. Owner visual acceptance was recorded on 26 October 2026; this is a local fictional preview.
+
+**BUI-06a review preview — launched and stopped 26 October 2026.**
+Guarded disposable project `halcyon-budget-m2-3dadf2d58a284109` serves
+`http://127.0.0.1:57300/budget` (API/DB 57421/57422). Normal sample and fresh-setup
+sign-in passed; its exact disposable runner was stopped before BUI-06b tests. The in-app browser was signed into the sample and showing Weekend
+away in the new goal card. Runtime credentials remain private and outside repository
+docs. Availability lasts while the retained runner lives; stop this exact disposable
+runner before conflicting tests. Personal services/data/exposure remain unchanged.
+
+**BUI-05b review preview — launched and stopped 26 October 2026.**
+Guarded disposable project `halcyon-budget-m2-23578e0ea78e4263` serves
+`http://127.0.0.1:57300/budget` on dedicated API/DB 57421/57422. Normal sample and
+fresh-setup sign-in passed. The in-app browser is signed into the current sample
+and scrolled to the compact commitments. The exact disposable runner was stopped before BUI-06a tests. Its three unconfigured allowances retain
+Finish setup; configured partial-payment examples are in the phase captures.
+Runtime credentials remain private and outside docs. Availability lasts while the
+runner lives; stop this exact disposable runner before conflicting tests.
+
+**BUI-05a review preview — launched and stopped 26 October 2026.**
+Guarded disposable project `halcyon-budget-m2-0f945b8b9ace4b12` serves
+`http://127.0.0.1:57300/budget` on the dedicated API/DB 57421/57422.
+Normal sample/fresh-setup password login and headline controls passed; the in-app
+browser is signed into the new sample and scrolled to Your everyday spending.
+The sample starts with limits off; category-on screenshots are in the phase record.
+Its exact disposable runner was stopped before BUI-05b tests; this launch is historical.
+Private runtime credentials remain outside repository docs. This retained preview
+lasts while its runner is alive; stop the exact disposable runner before conflicting
+tests. Personal services and exposure remain unchanged.
+
+**BUI-04 visual review preview — launched 25 October, stopped 26 October 2026.**
+A new guarded disposable project `halcyon-budget-m2-7e361640947a4e3b` serves
+`http://127.0.0.1:57300/budget` (API/DB 57421/57422). Normal password sign-in,
+$290 remaining / $200 still-to-plan, goal dialog and fresh setup controls were verified.
+The owner was given a desktop/phone walkthrough and explicitly accepted the current
+visual checks on 26 October 2026. Device-specific results were not separately reported.
+Credentials are runtime-only in the private `manual-preview.json`; do not put them in
+repository docs. The exact disposable runner was stopped before the BUI-05a isolated tests.
+This historical launch record does not identify an active preview. Personal port 5300 and
+its database remain unchanged. No automated harness may reuse this running target;
+stop the positively identified disposable runner before a conflicting run.
+
+**Earlier manual validation preview — stopped during BUI-02, 25 October 2026.**
+The recorded disposable project's orphaned API/database were stopped by exact ID,
+with backup retained, before fresh BUI-02 tests. Its runner/frontend were no longer
+active. The URL below is not currently a running manual review endpoint. No personal
+stack was stopped. Relaunch through the guarded provisioner when a new review is needed.
+
+Historical launch record:
+`npm run preview:budget:manual` provisions a guarded disposable stack and retains its frontend/API
+until stopped. This session launched `halcyon-budget-m2-55969f559171448a`, with the review UI at
+`http://127.0.0.1:57300/budget` and API/DB ports 57421/57422. Normal password sign-in, Budget
+navigation, the sample goal dialog and fresh manual setup controls were verified. Chrome was
+opened and signed into the sample account. The normal app at port 5300 and personal database/
+exposure were unchanged. Availability lasts only while the preview process remains alive;
+credentials are in its private temporary `manual-preview.json`, never committed here. Stopping
+the runner removes its disposable data. M7.3 human results remain pending.
+
+**M7.2 automated accessibility audit complete — 22 October 2026.**
+[[BUDGET_M7_ACCESSIBILITY]] records 64 rendered-state scans / 260 focused isolated checks across
+91 migrations, keyboard-scroll and focus fixes, 320px light/dark, desktop, reflow and reduced-motion
+evidence. Full/focused/browser TypeScript, 516 unit tests (14 skips) and build passed at that checkpoint.
+M7.3 observed human accessibility validation remains pending after BUI work. R01–R05 were open at that checkpoint; R02–R05 are now corrected above. The
+disposable target was cleaned up; no personal migration or feature exposure occurred.
+
+**Prior M7.1 release-baseline audit — 22 October 2026.** The current checklist and acceptance
+matrix are [[BUDGET_M7_RELEASE_VERIFICATION]]. M6's final broad run passed 472 checks across 91
+migrations. Fresh M7.1 full/focused/browser TypeScript, 516 unit tests (14 skips) and production
+build pass after correcting the Planning metric adapter. The existing Vite chunk advisory remains.
+The audit qualifies M6's earlier blanket sign-off: R01–R05 track missing forecast implementation,
+fortnightly eligibility, what-if readiness, confirmation/preservation and estimator edge proofs.
+At that checkpoint, release remained No-Go and M7.2 was the next scheduled chunk;
+bounded engineering follow-ups must close these findings before final release verification.
+Human comprehension/accessibility, hosted performance, migration/restore rehearsal and rollout
+remain pending. No personal migration or feature exposure occurred.
+
+The following checkpoints are historical:
 
 **M5 engineering-complete — 22 October 2026.** Migration 90 implements complete, resumable
 before/after impact checks and short atomic acceptance for account, rollover and lifecycle controls.

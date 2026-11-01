@@ -1,0 +1,21 @@
+{
+  "halcyon-budget-m2-b8da0df2fad04fef": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-budget-m2-eeff7681c9f04655": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-budget-m2-579045036283479e": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "retained_preview": {
+    "project": "halcyon-budget-m2-c65dd04871874dcb",
+    "database_running": true
+  }
+}

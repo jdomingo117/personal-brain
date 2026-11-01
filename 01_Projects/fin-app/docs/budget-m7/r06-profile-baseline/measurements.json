@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-29",
+  "project": "halcyon-budget-m2-a01eca27d00544af",
+  "api": "http://127.0.0.1:57521",
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M3 Pro",
+    "logical_cpus": 11,
+    "host_memory_bytes": 19327352832,
+    "postgres": "PostgreSQL 17.11 on aarch64-unknown-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+    "settings": {
+      "shared_buffers": "128MB",
+      "work_mem": "4MB",
+      "max_connections": "100"
+    }
+  },
+  "method": {
+    "sql_samples": 20,
+    "edge_samples": 5,
+    "percentile": "nearest rank; p95 of five Edge samples is the maximum, not a stable production percentile",
+    "cache": "first after fixture load/ANALYZE plus warm repetitions; no OS/shared-buffer flush and no true cold-cache claim",
+    "limits": "Existing 8s SQL cancellation bound; unchanged Edge authentication and rate limits",
+    "concurrency": "sequential request samples; retained visual-preview stack also exists on different ports"
+  },
+  "scales": [
+    {
+      "rows": 100000,
+      "fixture_started_at": "2026-10-28T13:49:00.042Z",
+      "fixture_load_ms": 6254
+    }
+  ],
+  "hosted": "not measured; no hosted target authorized",
+  "failures": [],
+  "status": "profile-only"
+}

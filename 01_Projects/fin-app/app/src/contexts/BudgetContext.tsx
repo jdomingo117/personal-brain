@@ -1,7 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type MutableRefObject } from 'react'
 import { useAuth } from './AuthContext'
 import { supabase } from '../lib/supabaseClient'
-import { BUDGET_ENABLED, BUDGET_METHOD, recoverBudgetCommand, type Command, type Draft, type Receipt, type Setup, type Snapshot } from '../lib/budgetWorkspace'
+import { BUDGET_ENABLED, BUDGET_METHOD, recoverBudgetCommand, type BudgetReadState, type Command, type Draft, type Receipt, type Setup, type Snapshot } from '../lib/budgetWorkspace'
 import type { BudgetSourcesPage } from '../lib/budgetItems'
 import type {AccountScopeIntent,AccountScopePreview} from '../lib/budgetAccountPolicy'
 import type {RolloverIntent,RolloverPreview} from '../lib/budgetRollover'
@@ -9,9 +9,10 @@ import type {ControlIntent,ControlPreview} from '../lib/budgetControls'
 import {isPreparing,historyRequest,type HistoryPreparation,type PreparingWorkspace} from '../lib/budgetHistory'
 import {prepareImpact,type ImpactPreparation} from '../lib/budgetImpact'
 import type {AssistanceRequest,AssistanceResult} from '../lib/budgetAssistance'
+import { useBudgetNavigationGuard, type BudgetNavigationGuard } from '../hooks/useBudgetNavigationGuard'
 
 class BudgetApiError extends Error {
-  constructor(message:string,readonly definitive:boolean){super(message)}
+  constructor(message:string,readonly definitive:boolean,readonly code?:string){super(message)}
 }
 async function invoke<T>(name:string,body:unknown):Promise<T> {
   const {data,error}=await supabase.functions.invoke(name,{body:body as Record<string,unknown>})
@@ -20,7 +21,7 @@ async function invoke<T>(name:string,body:unknown):Promise<T> {
     let detail:{message?:string;code?:string}|null=null
     try{detail=response?await response.clone().json():null}catch{}
     const definitive=!!response && ([400,401,403,404,409,413,422,429].includes(response.status)||detail?.code==='disabled')
-    throw new BudgetApiError(detail?.message??'We couldn’t confirm the result. Your edits are still here.',definitive)
+    throw new BudgetApiError(detail?.message??'We couldn’t confirm the result. Your edits are still here.',definitive,detail?.code)
   }
   if(!data||typeof data!=='object')throw new BudgetApiError('The Budget response was incomplete. Please check again.',false)
   return data as T
@@ -28,11 +29,13 @@ async function invoke<T>(name:string,body:unknown):Promise<T> {
 type Workspace = {
   snapshot:Snapshot|null; draft:Draft|null; editing:Setup|null; setEditing:(s:Setup|null)=>void;
   loading:boolean; busy:boolean; error:string; notice:string; pending:Command|null; canWrite:boolean;
+  readState:BudgetReadState;
   preparation:HistoryPreparation|null;
   impactPreparation:ImpactPreparation|null;
   refresh:()=>Promise<void>; run:(input:Record<string,unknown>)=>Promise<Receipt|null>; recover:()=>Promise<void>;
   sources:(after?:{booking_date:string;source_key:string})=>Promise<BudgetSourcesPage>;
   selectPeriod:(id:string|null)=>void;
+  guardTaskNavigation:(guard:BudgetNavigationGuard)=>()=>void;
   previewAccountScope:(intent:AccountScopeIntent)=>Promise<AccountScopePreview>;
   previewRollover:(intent:RolloverIntent)=>Promise<RolloverPreview>;
   previewControl:(intent:ControlIntent)=>Promise<ControlPreview>;
@@ -45,12 +48,17 @@ export function useBudget(){const ctx=useContext(BudgetContext);if(!ctx)throw ne
 export function BudgetProvider({children}:{children:ReactNode}) {
   const {user,tenantId,role}=useAuth()
   const identity=user&&tenantId?`${user.id}:${tenantId}`:null
-  return <BudgetSession key={`${identity??'signed-out'}:${role??'none'}`} identity={identity} tenantId={tenantId} owner={role==='owner'}>{children}</BudgetSession>
+  // Install once, before BrowserRouter's history listener. Identity/session
+  // remounts must not move the POP guard behind the router's listener.
+  const guardResolver=useRef<()=>BudgetNavigationGuard|null>(()=>null)
+  const requestNavigation=useBudgetNavigationGuard(()=>guardResolver.current())
+  return <BudgetSession key={`${identity??'signed-out'}:${role??'none'}`} identity={identity} tenantId={tenantId} owner={role==='owner'} guardResolver={guardResolver} requestNavigation={requestNavigation}>{children}</BudgetSession>
 }
-function BudgetSession({children,identity,tenantId,owner}:{children:ReactNode;identity:string|null;tenantId:string|null;owner:boolean}) {
+function BudgetSession({children,identity,tenantId,owner,guardResolver,requestNavigation}:{children:ReactNode;identity:string|null;tenantId:string|null;owner:boolean;guardResolver:MutableRefObject<()=>BudgetNavigationGuard|null>;requestNavigation:(proceed:()=>void)=>void}) {
   const storageKey=identity?`halcyon-budget-pending-v1:${identity}`:null
   const [snapshot,setSnapshot]=useState<Snapshot|null>(null),[draft,setDraft]=useState<Draft|null>(null)
   const [editing,setEditing]=useState<Setup|null>(null),[loading,setLoading]=useState(false),[busy,setBusy]=useState(false)
+  const [readState,setReadState]=useState<BudgetReadState>('idle')
   const [error,setError]=useState(''),[notice,setNotice]=useState('')
   const [preparation,setPreparation]=useState<HistoryPreparation|null>(null)
   const [impactPreparation,setImpactPreparation]=useState<ImpactPreparation|null>(null)
@@ -60,6 +68,20 @@ function BudgetSession({children,identity,tenantId,owner}:{children:ReactNode;id
     try{return storageKey&&owner?JSON.parse(sessionStorage.getItem(storageKey)??'null'):null}catch{return null}
   })
   const mounted=useRef(true),working=useRef(false),sequence=useRef(0)
+  const taskGuard=useRef<BudgetNavigationGuard|null>(null)
+  const guardTaskNavigation=useCallback((guard:BudgetNavigationGuard)=>{
+    taskGuard.current=guard
+    return ()=>{if(taskGuard.current===guard)taskGuard.current=null}
+  },[])
+  const sessionGuard=useRef<()=>BudgetNavigationGuard|null>(()=>null)
+  sessionGuard.current=()=>taskGuard.current??(
+    window.location.pathname==='/budget'&&pending?.action==='save_item'&&(pending as Command&{item?:{type?:string}}).item?.type==='goal'
+      ? ()=>{} : null)
+  useLayoutEffect(()=>{
+    const resolve=()=>sessionGuard.current()
+    guardResolver.current=resolve
+    return ()=>{if(guardResolver.current===resolve)guardResolver.current=()=>null}
+  },[guardResolver])
   useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;sequence.current++}},[])
   // Signing out/switching identity clears the old user's transient checkpoint, not their saved draft.
   useEffect(()=>()=>{if(storageKey)try{sessionStorage.removeItem(storageKey)}catch{}},[storageKey])
@@ -70,7 +92,7 @@ function BudgetSession({children,identity,tenantId,owner}:{children:ReactNode;id
   },[editing,pending])
   const refresh=useCallback(async()=>{
     if(!identity)return
-    const generation=++sequence.current;setLoading(true)
+    const generation=++sequence.current;setLoading(true);setReadState('loading')
     let checkingHistory=false
     try {
       const [loaded,nextDraft]=await Promise.all([
@@ -89,9 +111,9 @@ function BudgetSession({children,identity,tenantId,owner}:{children:ReactNode;id
       if(!mounted.current||generation!==sequence.current)return
       if(next.tenant_id!==tenantId)throw new Error('Your workspace changed. Sign in again before continuing.')
       setDraft(nextDraft);setError('')
-      if(isPreparing(next)){setPreparation(next.preparation);return}
-      setSnapshot(next as Snapshot);setPreparation(null)
-    }catch(e){if(mounted.current&&generation===sequence.current)setError(checkingHistory&&!(e instanceof BudgetApiError&&e.definitive)?'We couldn’t finish checking your history. Completed batches are saved. Continue loading when the connection is ready.':e instanceof Error?e.message:'Budget could not load.')}
+      if(isPreparing(next)){setPreparation(next.preparation);setReadState('preparing');return}
+      setSnapshot(next as Snapshot);setPreparation(null);setReadState('ready')
+    }catch(e){if(mounted.current&&generation===sequence.current){setReadState('failed');setError(checkingHistory&&!(e instanceof BudgetApiError&&e.definitive)?'We couldn’t finish checking your history. Completed batches are saved. Continue loading when the connection is ready.':e instanceof Error?e.message:'Budget could not load.')}}
     finally{if(mounted.current&&generation===sequence.current)setLoading(false)}
   },[identity,owner,tenantId,selectedPeriod])
   // Load only when the Budget page requests it, not on every authenticated route.
@@ -115,6 +137,7 @@ function BudgetSession({children,identity,tenantId,owner}:{children:ReactNode;id
       await refresh();return receipt
     }catch(e){
       if(mounted.current) {
+        if(e instanceof BudgetApiError&&['budget_stale_source','budget_stale_plan','budget_stale_method'].includes(e.code??''))setReadState('invalidated')
         if(e instanceof BudgetApiError&&e.definitive){checkpoint(null);setNotice('No new change was saved by this request. Your edits are still here.')}
         else setNotice('The result is not confirmed. Check the saved result before making another change.')
         setError(e instanceof Error?e.message:'Budget could not be saved.')
@@ -138,7 +161,7 @@ function BudgetSession({children,identity,tenantId,owner}:{children:ReactNode;id
     try{return await prepareImpact<T>(body,b=>invoke<T|ImpactPreparation>('query-budget',b),p=>{if(mounted.current)setImpactPreparation(p)},()=>mounted.current&&generation===sequence.current)}
     catch(e){if(e instanceof BudgetApiError&&!e.definitive)throw Error('We couldn’t finish checking the budget effects. Completed checks are saved. Review the effects again to continue; no budget change has been saved.');throw e}
   }
-  return <BudgetContext.Provider value={{snapshot,draft,editing,setEditing,loading,busy,error,notice,pending,preparation,impactPreparation,canWrite:BUDGET_ENABLED&&owner&&!!snapshot?.write_enabled&&!pending&&!preparation&&!busy&&!loading,
+  return <BudgetContext.Provider value={{snapshot,draft,editing,setEditing,loading,busy,error,notice,pending,readState,preparation,impactPreparation,canWrite:BUDGET_ENABLED&&owner&&!!snapshot?.write_enabled&&!pending&&!preparation&&!busy&&!loading,
     refresh,run,sources,assistedSetup:async input=>{
       if(!owner||pending||working.current||loading)throw Error('Load the latest Budget workspace before checking history.')
       const result=await invoke<AssistanceResult>('query-budget',{action:'assisted_setup',...input})
@@ -159,5 +182,5 @@ function BudgetSession({children,identity,tenantId,owner}:{children:ReactNode;id
       const result=await review<AccountScopePreview>({action:'preview_account_scope',...intent,plan_id:snapshot.plan.id,period_id:snapshot.period.id,expected_plan:snapshot.plan.version,expected_source:snapshot.source_revision,expected_method:BUDGET_METHOD})
       if(!mounted.current||result.source_revision!==snapshot.source_revision||result.plan_version!==snapshot.plan.version)throw Error('Your budget changed. Review a fresh account preview.')
       return result
-    },selectPeriod:id=>{if(editing||pending||working.current||loading)return;const url=new URL(window.location.href);if(id)url.searchParams.set('budgetPeriod',id);else url.searchParams.delete('budgetPeriod');window.history.pushState({},'',url);if(id===selectedPeriod)void refresh();else setSelectedPeriod(id)},recover:async()=>{if(pending)await execute(pending,true)}}}>{children}</BudgetContext.Provider>
+    },guardTaskNavigation,selectPeriod:id=>{if(editing||pending||working.current||loading)return;requestNavigation(()=>{const url=new URL(window.location.href);if(id)url.searchParams.set('budgetPeriod',id);else url.searchParams.delete('budgetPeriod');const state=window.history.state;window.history.pushState({...state,idx:(state?.idx??0)+1},'',url);if(id===selectedPeriod)void refresh();else setSelectedPeriod(id)})},recover:async()=>{if(pending)await execute(pending,true)}}}>{children}</BudgetContext.Provider>
 }

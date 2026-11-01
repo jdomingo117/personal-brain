@@ -1,0 +1,10 @@
+{
+  "scope": "Exact two-rule unused CSS removal; all other 440 candidate sources match",
+  "changes": [
+    {
+      "path": "app/src/views/budget.css",
+      "candidate_sha256": "7f9e7379c71a18626650fecd9d95161cf22ca224c9029eca96b3fb659b6d81ef",
+      "handback_sha256": "50653b496d42767a5ef4497a47351f89730f4f7f7f682e67d1417f36ae01924b"
+    }
+  ]
+}

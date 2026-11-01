@@ -1,0 +1,81 @@
+{
+  "decision": "M7.7 local candidate verified; live provider authorized but blocked by depleted Gemini prepayment credits; release No-Go",
+  "schema_migrations": 104,
+  "source_files_bound": 563,
+  "financial_sql_changed": false,
+  "lifecycle": {
+    "project": "halcyon-budget-m2-44b18408f7d940c3",
+    "assertions": 560
+  },
+  "forecast_assistance_candidate": {
+    "project": "halcyon-budget-m2-8f9e548c44364dbe",
+    "assertions": 391,
+    "wcag_scans": 78,
+    "captures": 88
+  },
+  "golden": {
+    "project": "halcyon-golden-isolated-1793253162033",
+    "tests": 8,
+    "provider": "disabled",
+    "live_ai_refresh_tested": false
+  },
+  "unit": {
+    "passed": 609,
+    "existing_skips": 14
+  },
+  "telemetry_summary_assertions": 8,
+  "security_inventory": {
+    "budget_tables": 26,
+    "budget_functions": 97
+  },
+  "dependency_audit": {
+    "before": {
+      "high": 14,
+      "moderate": 3,
+      "total": 17
+    },
+    "after_total": 0,
+    "dev_versions_changed": 20,
+    "runtime_versions_changed": 0,
+    "vite": "6.4.5",
+    "vitest": "4.1.12"
+  },
+  "primary_node_modules_modified": false,
+  "retained_preview": {
+    "project": "halcyon-budget-m2-c65dd04871874dcb",
+    "database_running": true,
+    "migration_count": 96,
+    "parent_pid": 80255,
+    "primary_node_modules_modified": false
+  },
+  "cleaned_projects": 16,
+  "open_gates": [
+    "Live provider qualification: Google HTTP402 depleted prepayment credits (owner authorization granted)",
+    "M7.3 observed human accessibility",
+    "M7.4 independent beginner comprehension",
+    "M7.5 hosted/cold/load qualification",
+    "M7.8 owner release/exposure decision"
+  ],
+  "golden_live": {
+    "status": "blocked_provider_prepayment_credits",
+    "authorization": "granted",
+    "initial_project": "halcyon-golden-isolated-1793256035206",
+    "explicit_project": "halcyon-golden-isolated-1793256415844",
+    "golden_result": {
+      "failed": 1,
+      "did_not_run": 7,
+      "passed": 0
+    },
+    "model_metadata_http_status": 200,
+    "generation_http_status": 402,
+    "provider_status": "RESOURCE_EXHAUSTED",
+    "model": "gemini-2.5-flash",
+    "cold_ai_classification_passed": false,
+    "fresh_ui_review_passed": false,
+    "changed_executable_sources": [
+      "app/e2e/golden-pass.spec.ts"
+    ],
+    "browser_typecheck": "passed",
+    "no_generation_retries_after_billing_diagnosis": true
+  }
+}

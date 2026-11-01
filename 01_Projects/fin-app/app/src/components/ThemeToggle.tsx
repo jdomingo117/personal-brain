@@ -2,11 +2,11 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useView } from '../router'
 
 /**
- * Floating quick theme toggle, anchored bottom-right above the status strip.
+ * Quick theme toggle: floating by default, or in-flow for the Budget header.
  * Shares the same `dark`/`setDark` context as Settings → Dark mode, so the two
  * stay in sync. Glass pill + a sun/moon icon that rotates-and-fades on swap.
  */
-export default function ThemeToggle() {
+export default function ThemeToggle({inline=false}:{inline?:boolean}={}) {
   const { dark, setDark } = useView()
 
   return (
@@ -15,12 +15,12 @@ export default function ThemeToggle() {
       aria-label="Toggle dark mode"
       aria-pressed={dark}
       title={dark ? 'Switch to light' : 'Switch to dark'}
-      initial={{ opacity: 0, y: 12, scale: 0.9 }}
+      initial={inline?false:{ opacity: 0, y: 12, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: 'spring', stiffness: 220, damping: 22, delay: 0.3 }}
       whileHover={{ scale: 1.06 }}
       whileTap={{ scale: 0.94 }}
-      className="glass fixed bottom-[60px] right-6 z-20 grid h-[46px] w-[46px] place-items-center text-ink md:bottom-[64px] md:right-8"
+      className={inline?"budget-theme-control grid h-[46px] w-[46px] shrink-0 place-items-center border border-[var(--hair)] text-ink":"glass fixed bottom-[60px] right-6 z-20 grid h-[46px] w-[46px] place-items-center text-ink md:bottom-[64px] md:right-8"}
       style={{ borderRadius: 9999 }}
     >
       <AnimatePresence mode="wait" initial={false}>

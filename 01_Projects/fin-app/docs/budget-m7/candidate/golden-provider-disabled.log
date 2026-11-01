@@ -1,0 +1,28 @@
+
+> halcyon-app@0.1.0 test:golden:budget-candidate
+> node scripts/run-golden-pass.mjs --release-candidate
+
+Target: halcyon-golden-isolated-1793253162033; API=http://127.0.0.1:55421; DB=127.0.0.1:55422/postgres; fixtures=isolated-only
+Golden provider mode: disabled; no provider credential copied; AI refresh remains untested
+[WebServer] (node:43242) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 8 tests using 1 worker
+
+(node:43328) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/8] e2e/golden-pass.spec.ts:133:3 › isolated golden pass › creates accounts, imports real statements, resolves the 203-link batch, and reviews categorisation
+e2e/golden-pass.spec.ts:133:3 › isolated golden pass › creates accounts, imports real statements, resolves the 203-link batch, and reviews categorisation
+Provider-disabled candidate: real import/transfer/ledger assertions run; live AI classification and fresh review deliberately not exercised.
+
+[2/8] e2e/golden-pass.spec.ts:235:3 › isolated golden pass › enforces the 5,000-source-row boundary while preserving one server-generated reconciliation anchor
+[3/8] e2e/golden-pass.spec.ts:311:3 › isolated golden pass › keeps the categorisation endpoint boundary at 300 merchants
+[4/8] e2e/golden-pass.spec.ts:323:3 › isolated golden pass › preserves sequential-import counts, partial-overlap dedupe and one replacement reconciliation anchor
+[5/8] e2e/golden-pass.spec.ts:371:3 › isolated golden pass › rolls back the complete import when reconciliation would exceed integer-cent range
+[6/8] e2e/golden-pass.spec.ts:394:3 › isolated golden pass › allows CSV history before connected-account cutover but rejects provider-owned dates and reconciliation
+[7/8] e2e/golden-pass.spec.ts:448:3 › isolated golden pass › persists a saved CSV profile by fingerprint without duplicate layouts
+[8/8] e2e/golden-pass.spec.ts:481:3 › isolated golden pass › resolves active tenant custom taxonomy pairs and rejects invalid or cross-tenant pairs before import
+  8 passed (29.9s)

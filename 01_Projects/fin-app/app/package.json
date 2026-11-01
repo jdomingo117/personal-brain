@@ -10,13 +10,18 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:budget:durable": "node scripts/test-budget-durable.mjs",
+    "test:budget:release": "node scripts/test-budget-durable.mjs --release-candidate --secondary-ports --items --lifecycle --workspace",
+    "test:budget:recovery": "node scripts/test-budget-durable.mjs --recovery-only --secondary-ports",
     "test:budget:workspace": "node scripts/test-budget-durable.mjs --workspace",
     "test:budget:items": "node scripts/test-budget-durable.mjs --items --workspace",
     "test:budget:lifecycle": "node scripts/test-budget-durable.mjs --items --lifecycle --workspace",
     "test:budget:assistance": "node scripts/test-budget-durable.mjs",
+    "test:budget:accessibility": "node scripts/test-budget-durable.mjs --accessibility-only --workspace",
+    "preview:budget:manual": "node scripts/test-budget-durable.mjs --manual-preview",
     "test:browser": "node scripts/run-browser-tests.mjs",
     "test:browser:install": "playwright install chromium",
     "test:browser:typecheck": "tsc --noEmit -p e2e/tsconfig.json",
+    "test:golden:budget-candidate": "node scripts/run-golden-pass.mjs --release-candidate",
     "test:golden": "node scripts/run-golden-pass.mjs",
     "test:gate2": "node scripts/run-golden-pass.mjs --gate2"
   },
@@ -32,6 +37,7 @@
     "three": "^0.169.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.0.0",
     "@types/animejs": "^3.1.13",
@@ -43,7 +49,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.6.3",
-    "vite": "^6.0.3",
-    "vitest": "^4.1.10"
+    "vite": "^6.4.4",
+    "vitest": "^4.1.12"
   }
 }

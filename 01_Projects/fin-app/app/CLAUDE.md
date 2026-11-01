@@ -77,6 +77,10 @@ column-mapping quality, ingestion dedupe, categorisation, transfer linking. If y
 Edge Function or a new cross-cutting invariant, add or extend a script here rather than only
 covering it with a unit test — the unit tests can't catch an RLS policy gap or a cross-tenant leak.
 
+### Budget release candidates
+
+`npm run test:budget:release` provisions an isolated API 57521 / browser 57600 candidate. The alternate `--candidate-alternate` profile reserves 57721/57800 for forecast/candidate checks. Each Vite server uses a generated project-local cache so concurrent profiles do not share optimizer state. `npm run test:golden:budget-candidate` uses its own 55421/55300 project and disables provider credentials/live AI assertions by default; `--live-provider` requires explicit authorization for configured Gemini key use and financial-fixture egress. These runners verify project labels/empty targets and clean only owned resources. See `../BUDGET_M7_CANDIDATE_OPERATIONS.md` for the validated install and retained-preview constraints before reinstalling dependencies or stopping a preview process.
+
 ## Component conventions
 
 `components/Controls.tsx` has the shared form primitives (`Button`, `Chip`, `Select`, `DateInput`,

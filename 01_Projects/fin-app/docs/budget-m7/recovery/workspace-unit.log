@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /Users/joel/Documents/Obsidian/personal-brain/01_Projects/fin-app/app
+
+
+ Test Files  1 passed (1)
+      Tests  25 passed (25)
+   Start at  15:49:59
+   Duration  257ms (transform 64ms, setup 0ms, import 72ms, tests 54ms, environment 0ms)
+

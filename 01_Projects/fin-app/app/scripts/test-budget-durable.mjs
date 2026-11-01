@@ -13,8 +13,24 @@ const repo=resolve(dirname(fileURLToPath(import.meta.url)),'../..')
 const project=`halcyon-budget-m2-${randomUUID().replaceAll('-','').slice(0,16)}`
 const work=mkdtempSync(resolve(tmpdir(),'halcyon-budget-m2-'))
 const container=`supabase_db_${project}`, cli=process.env.SUPABASE_CLI??'supabase'
-const api='http://127.0.0.1:57421'
-let functions,attempted=false,anon,checks=0,temporalFixtures=[],historyFixture
+// Capacity runs need no browser and must not retire the retained visual preview.
+const capacity=process.argv.includes('--capacity')
+const capacityLedgerOnly=process.argv.includes('--capacity-ledger-only')
+const secondaryPorts=process.argv.includes('--secondary-ports')
+const recovery=process.argv.includes('--recovery-only')
+const candidate=process.argv.includes('--release-candidate')
+if(candidate)assert(secondaryPorts&&!capacity&&!recovery&&!process.argv.includes('--manual-preview'),'Candidate validation uses only a fresh secondary-port project')
+const alternateCandidate=process.argv.includes('--candidate-alternate')
+if(alternateCandidate)assert(candidate&&secondaryPorts&&!capacity&&!recovery,'Alternate candidate ports require a fresh candidate stack')
+const browserPort=alternateCandidate?57800:candidate?57600:57300
+if(recovery)assert(secondaryPorts&&!capacity,'Recovery requires its own secondary-port backend stack')
+if(process.argv.includes('--assistance-backend'))assert(secondaryPorts&&!capacity,'Assistance backend scope requires backend-only secondary ports')
+if(secondaryPorts)assert((candidate||!process.argv.includes('--workspace'))&&!process.argv.includes('--manual-preview'),'Secondary ports are for backend-only validation; preserve the existing browser preview')
+if(capacityLedgerOnly)assert(capacity,'Focused ledger capacity requires the guarded capacity stack')
+if(capacity)assert(process.argv.includes('--performance-only')&&!process.argv.includes('--workspace')&&!process.argv.includes('--manual-preview'),'Capacity mode is a separate performance-only stack without a browser')
+const apiPort=alternateCandidate?57721:capacity||secondaryPorts?57521:57421,dbPort=alternateCandidate?57722:capacity||secondaryPorts?57522:57422,shadowPort=alternateCandidate?57720:capacity||secondaryPorts?57520:57420
+const api=`http://127.0.0.1:${apiPort}`
+let functions,attempted=false,anon,checks=0,temporalFixtures=[],historyFixture,forecastFixture
 const users=[]
 function run(cmd,args,input,timeout=60_000) {
  const r=spawnSync(cmd,args,{cwd:repo,input,encoding:'utf8',timeout,maxBuffer:16*1024*1024})
@@ -23,6 +39,13 @@ function run(cmd,args,input,timeout=60_000) {
 }
 const quote=v=>`'${String(v).replaceAll("'","''")}'`
 const sql=q=>run('docker',['exec','-i',container,'psql','-XAt','-v','ON_ERROR_STOP=1','-U','postgres','-d','postgres'],q)
+function profileSQL(query){
+ // Use the existing test-stack administrator only for session-local profiling.
+ // The normal postgres/service-role paths and permissions stay unchanged.
+ const r=spawnSync('docker',['exec','-i',container,'psql','-XAt','-v','ON_ERROR_STOP=1','-U','supabase_admin','-d','postgres'],{input:query,encoding:'utf8',timeout:60_000,maxBuffer:64*1024*1024})
+ if(r.status!==0)throw new Error(r.error?.message??r.stderr)
+ return r.stderr
+}
 function check(label,value,expected=true){assert.deepEqual(value,expected,label);checks++;console.log(`PASS ${label}`)}
 function sqlAsync(query) {
  return new Promise((res,rej)=>{
@@ -31,12 +54,16 @@ function sqlAsync(query) {
   p.on('error',rej);p.on('close',code=>code===0?res(out.trim()):rej(new Error(err)));p.stdin.end(query)
  })
 }
-async function edge(user,name,body){const r=await fetch(`${api}/functions/v1/${name}`,{method:'POST',headers:{apikey:anon,'Content-Type':'application/json',...(user?{Authorization:`Bearer ${user.token}`}:{})},body:JSON.stringify(name==='manage-budget'?{expected_method:'budget-foundation-v1',...body}:body)});return {status:r.status,body:await r.json()}}
+async function edge(user,name,body,freshConnection=false){const r=await fetch(`${api}/functions/v1/${name}`,{method:'POST',headers:{apikey:anon,'Content-Type':'application/json',...(freshConnection?{Connection:'close'}:{}),...(user?{Authorization:`Bearer ${user.token}`}:{})},body:JSON.stringify(name==='manage-budget'?{expected_method:'budget-foundation-v1',...body}:body)});return {status:r.status,body:await r.json()}}
 async function newUser(){
- const password=`Budget-proof-${randomUUID()}!`
- const r=await fetch(`${api}/auth/v1/signup`,{method:'POST',headers:{apikey:anon,'Content-Type':'application/json'},body:JSON.stringify({email:`budget-${randomUUID()}@example.test`,password})})
+ const manual=process.argv.includes('--manual-preview')
+ const password=manual?`Review-${randomUUID().slice(0,8)}-2026!`:`Budget-proof-${randomUUID()}!`
+ const email=manual?`budget-preview-${users.length+1}@example.test`:`budget-${randomUUID()}@example.test`
+ const r=await fetch(`${api}/auth/v1/signup`,{method:'POST',headers:{apikey:anon,'Content-Type':'application/json'},body:JSON.stringify({email,password})})
  const data=await r.json();assert.equal(r.status,200,JSON.stringify(data));assert(data.access_token)
  const user={id:data.user.id,token:data.access_token,session:data};users.push(user)
+ if(manual)user.previewPassword=password
+ if(recovery)user.recoveryCredentials={email,password}
  user.tenant=sql(`SELECT default_tenant_id FROM public.profiles WHERE id=${quote(user.id)};`)
  return user
 }
@@ -48,7 +75,7 @@ async function startFunctions(){
  // Deliberately do not print runtime output or generated auth keys.
  functions.stdout.on('data',()=>{});functions.stderr.on('data',()=>{})
  for(let n=0;n<120;n++){
-  try{const r=await fetch(`${api}/functions/v1/query-budget`,{method:'OPTIONS'});if(r.status<500)return}catch{}
+  try{const r=await fetch(`${api}/functions/v1/query-budget`,{method:'POST',headers:{apikey:anon,'Content-Type':'application/json'},body:'{"action":"snapshot"}'});const body=await r.json();if(r.status===401&&body.error==='Unauthorized')return}catch{}
   await new Promise(r=>setTimeout(r,500))
  }
  throw new Error('Isolated Budget functions failed to start')
@@ -72,14 +99,15 @@ try{
  assertSafeTestTarget({SUPABASE_URL:api,HALCYON_TEST_TARGET_ID:project,HALCYON_ALLOW_DESTRUCTIVE_TEST_FIXTURES:'isolated-only'})
  cpSync(resolve(repo,'supabase/migrations'),resolve(work,'supabase/migrations'),{recursive:true})
  cpSync(resolve(repo,'supabase/functions'),resolve(work,'supabase/functions'),{recursive:true})
+ if(recovery)for(const name of readdirSync(resolve(work,'supabase/migrations')))if(name>='20261020000000_budget_durable_schema.sql')rmSync(resolve(work,'supabase/migrations',name))
  writeFileSync(resolve(work,'supabase/config.toml'),`project_id = "${project}"
 [api]
-port = 57421
+port = ${apiPort}
 schemas = ["public", "graphql_public", "private"]
 max_rows = 1000
 [db]
-port = 57422
-shadow_port = 57420
+port = ${dbPort}
+shadow_port = ${shadowPort}
 major_version = 17
 [db.seed]
 enabled = false
@@ -90,13 +118,13 @@ enabled = false
 [analytics]
 enabled = false
 [auth]
-site_url = "http://localhost:57300"
+site_url = "http://localhost:${browserPort}"
 enable_signup = true
 [auth.email]
 enable_confirmations = false
 `)
- writeFileSync(resolve(work,'budget.env'),'BUDGET_V1_ENABLED=true\nALLOWED_ORIGINS=http://127.0.0.1:57300\n')
- console.log(`Target: ${project}; API=${api}; DB=127.0.0.1:57422/postgres; fixtures=isolated-only`)
+ writeFileSync(resolve(work,'budget.env'),`BUDGET_V1_ENABLED=true\nALLOWED_ORIGINS=http://127.0.0.1:${browserPort}\n`)
+ console.log(`Target: ${project}; API=${api}; DB=127.0.0.1:${dbPort}/postgres; fixtures=isolated-only`)
  attempted=true
  run(cli,['start','--workdir',work],undefined,240_000)
  const info=JSON.parse(run('docker',['inspect',container]))[0]
@@ -104,16 +132,56 @@ enable_confirmations = false
  check('new isolated target has no identities or financial data',JSON.parse(sql("SELECT json_build_array((SELECT count(*) FROM auth.users),(SELECT count(*) FROM public.tenants),(SELECT count(*) FROM public.accounts),(SELECT count(*) FROM public.transactions));")),[0,0,0,0])
  const stack=JSON.parse(run(cli,['status','--workdir',work,'--output','json']))
  assert.equal(stack.API_URL,api);anon=stack.ANON_KEY
- check('all migrations replayed',Number(sql('SELECT count(*) FROM supabase_migrations.schema_migrations;')),readdirSync(resolve(repo,'supabase/migrations')).filter(n=>n.endsWith('.sql')).length)
+ check('initial migration set replayed',Number(sql('SELECT count(*) FROM supabase_migrations.schema_migrations;')),readdirSync(resolve(work,'supabase/migrations')).filter(n=>n.endsWith('.sql')).length)
+ if(recovery){
+  const {runBudgetRecoveryChecks}=await import('./test-budget-recovery.mjs')
+  await runBudgetRecoveryChecks({repo,work,project,container,cli,api,anon,newUser,sql,quote,check,edge,source,startFunctions,stopFunctions,run})
+ }else{
  await startFunctions()
+ if(candidate){
+  const {runBudgetSecurityChecks}=await import('./test-budget-security.mjs')
+  await runBudgetSecurityChecks({repo,project,container,api,anon,newUser,sql,quote,check,edge,source,run})
+ }
  const {runBudgetAssistanceChecks}=await import('./test-budget-assistance.mjs')
  const assistanceFixture=await runBudgetAssistanceChecks({newUser,sql,quote,check,edge,source})
+ if(process.argv.includes('--assistance-backend')){
+  const {runBudgetEligibilityChecks}=await import('./test-budget-eligibility.mjs')
+  await runBudgetEligibilityChecks({newUser,sql,quote,check,edge})
+  const {runBudgetReadinessChecks}=await import('./test-budget-readiness.mjs')
+  await runBudgetReadinessChecks({newUser,sql,quote,check,edge})
+  const {runBudgetEstimatorChecks}=await import('./test-budget-estimator.mjs')
+  await runBudgetEstimatorChecks({newUser,sql,quote,check,edge})
+  const {runBudgetInputReviewChecks}=await import('./test-budget-input-review.mjs')
+  await runBudgetInputReviewChecks({newUser,sql,quote,check,edge,sqlAsync,assistanceFixture,snapshotSQL:u=>JSON.parse(sql(`SELECT public.budget_query(${quote(u.tenant)},${quote(u.id)},'{"action":"snapshot"}');`))})
+ }
+ if(process.argv.includes('--manual-preview')){
+  const {runBudgetManualPreview}=await import('./preview-budget-manual.mjs')
+  await runBudgetManualPreview({repo,work,project,api,anon,newUser,edge,source,assistanceFixture,sql,quote})
+ }else{
+ if(process.argv.includes('--forecast-only')){
+  const {runBudgetForecastChecks}=await import('./test-budget-forecast.mjs')
+  forecastFixture=await runBudgetForecastChecks({newUser,sql,quote,check,edge,source,commandSQL})
+ }
+ if(process.argv.includes('--estimator-only')&&!process.argv.includes('--workspace')){
+  const {runBudgetEstimatorChecks}=await import('./test-budget-estimator.mjs')
+  await runBudgetEstimatorChecks({newUser,sql,quote,check,edge})
+ }
+ if(process.argv.includes('--eligibility-only')&&!process.argv.includes('--workspace')){
+  const {runBudgetEligibilityChecks}=await import('./test-budget-eligibility.mjs')
+  await runBudgetEligibilityChecks({newUser,sql,quote,check,edge})
+ }
  if(process.argv.includes('--performance-only')){
+  if(!capacityLedgerOnly){
   const {runBudgetImpactPreparationChecks}=await import('./test-budget-impact-preparation.mjs')
   await runBudgetImpactPreparationChecks({newUser,sql,quote,check,edge,source,commandSQL})
   const {runBudgetPerformanceChecks}=await import('./test-budget-performance.mjs')
   historyFixture=await runBudgetPerformanceChecks({newUser,sql,quote,check,edge,source,commandSQL})
   if(process.argv.includes('--stress'))await runBudgetPerformanceChecks({newUser,sql,quote,check,edge,source,commandSQL,periods:120,perPeriod:1000})
+  }
+  if(capacity){
+   const {runBudgetCapacityChecks}=await import('./test-budget-capacity.mjs')
+   await runBudgetCapacityChecks({newUser,sql,sqlAsync,profileSQL,quote,check,edge,source,commandSQL,project,api,repo,historyFixture})
+  }
  }
  if(process.argv.includes('--lifecycle')||process.argv.includes('--temporal-only')){
   const {runBudgetTemporalChecks}=await import('./test-budget-temporal.mjs')
@@ -123,7 +191,7 @@ enable_confirmations = false
   const {runBudgetAttentionChecks}=await import('./test-budget-attention.mjs')
   await runBudgetAttentionChecks({newUser,sql,quote,check,edge,source,sqlAsync,commandSQL})
  }
- if(!process.argv.includes('--attention-only')&&!process.argv.includes('--temporal-only')&&!process.argv.includes('--performance-only')){
+ if(!process.argv.includes('--forecast-only')&&!process.argv.includes('--attention-only')&&!process.argv.includes('--temporal-only')&&!process.argv.includes('--performance-only')&&!process.argv.includes('--accessibility-only')&&!process.argv.includes('--task-panel-only')&&!process.argv.includes('--presentation-only')&&!process.argv.includes('--hero-only')&&!process.argv.includes('--everyday-only')&&!process.argv.includes('--commitments-only')&&!process.argv.includes('--goals-only')&&!process.argv.includes('--settings-only')&&!process.argv.includes('--plan-only')&&!process.argv.includes('--lookback-only')&&!process.argv.includes('--setup-only')&&!process.argv.includes('--eligibility-only')&&!process.argv.includes('--readiness-only')&&!process.argv.includes('--input-review-only')&&!process.argv.includes('--estimator-only')&&!process.argv.includes('--assistance-ui-only')&&!process.argv.includes('--candidate-only')){
  if(process.argv.includes('--lifecycle')){
   const {runBudgetControlChecks}=await import('./test-budget-controls.mjs')
   await runBudgetControlChecks({newUser,sql,quote,check,edge,source,sqlAsync,commandSQL})
@@ -339,14 +407,14 @@ enable_confirmations = false
  }
  if(process.argv.includes('--workspace')) {
   const {runBudgetWorkspaceChecks}=await import('./test-budget-workspace.mjs')
-  await runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,check,edge,temporalFixtures,assistanceFixture})
+  await runBudgetWorkspaceChecks({repo,api,browserPort,viteCache:resolve(work,'vite-cache'),anon,newUser,sql,quote,check,edge,sqlAsync,temporalFixtures,assistanceFixture})
  }
  // Roll back exposure at the real Edge layer without hiding committed outcomes.
  await stopFunctions()
  const runtime=`supabase_edge_runtime_${project}`
  const runtimeIds=run('docker',['ps','-aq','--filter',`name=^${runtime}$`]).split(/\s+/).filter(Boolean)
  for(const id of runtimeIds){const info=JSON.parse(run('docker',['inspect',id]))[0];assert.equal(info.Config.Labels['com.supabase.cli.project'],project);run('docker',['rm','-f',id])}
- writeFileSync(resolve(work,'budget.env'),'BUDGET_V1_ENABLED=false\nALLOWED_ORIGINS=http://127.0.0.1:57300\n')
+ writeFileSync(resolve(work,'budget.env'),`BUDGET_V1_ENABLED=false\nALLOWED_ORIGINS=http://127.0.0.1:${browserPort}\n`)
  await startFunctions()
  check('disabled Edge still returns original commit receipt',(await edge(a,'manage-budget',savedBody)).body,saved.body)
  check('disabled Edge rejects new writes',(await edge(a,'manage-budget',{action:'save_draft',request_id:randomUUID(),expected_source:source(a.tenant),expected_draft:'2',payload:{}})).status,503)
@@ -355,7 +423,9 @@ enable_confirmations = false
  check('disabled Edge exposes durable outcome lookup',(await edge(a,'query-budget',{action:'operation',request_id:savedBody.request_id})).body.outcome,saved.body)
  }else if(process.argv.includes('--workspace')){
   const {runBudgetWorkspaceChecks}=await import('./test-budget-workspace.mjs')
-  await runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,check,edge,attentionOnly:process.argv.includes('--attention-only'),temporalOnly:process.argv.includes('--temporal-only'),temporalFixtures,historyFixture,assistanceFixture})
+  await runBudgetWorkspaceChecks({repo,api,browserPort,viteCache:resolve(work,'vite-cache'),anon,newUser,sql,quote,check,edge,sqlAsync,forecastFixture,attentionOnly:process.argv.includes('--attention-only'),temporalOnly:process.argv.includes('--temporal-only'),temporalFixtures,historyFixture,assistanceFixture,accessibilityOnly:process.argv.includes('--accessibility-only')})
+ }
+ }
  }
  // Auth/tenant deletion cascades must not resurrect source gates or fail on immutable history.
  for(const u of users)sql(`DELETE FROM auth.users WHERE id=${quote(u.id)};`)

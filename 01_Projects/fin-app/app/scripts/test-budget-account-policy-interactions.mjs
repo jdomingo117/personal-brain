@@ -1,3 +1,4 @@
+import {openBudgetSettings,stayInBudgetSettings,closeBudgetSettings} from './lib/budgetSettingsUI.mjs'
 import {randomUUID} from 'node:crypto'
 import {expect} from '@playwright/test'
 
@@ -14,10 +15,11 @@ export async function budgetAccountPolicyInteractions({newUser,sql,quote,check,s
  for(const [account,amount,date] of [[a,-1000,start],[b,-2000,start],[a,-1000,next],[b,-2000,next]])sql(`INSERT INTO public.transactions(user_id,tenant_id,account_id,date,original_description,merchant,merchant_key,category,amount,kind,kind_source,pending) VALUES(${quote(u.id)},${quote(u.tenant)},${quote(account)},${quote(date)},'Scope browser fixture','Scope fixture','scope fixture','Shopping',${amount},'expense','user',false);`)
  sql(`INSERT INTO public.transactions(user_id,tenant_id,account_id,date,original_description,merchant,merchant_key,category,amount,kind,kind_source,pending) VALUES(${quote(u.id)},${quote(u.tenant)},${quote(a)},${quote(start)},'Pending scope fixture','Pending scope','pending scope','Shopping',-900,'expense','user',true);`)
  const phone=await signedPage(u,390,true),region=phone.getByRole('region',{name:'Budget account settings',exact:true})
+ await openBudgetSettings(phone)
  await region.getByRole('button',{name:'Change budget accounts',exact:true}).click()
  const form=region.getByRole('form',{name:'Change budget accounts preview',exact:true})
  await form.getByRole('checkbox',{name:'Activity: Scope A fictional',exact:true}).uncheck()
- phone.once('dialog',d=>d.dismiss());await phone.getByRole('button',{name:'Return to current budget',exact:true}).click()
+ await stayInBudgetSettings(phone)
  await expect(form.getByRole('checkbox',{name:'Activity: Scope A fictional',exact:true})).not.toBeChecked()
  await form.getByRole('button',{name:'Review account effects',exact:true}).click()
  await expect(form).toContainText('Preview ready')
@@ -37,7 +39,7 @@ export async function budgetAccountPolicyInteractions({newUser,sql,quote,check,s
  check('account effects table scrolls locally without overflowing the phone workspace',await phone.locator('.budget-workspace').evaluate(el=>el.scrollWidth>el.clientWidth),false)
  await form.getByRole('button',{name:'Save dated account choices',exact:true}).click()
  await expect(region).toContainText('Last account change saved')
- await phone.reload();await expect(region).toContainText(`${next} onwards`)
+ await phone.reload();await openBudgetSettings(phone);await expect(region).toContainText(`${next} onwards`)
  check('dated future account policy survives real signed-in reload without changing current figures',snapshotSQL(u).actuals.net_expense_cents,3000)
  phone.once('dialog',d=>d.accept());await region.getByRole('button',{name:'Undo last account change',exact:true}).click()
  await expect(region).toContainText('Last account change was undone')
@@ -65,9 +67,9 @@ export async function budgetAccountPolicyInteractions({newUser,sql,quote,check,s
  await form.getByRole('checkbox',{name:/I understand the incomplete or unavailable history/}).check()
  sql(`UPDATE public.accounts SET name='Scope A updated' WHERE id=${quote(a)};`)
  await form.getByRole('button',{name:'Save dated account choices',exact:true}).click()
- await expect(phone.getByRole('alert').first()).toContainText('This budget changed')
+ await expect(phone.getByRole('dialog').getByRole('alert').first()).toContainText('This budget changed')
  await expect(form.getByRole('checkbox',{name:'Activity: Scope B fictional',exact:true})).not.toBeChecked()
- await phone.getByRole('button',{name:'Refresh saved data',exact:true}).click()
+ await phone.getByRole('button',{name:'Refresh settings data',exact:true}).click()
  await expect(form.getByRole('button',{name:'Save dated account choices',exact:true})).toHaveCount(0)
  await expect(form.getByRole('checkbox',{name:'Activity: Scope B fictional',exact:true})).not.toBeChecked()
  check('stale account save retains selections while refresh invalidates the prior effect preview',true)

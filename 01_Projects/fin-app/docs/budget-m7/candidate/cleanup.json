@@ -1,0 +1,89 @@
+{
+  "halcyon-budget-m2-3cb10508cb1c4012": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-budget-m2-44b18408f7d940c3": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-budget-m2-5903a8b0425045d6": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-budget-m2-64cf5e96d4bd4df2": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-budget-m2-6f55d1be7a72443e": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-budget-m2-7682d06da3d24f57": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-budget-m2-78ead011a5da4c92": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-budget-m2-8335ca5a61ea4a91": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-budget-m2-8f9e548c44364dbe": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-budget-m2-f8b5fb5607bd44ef": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-golden-isolated-1793250411168": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-golden-isolated-1793250632342": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-golden-isolated-1793252328308": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-golden-isolated-1793253162033": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "retained_preview": {
+    "project": "halcyon-budget-m2-c65dd04871874dcb",
+    "database_running": true,
+    "migration_count": 96,
+    "parent_pid": 80255,
+    "primary_node_modules_modified": false
+  },
+  "halcyon-golden-isolated-1793256035206": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-golden-isolated-1793256415844": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  }
+}

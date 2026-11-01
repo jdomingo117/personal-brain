@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 
 const port = Number(process.env.HALCYON_GOLDEN_APP_PORT ?? 55300)
+const testConfig = process.env.HALCYON_TEST_VITE_CONFIG
+const configOption = testConfig ? " --config '" + testConfig.replaceAll("'", "'\"'\"'") + "'" : ''
 const baseURL = `http://127.0.0.1:${port}`
 const reviewReportDir = process.env.HALCYON_REVIEW_REPORT_DIR
   ?? (process.env.HALCYON_REVIEW_BROWSER === '1' ? resolve(tmpdir(), `halcyon-review-browser-${process.pid}`) : undefined)
@@ -24,7 +26,7 @@ export default defineConfig({
     actionTimeout: 30_000,
   },
   webServer: {
-    command: `npm run dev -- --host 127.0.0.1 --port ${port} --strictPort`,
+    command: `npm run dev -- --host 127.0.0.1 --port ${port} --strictPort${configOption}`,
     url: baseURL,
     reuseExistingServer: false,
     timeout: 60_000,

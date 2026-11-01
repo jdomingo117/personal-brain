@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-28",
+  "migrations": 96,
+  "runs": [
+    {
+      "command": "node app/scripts/test-budget-durable.mjs --items --lifecycle --workspace",
+      "project": "halcyon-budget-m2-d2f5c284485a479e",
+      "checks": 472,
+      "cleaned": true,
+      "scope": "Before final forecast copy/guard polish and pending evidence refinement"
+    },
+    {
+      "command": "node app/scripts/test-budget-durable.mjs --forecast-only --workspace --candidate-only",
+      "project": "halcyon-budget-m2-63df588076894109",
+      "checks": 243,
+      "cleaned": true,
+      "wcag_scans": 78,
+      "violations": 0,
+      "scope": "Final frontend, before pending evidence identity refinement"
+    },
+    {
+      "command": "node app/scripts/test-budget-durable.mjs --forecast-only --workspace",
+      "project": "halcyon-budget-m2-a66902243a7d48a2",
+      "checks": 79,
+      "cleaned": true,
+      "wcag_scans": 8,
+      "violations": 0,
+      "scope": "Final calculation/attention/frontend; final grant assertion subsequently replayed by preview"
+    }
+  ],
+  "unit": {
+    "passed": 589,
+    "skipped": 14
+  },
+  "static": [
+    "full TypeScript",
+    "focused Budget TypeScript",
+    "browser TypeScript",
+    "modified script syntax",
+    "production build"
+  ],
+  "release": "No-Go; human/operational/release gates remain",
+  "personal_database_touched": false,
+  "deployed": false,
+  "final_threshold_copy": {
+    "project": "halcyon-budget-m2-8a23491eb36a470c",
+    "wcag_fit_cases": 8,
+    "runtime_errors": 0,
+    "budget_writes": 0,
+    "normal_password_login": true
+  },
+  "retained_preview": {
+    "project": "halcyon-budget-m2-8a23491eb36a470c",
+    "pid": 19901,
+    "url": "http://127.0.0.1:57300/budget",
+    "fictional_accounts_signed_in": 8,
+    "final_migration_grant_assertion_replayed": true
+  },
+  "distinct_affected_wcag_scans": 86
+}

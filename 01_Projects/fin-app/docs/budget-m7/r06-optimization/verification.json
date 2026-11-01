@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-29",
+  "scope": "Local R06 optimization; finite declared fixture matrix, not hosted/release or human acceptance",
+  "schema_migrations": 104,
+  "runs": {
+    "capacity": {
+      "checks": 187,
+      "log": "/tmp/halcyon-r06-capacity-104.log",
+      "matrix": "../r06-capacity/measurements.json"
+    },
+    "history": {
+      "checks": 142,
+      "log": "/tmp/halcyon-r06-history.log"
+    },
+    "backend_regression": {
+      "checks": 537,
+      "log": "/tmp/halcyon-r06-regression.log",
+      "includes": "Budget lifecycle plus SQL/Edge R02-R05 assistance; browser presentation not rerun"
+    }
+  },
+  "counts_overlap": true,
+  "unit": {
+    "passed": 595,
+    "skipped": 14,
+    "log": "/tmp/halcyon-r06-unit-final.log"
+  },
+  "static": [
+    "full app TypeScript",
+    "five modified/new script syntax checks"
+  ],
+  "cleanup": {
+    "optimization_projects_verified_empty": 14,
+    "preview_project": "halcyon-budget-m2-c65dd04871874dcb",
+    "preview_schema": 96,
+    "personal_database_touched": false
+  },
+  "decision": "R06 corrected for local repeated-read admission; M7.5 hosted/cold/load qualifications and release gates remain open"
+}

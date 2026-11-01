@@ -249,7 +249,7 @@ export default function StrategicProjections() {
   }, [planningGoals, selectedGoal, selectedGoalId])
   useEffect(() => {
     if (selectedGoal) {
-      setGoalName(selectedGoal.name); setMetric(selectedGoal.metric)
+      setGoalName(selectedGoal.name); setMetric(selectedGoal.metric === 'net_worth' ? 'netWorth' : 'cash')
       setTargetInput(centsToInput(selectedGoal.targetCents)); setTargetDate(selectedGoal.targetDate ?? futureDate(24))
     } else setGoalName(metric === 'cash' ? 'Cash reserve' : 'Net worth milestone')
   }, [selectedGoal])

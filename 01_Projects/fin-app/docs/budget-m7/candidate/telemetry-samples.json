@@ -1,0 +1,170 @@
+[
+  {
+    "event": "budget.request.v1",
+    "endpoint": "query-budget",
+    "status": 401,
+    "outcome": "denied",
+    "duration_ms": 1
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "query-budget",
+    "status": 401,
+    "outcome": "denied",
+    "duration_ms": 0
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "query-budget",
+    "status": 401,
+    "outcome": "denied",
+    "duration_ms": 7
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "query-budget",
+    "status": 403,
+    "outcome": "denied",
+    "duration_ms": 0
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "query-budget",
+    "status": 405,
+    "outcome": "rejected",
+    "duration_ms": 0
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "query-budget",
+    "status": 400,
+    "outcome": "rejected",
+    "duration_ms": 46
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 413,
+    "outcome": "rejected",
+    "duration_ms": 1
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "query-budget",
+    "status": 422,
+    "outcome": "rejected",
+    "duration_ms": 6
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 200,
+    "outcome": "success",
+    "duration_ms": 28
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 200,
+    "outcome": "success",
+    "duration_ms": 11
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 409,
+    "outcome": "conflict",
+    "duration_ms": 9
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "query-budget",
+    "status": 200,
+    "outcome": "success",
+    "duration_ms": 20
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "query-budget",
+    "status": 200,
+    "outcome": "success",
+    "duration_ms": 6
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 422,
+    "outcome": "rejected",
+    "duration_ms": 15
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 422,
+    "outcome": "rejected",
+    "duration_ms": 4
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 422,
+    "outcome": "rejected",
+    "duration_ms": 5
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 422,
+    "outcome": "rejected",
+    "duration_ms": 4
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 422,
+    "outcome": "rejected",
+    "duration_ms": 5
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 422,
+    "outcome": "rejected",
+    "duration_ms": 5
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 422,
+    "outcome": "rejected",
+    "duration_ms": 5
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 422,
+    "outcome": "rejected",
+    "duration_ms": 4
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 422,
+    "outcome": "rejected",
+    "duration_ms": 6
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 422,
+    "outcome": "rejected",
+    "duration_ms": 5
+  },
+  {
+    "event": "budget.request.v1",
+    "endpoint": "manage-budget",
+    "status": 429,
+    "outcome": "rate_limited",
+    "duration_ms": 3
+  }
+]

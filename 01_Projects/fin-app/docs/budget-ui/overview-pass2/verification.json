@@ -1,0 +1,205 @@
+{
+  "project": "halcyon-budget-m2-8a23491eb36a470c",
+  "matrix": [
+    {
+      "state": "real",
+      "width": 320,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "real",
+      "width": 320,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "real",
+      "width": 390,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "real",
+      "width": 390,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "real",
+      "width": 1440,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "real",
+      "width": 1440,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "multi",
+      "width": 320,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "multi",
+      "width": 320,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "multi",
+      "width": 390,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "multi",
+      "width": 390,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "multi",
+      "width": 1440,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "multi",
+      "width": 1440,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "funding",
+      "width": 320,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "funding",
+      "width": 320,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "funding",
+      "width": 390,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "funding",
+      "width": 390,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "funding",
+      "width": 1440,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "funding",
+      "width": 1440,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "unknown",
+      "width": 320,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "unknown",
+      "width": 320,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "unknown",
+      "width": 390,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "unknown",
+      "width": 390,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "unknown",
+      "width": 1440,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "unknown",
+      "width": 1440,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "changed",
+      "width": 320,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "changed",
+      "width": 320,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "changed",
+      "width": 390,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "changed",
+      "width": 390,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "changed",
+      "width": 1440,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "changed",
+      "width": 1440,
+      "theme": "dark",
+      "violations": 0
+    }
+  ],
+  "real_preference_acknowledgement_and_undo": true,
+  "financial_facts_unchanged": true,
+  "persistent_review_across_views": true,
+  "stale_review_guard": true,
+  "snooze_choice_accessible": true,
+  "original_goal_and_bill_tasks": true,
+  "all_checks_preserved": true,
+  "extra_display_states": [
+    "paused",
+    "draft",
+    "purchased",
+    "unsafe target",
+    "failed refresh"
+  ],
+  "runtime_errors": [],
+  "write_actions": [
+    "set_attention",
+    "undo"
+  ],
+  "response_variants_are_display_only": true
+}

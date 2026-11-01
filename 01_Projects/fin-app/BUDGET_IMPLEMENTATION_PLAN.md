@@ -6,10 +6,10 @@ tags:
   - projects/fin-app
   - budgeting
 type: implementation-plan
-status: m6-engineering-complete
+status: m7-verification-in-progress
 project: Halcyon
 created: 2026-10-20
-updated: 2026-10-22
+updated: 2026-10-29
 related:
   - "[[BUDGET_SCOPE_BASELINE]]"
   - "[[BUDGET_FEATURE_SPEC]]"
@@ -20,7 +20,67 @@ related:
 
 # Budget V1 — technical implementation plan
 
-**Plan 1.17 · 22 October 2026 · M0–M6 engineering-complete; M7 release verification is next.**
+
+**M7.7 local candidate verified — 29 October 2026.** [[BUDGET_M7_CANDIDATE_OPERATIONS]] records final patched-installation passes: 560 lifecycle, 391 forecast/assistance/candidate assertions, eight provider-disabled golden tests, 78 passing WCAG scans, 609 unit passes/14 existing skips, types/build and eight telemetry-summary assertions. Budget now has fixed-field privacy-safe request metrics and redacted audit/error diagnostics. Compatible development dependency updates (Vite 6.4.5 / Vitest 4.1.12 in the lock) clear 17 npm advisory entries; no runtime dependency version or financial SQL changed. All sixteen M7.7 test projects, including the two live attempts, are cleaned up. [[BUDGET_OPERATIONS_RUNBOOK]] supplies private-exposure/monitoring/recovery procedures. The owner subsequently authorized the live Gemini categorization test; [[BUDGET_M7_LIVE_CATEGORIZATION]] records two isolated attempts and a definitive generation HTTP402 / RESOURCE_EXHAUSTED response: prepayment credits are depleted. Live classification/fresh-review remains unpassed pending owner-restored credits and a rerun; no billing change was attempted. Human/hosted/M7.8 gates remain open; No-Go. No deployment or personal migration.
+
+**M7.6 isolated migration/recovery rehearsal complete — 29 October 2026.** [[BUDGET_M7_MIGRATION_RECOVERY]] records 164 passing final assertions: populated forward migration from 64 to 104 migrations, pre-/post-Budget auth/application backups restored into separate databases, exact 81/108-table content and sequence parity, original-user password sign-in, tenant RLS, signed-cent totals, recorded review/reserves/edited drafts and receipt preservation with writes disabled/re-enabled. The focused workspace suite passes 25 tests. All three rehearsal projects are cleaned up; private fictional backups remain ignored outside Docker, and preview96/personal data are unchanged. Next engineering: M7.7 final candidate cross-feature/security/operations review. M7.3/M7.4 human, M7.5 hosted/cold/load and M7.8 release gates remain open; No-Go.
+
+**R06 local performance admission verified — 29 October 2026.** [[BUDGET_M7_R06_OPTIMIZATION]] records schema 104 and passing original 10k/100k/1m targets: at 1m, workspace SQL p95 744.926ms, five warm API samples maximum 835ms, assistance API maximum 2,635ms. The first same-generation checkpoint miss was 4,325.854ms SQL; warm p95 is not a first-load/hosted guarantee. Separate suites pass 187 capacity, 142 history and 537 backend assertions; unit 595/14 existing skips, types and script syntax pass. Money/API/UI semantics are preserved, all fourteen run projects are cleaned up, and preview96/personal data are unchanged. M7.5 hosted/cold/load qualification remains pending; next M7.6 isolated migration/restore preparation. Human and release gates remain open / No-Go.
+
+**M7.5 local measurements complete with findings — 29 October 2026.** [[BUDGET_M7_CAPACITY]] records 10k/100k/1m mixed-ledger measurements and the corrected-schema five-/ten-year history proof. Migration 97 restores the history guard bypassed by R01; it is verified only on disposable targets. New finding R06 remains open: 100k workspace SQL misses 1s; 1m workspace times out at 8s and assistance slightly exceeds 3s. The benchmark correctly fails admission. Next is SQL profiling/optimization and the same benchmark rerun. Hosted checks remain pending by explicit owner instruction. Preview retained on schema 96; personal database untouched. Human/operational/release gates remain open / No-Go.
+
+**Approved Overview copy refinement complete — 28 October 2026.** [[BUDGET_OVERVIEW_COPY_REFINEMENT]] records the positive pending-overage sentence, explicit everyday-spending forecast heading/period end, and threshold policy retained in details. Six width/theme browser accessibility checks, future/stale guards, full TypeScript and production build pass; zero Budget writes. Only two presentation components differ from the pass-three source baseline. Prior owner acceptance remains recorded; this follow-up has engineering verification. Human and operational release gates remain open / No-Go.
+
+**Owner Overview comparison accepted — 28 October 2026.** The owner confirmed all three clarity questions: “All 3 questions are a yes. We can resume to the next steps”. The three production passes and owner presentation checkpoint are complete. [[BUDGET_M7_HUMAN_VALIDATION]] now provides the observed accessibility protocol and independent beginner walkthrough. A human beginner tester is no longer available; screen-reader observation is not yet arranged. The owner requested an AI beginner-perspective critique, which does not close either human gate. M7.3/M7.4 results remain pending; M7.5–M7.8 and release remain open / No-Go.
+
+**Overview simplification pass 3 engineering verified — 28 October 2026.** [[BUDGET_OVERVIEW_PASS_3_VERIFICATION]] records 472 fresh lifecycle checks and 442 final assembled checks across 96 migrations, with 131 passing automated accessibility scans and all 70 candidate cases. 595 unit passes/14 skips, types and build pass. A phone funding notice now precedes the positive allowance, using the existing qualified value; backend/calculations remain unchanged. The restored real preview received owner acceptance on 28 October 2026. M7 human/operational/release gates remain open; No-Go.
+
+**Overview simplification pass 2 complete — 28 October 2026.** [[BUDGET_OVERVIEW_PASS_2_ATTENTION_COMMITMENTS_GOALS]] records the canonical single-priority decision beside the hero, retained reminder controls, compact bill/goal disclosures and optional ordinary income detail with visible funding gaps. 595 unit passes/14 skips, types/build, 30 full-workspace WCAG cases and original task checks pass. A real fictional-account reminder acknowledgement/Undo restored its state and preserved financial facts. Next is pass three assembled verification and owner comparison.
+
+**Overview simplification pass 1 complete — 28 October 2026.** [[BUDGET_OVERVIEW_PASS_1_SUMMARY_FORECAST]] records the real hero/forecast composition, amount-based headline, solid/hatched comparison and preserved evidence/staleness guards. 595 unit passes/14 skips, types/build and 30 production presentation WCAG cases plus seven boundary/guard cases pass; zero Budget writes. The owner authorized this first pass only and requested a handback before pass two. Next: attention/bills/goals simplification, then assembled verification; no second-pass work has started.
+
+**Current presentation follow-up — 28 October 2026.** The owner reports the R01 walkthrough checks pass but finds the page text-heavy and overwhelming. [[BUDGET_OVERVIEW_SIMPLIFICATION_STUDY]] is the separately authorized hierarchy/desktop/phone proposal, with five fictional states. Review it before implementing a presentation change and resuming observed accessibility/comprehension walkthroughs. Production Budget and its R01 calculations remain unchanged; release remains No-Go.
+
+**R01 engineering complete — 28 October 2026.** [[BUDGET_R01_SPENDING_FORECAST]] records forward migration 96 and the owner-approved median of three monthly daily gross rates, date-aware fixed bills, separate pending warnings and conservative unavailable states. Verification: 79 final forecast checks, 243 combined forecast/affected-candidate checks with 78 passing WCAG scans plus eight final threshold-explanation scans, 472 lifecycle checks, 589 unit passes/14 existing skips, full/focused/browser types and production build. These are separate runs, not additive unique checks. All 17 BUI presentation bursts remain delivered; R01–R05 engineering findings are now corrected. Next is the R01 affected-flow owner checkpoint and M7.3 observed human accessibility/M7.4 independent beginner walkthroughs, followed by M7.5–M7.8 operational/release gates. Release remains **No-Go**. No personal migration, deployment or commit occurred.
+
+**Plan 1.21 · 28 October 2026 · M7.1–M7.2 recorded; presentation handover precedes final human validation.**
+
+Owner review found that the production Budget does not carry across the concept's visual hierarchy
+and progressive disclosure. [[BUDGET_UI_IMPLEMENTATION_HANDOFF]] defines 17 short BUI presentation
+bursts and technical/visual acceptance gates. BUI-01 reference/action/data mapping is complete
+in [[BUDGET_BUI_01_REFERENCE_MAP]], including 36 concept captures, explicit task-exit policy,
+nullable/Other field dependencies and staged visual/correctness gates. BUI-02 is complete
+in [[BUDGET_BUI_02_TASK_PANEL]]: native production goal-panel pilot, task/period/route guards,
+same-request recovery, 62 focused isolated checks, 12 fresh axe scans and 13 production
+captures. BUI-03 is complete in [[BUDGET_BUI_03_PRESENTATION_ADAPTER]]: canonical qualified
+display models and current-view wiring, nullable/Other proof, 559 unit passes/14 skips,
+32 focused and 208 item/workspace isolated checks (separate totals), four fresh axe
+scans and seven captures. No migration or financial kernel/command-body change.
+BUI-04 is engineering-complete in [[BUDGET_BUI_04_HEADER_HERO]]: compact header/three views,
+canonical everyday/income hero, retained lower controls and Budget-local plane. 121 focused /
+472 lifecycle isolated checks, 22 axe scans, 31 captures, unit/types/build pass. Owner
+header/hero visual review was accepted on 26 October 2026; BUI-05a is complete in [[BUDGET_BUI_05A_EVERYDAY_ROWS]]: canonical category/Other
+rows, optional details and existing task entry points. BUI-05b is complete in [[BUDGET_BUI_05B_COMMITMENTS]]: compact commitment
+disclosures and preserved dates, matches and task forms. BUI-06a is complete in [[BUDGET_BUI_06A_GOALS]]: featured card/compact peers,
+separate reserve/evidence and preserved goal actions. BUI-06b is engineering-complete in [[BUDGET_BUI_06B_CHECKS_GUIDANCE]]: assembled
+overview and compact checks/guidance, with 87 attention / 121 overview-recovery / 472
+lifecycle checks on separate targets and 33 axe scans. Owner overview review was accepted on 26 October 2026; R01 checks acceptance remains open. BUI-07a settings host is complete; BUI-07b frequency/accounts presentation is complete in [[BUDGET_BUI_07B_FREQUENCY_ACCOUNTS]]: 171 focused / 472 lifecycle checks on separate fresh targets, 62 axe scans, 63 captures, unit/types/build pass. BUI-07c rollover/lifecycle presentation is complete in [[BUDGET_BUI_07C_ROLLOVER_LIFECYCLE]]: 320 focused / 472 lifecycle checks on separate fresh targets, 112 axe scans, 113 captures, 32 keyboard-scroll checks and unit/types/build pass. Signed effects and in-form preparation counts remain visible. BUI-08a My plan is complete in [[BUDGET_BUI_08A_MY_PLAN]]: 68 focused / 472 lifecycle checks on separate fresh targets, 20 axe scans, 20 captures, 561 unit passes/14 skips and types/build pass. Saved current/future allocations, one-off cash and reserves remain separate; existing edit/recovery behavior is preserved. BUI-08b Look back is complete in [[BUDGET_BUI_08B_LOOK_BACK]]: 180 focused / 472 lifecycle checks on separate fresh targets, 70 axe scans, 70 captures, 8 keyboard-scroll checks, 565 unit passes/14 skips and types/build pass. Original/latest/recorded facts and carry/next-period controllers remain distinct. BUI-09a manual setup is complete in [[BUDGET_BUI_09A_MANUAL_SETUP]]: 193 focused / 472 lifecycle checks on separate fresh targets, 72 axe scans, 73 captures, 565 unit passes/14 skips and types/build pass. Close/Back retain setup; draft save and saved-draft activation remain separate. All 17 presentation bursts are delivered; owner visual acceptance is recorded. BUI-11 is complete in [[BUDGET_BUI_11_OWNER_HANDBACK]]: on 27 October 2026 the owner explicitly replied “Accept the visual presentation”. The engineering handback removes two unused Look back placeholder CSS rules; all other 440 BUI-10 source hashes match. Fresh 586 unit passes/14 skips, full/focused/browser types and build pass. BUI-10 remains the live-test baseline, rather than being claimed as a new BUI-11 run. Presentation acceptance does not close R01 or M7 human/release gates. BUI-10 is complete in [[BUDGET_BUI_10_CANDIDATE_VERIFICATION]]: 263 accessibility checks/64 states, 187 candidate checks/70 state-width-theme scans, and 472 lifecycle checks on separate fresh targets across 95 migrations. All 134 axe scans pass; 144 captures and manifests record seven financial/recovery states and the assembled UI. 586 unit passes/14 skips, full/focused/browser types and build pass. A phone theme-control overlap was fixed by reusing the shared toggle in the Budget header; other routes retain their floating control. No personal migration or exposure. BUI-09b is complete in [[BUDGET_BUI_09B_ASSISTANCE]]: retained native assistance task, numbered evidence/amounts/review sections, preserved optional-change controller, signed planning receipt, explicit fresh review and Close/Back focus recovery. 221 combined presentation/R02–R05 and 472 lifecycle checks pass on separate fresh targets across 95 migrations, with 42 combined WCAG scans, 30 presentation captures, 586 unit passes/14 skips and types/build. No personal migration. R02 eligibility is corrected in [[BUDGET_R02_ELIGIBILITY]]; R03 is corrected in [[BUDGET_R03_READINESS]]; R04 is complete in [[BUDGET_R04_INPUT_REVIEW]]; R05 is complete in [[BUDGET_R05_SIGNED_ESTIMATOR]] (73 reference / 98 dependency / 472 lifecycle checks across 95 migrations, 586 unit passes/14 skips). R01 engineering is complete in [[BUDGET_R01_SPENDING_FORECAST]]; next is affected human verification; M7 human/release gates remain open. It preserves the frozen financial
+requirements and R01–R05; final M7.3/M7.4 sessions should follow stable revised flows and refreshed
+automated accessibility evidence. It does not start an app-wide redesign or authorize rollout.
+
+[[BUDGET_M7_ACCESSIBILITY]] records the M7.2 automated audit: 64 rendered states and 260
+focused isolated checks across 91 migrations pass, including axe, keyboard table scrolling,
+inline/modal focus, 320px/themes, reduced motion and error states. Comparison scroll regions,
+inline focus and Budget control/focus/motion styles were corrected. Full/focused/browser
+TypeScript, 516 unit tests (14 skips) and build passed at that checkpoint. M7.3 remains pending;
+the BUI presentation handover above now precedes its final sessions.
+
+[[BUDGET_M7_RELEASE_VERIFICATION]] is the current release checklist and per-requirement evidence
+matrix. M7.1 fixed the Planning `net_worth` → `netWorth` adapter; full/focused/browser TypeScript,
+516 unit tests (14 skips) and production build pass. Its audit identifies open R01–R05 findings
+for forecasting, fortnightly eligibility, what-if readiness, input preservation/confirmation and
+canonical estimator edge cases. These qualify the earlier M6 blanket technical closure below;
+passing the existing suites does not close these uncovered requirements. Release remains No-Go.
 
 M6 closeout: [[BUDGET_M6_ASSISTED_SETUP]] records migration 91, deterministic covered-history
 suggestions, editable provenance, bounded one-change what-if, stale/manual conversion and the
@@ -501,6 +561,8 @@ needed unless a dependency requires an explicit owner-visible scope decision.
 U = pure/unit/property/parity tests; I = isolated SQL/Edge integration/concurrency; B = authenticated
 browser journeys; H = human comprehension/accessibility. Each group lists the exact covered IDs.
 Expand to test case names as implementation lands; an entry here is planned coverage, not a pass.
+The current audited statuses and test modules are in [[BUDGET_M7_RELEASE_VERIFICATION]]; that
+matrix supersedes any implication that the grouped milestone mapping below establishes a pass.
 
 | Requirements | Proof and milestone |
 | --- | --- |
@@ -533,8 +595,8 @@ response after dialog close; invalid/foreign custom subcategory and failed secon
 
 Current concept evidence (361 unit tests across the app, 24 fictional browser journeys, focused
 TypeScript/build) is reference coverage only. It neither replaces these production tests nor proves
-independent usability. Track and resolve the existing app-wide TypeScript metric mismatch before
-calling a production typecheck green; focused concept success is not full-app success.
+independent usability. M7.1 resolved the app-wide Planning metric mismatch and reran the full
+production typecheck successfully; focused concept success alone remains insufficient.
 
 ## 13. M0 decisions and readiness register
 
@@ -578,10 +640,12 @@ silently shipping a reduced feature. Final migration DDL is reviewed after these
 
 ## 15. Immediate next step
 
-M0–M6 engineering implementation and verification are recorded in the phase records. M5 closeout
-is complete in [[BUDGET_M5_IMPACT_PREPARATION]] and M6 closeout is complete in
-[[BUDGET_M6_ASSISTED_SETUP]]; no M0–M6 engineering item remains on this plan. The next milestone
-is **M7 — release verification**.
+M7.1 baseline audit and M7.2 automated accessibility audit are complete in
+[[BUDGET_M7_RELEASE_VERIFICATION]] and [[BUDGET_M7_ACCESSIBILITY]]. Following owner visual feedback,
+next planned work is **BUI-01 — reference/action/data mapping**, then the bounded presentation
+bursts in [[BUDGET_UI_IMPLEMENTATION_HANDOFF]]. M7.3 human accessibility validation resumes on
+stable revised flows, with renewed automated evidence. R01–R05 require separately bounded engineering
+follow-ups before the final release candidate; M6's historical closeout does not waive them.
 
 Preserve the distinction between planned allocations, canonical activity and verified per-line/
 funding evidence. The concept remains presentation reference. M7 retains human comprehension and

@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-28",
+  "project": "halcyon-budget-m2-c65dd04871874dcb",
+  "scope": "Read-only copy refinement; genuine current forecast plus response-only future/stale presentation guards",
+  "cases": [
+    {
+      "width": 320,
+      "theme": "light",
+      "violations": 0,
+      "horizontalOverflow": false
+    },
+    {
+      "width": 320,
+      "theme": "dark",
+      "violations": 0,
+      "horizontalOverflow": false
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "violations": 0,
+      "horizontalOverflow": false
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "violations": 0,
+      "horizontalOverflow": false
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "violations": 0,
+      "horizontalOverflow": false
+    },
+    {
+      "width": 1440,
+      "theme": "dark",
+      "violations": 0,
+      "horizontalOverflow": false
+    }
+  ],
+  "thresholdExplanationPreserved": true,
+  "futureLabel": true,
+  "staleSuppression": true,
+  "financialWrites": 0,
+  "runtimeErrors": []
+}

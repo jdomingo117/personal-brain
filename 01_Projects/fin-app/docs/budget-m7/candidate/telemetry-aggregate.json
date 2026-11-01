@@ -1,0 +1,88 @@
+{
+  "schema": "budget.aggregate.v1",
+  "accepted_samples": 24,
+  "rejected_samples": 0,
+  "groups": [
+    {
+      "endpoint": "manage-budget",
+      "outcome": "conflict",
+      "count": 1,
+      "status_counts": {
+        "409": 1
+      },
+      "p50_ms": 9,
+      "p95_ms": 9,
+      "max_ms": 9
+    },
+    {
+      "endpoint": "manage-budget",
+      "outcome": "rate_limited",
+      "count": 1,
+      "status_counts": {
+        "429": 1
+      },
+      "p50_ms": 3,
+      "p95_ms": 3,
+      "max_ms": 3
+    },
+    {
+      "endpoint": "manage-budget",
+      "outcome": "rejected",
+      "count": 11,
+      "status_counts": {
+        "413": 1,
+        "422": 10
+      },
+      "p50_ms": 5,
+      "p95_ms": 15,
+      "max_ms": 15
+    },
+    {
+      "endpoint": "manage-budget",
+      "outcome": "success",
+      "count": 2,
+      "status_counts": {
+        "200": 2
+      },
+      "p50_ms": 11,
+      "p95_ms": 28,
+      "max_ms": 28
+    },
+    {
+      "endpoint": "query-budget",
+      "outcome": "denied",
+      "count": 4,
+      "status_counts": {
+        "401": 3,
+        "403": 1
+      },
+      "p50_ms": 0,
+      "p95_ms": 7,
+      "max_ms": 7
+    },
+    {
+      "endpoint": "query-budget",
+      "outcome": "rejected",
+      "count": 3,
+      "status_counts": {
+        "400": 1,
+        "405": 1,
+        "422": 1
+      },
+      "p50_ms": 6,
+      "p95_ms": 46,
+      "max_ms": 46
+    },
+    {
+      "endpoint": "query-budget",
+      "outcome": "success",
+      "count": 2,
+      "status_counts": {
+        "200": 2
+      },
+      "p50_ms": 6,
+      "p95_ms": 20,
+      "max_ms": 20
+    }
+  ]
+}

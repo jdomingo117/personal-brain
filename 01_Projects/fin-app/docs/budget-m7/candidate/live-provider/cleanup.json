@@ -1,0 +1,14 @@
+{
+  "halcyon-golden-isolated-1793256035206": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-golden-isolated-1793256415844": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "temporary_provider_environment_removed": true,
+  "retained_preview_database_running": true
+}

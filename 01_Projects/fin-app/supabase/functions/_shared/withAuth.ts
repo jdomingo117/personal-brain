@@ -46,6 +46,8 @@ export interface WithAuthOptions<TSchema extends z.ZodTypeAny> {
   auditAction?: string
   /** Max request body in bytes. Defaults to 1 MiB. */
   maxBodyBytes?: number
+  /** Content-free unexpected-error logging for endpoints accepting private financial input. */
+  redactErrorDetails?: boolean
 }
 
 const MAX_BODY_BYTES_DEFAULT = 1024 * 1024
@@ -222,7 +224,7 @@ export function withAuth<TSchema extends z.ZodTypeAny>(
       const audit = async (action: string, extra: Record<string, unknown> = {}) => {
         // Audit writes must never fail the request they describe.
         try {
-          await adminClient().from('audit_log').insert({
+          const { error } = await adminClient().from('audit_log').insert({
             actor_id: user.id,
             tenant_id: membership.tenant_id,
             action,
@@ -230,8 +232,9 @@ export function withAuth<TSchema extends z.ZodTypeAny>(
             user_agent: req.headers.get('user-agent'),
             metadata: extra,
           })
+          if (error) throw error
         } catch (err) {
-          console.error('audit write failed', { action, err: String(err) })
+          console.error('audit write failed', { action, err: options.redactErrorDetails ? 'redacted' : String(err) })
         }
       }
 
@@ -268,7 +271,7 @@ export function withAuth<TSchema extends z.ZodTypeAny>(
       const detail = err instanceof Error
         ? err.message
         : (() => { try { return JSON.stringify(err) } catch { return String(err) } })()
-      console.error('unhandled error', { fn: req.url, detail })
+      console.error('unhandled error', options.redactErrorDetails ? { detail: 'redacted' } : { fn: req.url, detail })
       return json({ error: 'Request failed' }, 400, cors)
     }
   }

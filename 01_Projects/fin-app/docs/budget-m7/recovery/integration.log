@@ -1,0 +1,169 @@
+Target: halcyon-budget-m2-579045036283479e; API=http://127.0.0.1:57521; DB=127.0.0.1:57522/postgres; fixtures=isolated-only
+PASS new isolated target has no identities or financial data
+PASS initial migration set replayed
+PASS legacy baseline has no new Budget plans
+PASS nonzero legacy preservation fixture
+PASS before-budget catalog contains auth users
+PASS before-budget catalog contains public profiles
+PASS before-budget catalog contains public tenants
+PASS before-budget catalog contains public accounts
+PASS before-budget catalog contains public transactions
+PASS before-budget catalog contains public budgets
+Recovery: secured pre-migration archive; applying forward-only migrations to populated disposable target.
+PASS populated target reaches all repository migrations
+PASS additive migration preserves auth.users
+PASS additive migration preserves auth.sessions
+PASS additive migration preserves auth.instances
+PASS additive migration preserves public.budgets
+PASS additive migration preserves public.tenants
+PASS additive migration preserves auth.flow_state
+PASS additive migration preserves auth.identities
+PASS additive migration preserves auth.scim_users
+PASS additive migration preserves public.accounts
+PASS additive migration preserves public.profiles
+PASS additive migration preserves auth.mfa_factors
+PASS additive migration preserves auth.scim_tokens
+PASS additive migration preserves auth.sso_domains
+PASS additive migration preserves public.audit_log
+PASS additive migration preserves public.sync_runs
+PASS additive migration preserves auth.oauth_clients
+PASS additive migration preserves auth.sso_providers
+PASS additive migration preserves auth.mfa_amr_claims
+PASS additive migration preserves auth.mfa_challenges
+PASS additive migration preserves auth.oauth_consents
+PASS additive migration preserves auth.refresh_tokens
+PASS additive migration preserves auth.saml_providers
+PASS additive migration preserves public.achievements
+PASS additive migration preserves public.transactions
+PASS additive migration preserves auth.one_time_tokens
+PASS additive migration preserves public.user_sessions
+PASS additive migration preserves public.login_attempts
+PASS additive migration preserves public.merchant_rules
+PASS additive migration preserves public.planning_goals
+PASS additive migration preserves public.tenant_members
+PASS additive migration preserves public.transfer_links
+PASS additive migration preserves public.upload_batches
+PASS additive migration preserves auth.audit_log_entries
+PASS additive migration preserves auth.saml_relay_states
+PASS additive migration preserves auth.schema_migrations
+PASS additive migration preserves public.planning_events
+PASS additive migration preserves public.static_profiles
+PASS additive migration preserves auth.mfa_recovery_codes
+PASS additive migration preserves public.account_lockouts
+PASS additive migration preserves auth.oauth_client_states
+PASS additive migration preserves auth.webauthn_challenges
+PASS additive migration preserves public.instrument_prices
+PASS additive migration preserves public.user_achievements
+PASS additive migration preserves auth.oauth_authorizations
+PASS additive migration preserves auth.webauthn_credentials
+PASS additive migration preserves public.planning_scenarios
+PASS additive migration preserves public.transfer_decisions
+PASS additive migration preserves public.account_connections
+PASS additive migration preserves public.account_identifiers
+PASS additive migration preserves public.investment_holdings
+PASS additive migration preserves public.taxonomy_categories
+PASS additive migration preserves auth.custom_oauth_providers
+PASS additive migration preserves auth.mfa_recovery_code_sets
+PASS additive migration preserves public.planning_goal_events
+PASS additive migration preserves public.provider_connections
+PASS additive migration preserves public.tenant_subcategories
+PASS additive migration preserves private.provider_credentials
+PASS additive migration preserves public.investment_activities
+PASS additive migration preserves public.investment_cash_links
+PASS additive migration preserves public.investment_instruments
+PASS additive migration preserves public.investment_tax_records
+PASS additive migration preserves public.planning_goal_accounts
+PASS additive migration preserves public.taxonomy_subcategories
+PASS additive migration preserves public.taxonomy_migration_runs
+PASS additive migration preserves public.transaction_allocations
+PASS additive migration preserves public.transfer_match_overflow
+PASS additive migration preserves public.planning_scenario_events
+PASS additive migration preserves public.investment_cash_decisions
+PASS additive migration preserves public.merchant_recurrence_hints
+PASS additive migration preserves public.taxonomy_category_aliases
+PASS additive migration preserves public.taxonomy_migration_events
+PASS additive migration preserves public.investment_price_sync_runs
+PASS additive migration preserves public.planning_rebaseline_events
+PASS additive migration preserves public.recurring_series_overrides
+PASS additive migration preserves public.transaction_category_edits
+PASS additive migration preserves public.taxonomy_subcategory_aliases
+PASS additive migration preserves public.transaction_allocation_edits
+PASS additive migration preserves public.investment_account_valuations
+PASS additive migration preserves public.classification_review_policies
+PASS additive migration preserves public.recurring_series_override_events
+PASS additive migration preserves public.transaction_classification_edits
+PASS additive migration preserves exact financial aggregates
+PASS legacy budgets do not invent plans or reserves
+PASS migrated constraints, RLS, view security and command grants
+PASS original credentials authenticate original user ID
+PASS original credentials authenticate original user ID
+PASS initial disabled exposure rejects new Budget writes
+PASS authenticated owner saves post-migration Budget draft
+PASS authenticated owner activates plan
+PASS authenticated recovery fixture save_item
+PASS authenticated recovery fixture release_reserve
+PASS authenticated recovery fixture save_review
+PASS authenticated recovery fixture open_next_period
+PASS recovery fixture contains immutable review, reserve events and multiple periods
+PASS second owner saves unactivated draft
+PASS edited draft has a second durable revision
+PASS post-migration workspace is readable
+PASS foreign owner cannot read original plan
+PASS after-budget catalog contains auth users
+PASS after-budget catalog contains public profiles
+PASS after-budget catalog contains public tenants
+PASS after-budget catalog contains public accounts
+PASS after-budget catalog contains public transactions
+PASS after-budget catalog contains public budgets
+PASS recovery database name is new
+PASS recovery database has no auth or application tables
+PASS before-budget restored every auth/application table count and canonical row digest
+PASS before-budget restored exact ledger/account/income/expense aggregates
+PASS before-budget restored sequence definitions and positions
+PASS before-budget original profile/default tenant recovered
+PASS before-budget owner membership recovered
+PASS before-budget recovered account RLS exposes own account only
+PASS before-budget original profile/default tenant recovered
+PASS before-budget owner membership recovered
+PASS before-budget recovered account RLS exposes own account only
+PASS before-budget recovery Auth starts on its separate database
+PASS original credentials authenticate original user ID
+PASS original credentials authenticate original user ID
+PASS before-budget real recovery login preserves financial aggregates
+PASS pre-Budget restore has legacy model and no invented Budget model
+PASS recovery database name is new
+PASS recovery database has no auth or application tables
+PASS after-budget restored every auth/application table count and canonical row digest
+PASS after-budget restored exact ledger/account/income/expense aggregates
+PASS after-budget restored sequence definitions and positions
+PASS after-budget original profile/default tenant recovered
+PASS after-budget owner membership recovered
+PASS after-budget recovered account RLS exposes own account only
+PASS after-budget original profile/default tenant recovered
+PASS after-budget owner membership recovered
+PASS after-budget recovered account RLS exposes own account only
+PASS restored constraints, RLS, view security and command grants
+PASS after-budget recovery Auth starts on its separate database
+PASS original credentials authenticate original user ID
+PASS original credentials authenticate original user ID
+PASS after-budget real recovery login preserves financial aggregates
+PASS recovered committed outcome equals exact original receipt
+PASS recovered edited draft equals original saved input
+PASS separate recovery databases did not mutate source tables
+PASS disabled exposure rejects fresh owner writes
+PASS disabled exposure preserves exact committed retry
+PASS disabled exposure preserves durable outcome lookup
+PASS disabled exposure preserves snapshot reads
+PASS disabled exposure advertises writes paused
+PASS disabled exposure retains edited owner draft
+PASS disable preserves all authoritative application row counts and hashes
+PASS disable preserves ledger/account/analytics cents
+PASS reenabled reads work
+PASS reenabling retains idempotent original receipt
+PASS reenabling does not duplicate financial operations
+Recovery evidence: /Users/joel/Documents/Obsidian/personal-brain/01_Projects/fin-app/docs/budget-m7/recovery/halcyon-budget-m2-579045036283479e; private archives: /Users/joel/Documents/Obsidian/personal-brain/01_Projects/fin-app/backups/budget-m7/halcyon-budget-m2-579045036283479e
+PASS only created fixture identities removed
+PASS fixture accounts and transactions removed
+PASS tenant cascades leave no Budget plans or source gates
+164 durable-boundary integration checks passed.
+Removed only disposable resources for halcyon-budget-m2-579045036283479e; no personal stack cleanup.

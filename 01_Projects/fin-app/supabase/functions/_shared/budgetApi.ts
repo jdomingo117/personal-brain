@@ -41,7 +41,7 @@ export const BudgetCommand = z.discriminatedUnion('action',[
   z.object({...common,action:z.literal('undo'),operation_id:z.string().uuid()}).strict(),
 ])
 export const BudgetQuery = z.discriminatedUnion('action',[
-  z.object({action:z.literal('assisted_setup'),frequency:z.enum(['monthly','fortnightly']),start_date:DateOnly,anchor:DateOnly.optional(),account_ids:z.array(z.string().uuid()).max(100)}).strict(),
+  z.object({action:z.literal('assisted_setup'),timezone:z.string().min(1).max(100).optional(),frequency:z.enum(['monthly','fortnightly']),start_date:DateOnly,anchor:DateOnly.optional(),account_ids:z.array(z.string().uuid()).max(100)}).strict(),
   z.object({action:z.literal('prepare_history'),plan_id:z.string().uuid(),period_id:z.string().uuid(),expected_source:Version,expected_plan:Version}).strict(),
   z.object({action:z.literal('preview_control'),...Control,plan_id:z.string().uuid(),period_id:z.string().uuid(),expected_source:Version,expected_plan:Version,expected_method:z.string().min(1).max(64)}).strict(),
   z.object({action:z.literal('preview_rollover'),...Rollover,plan_id:z.string().uuid(),period_id:z.string().uuid(),expected_source:Version,expected_plan:Version,expected_method:z.string().min(1).max(64)}).strict(),
@@ -60,6 +60,7 @@ export function budgetFailure(error: { code?: string; message?: string }): never
   if(code==='budget_invalid_attention_period')throw new SafeHttpError(422,{code,message:'Review preferences can be changed for the budget currently in progress. Saved history remains available to inspect.',retryable:false})
   if(code==='budget_invalid_attention_date')throw new SafeHttpError(422,{code,message:'Choose a reminder date after today, no later than the end of this budget.',retryable:false})
   if(code==='budget_invalid_accounts')throw new SafeHttpError(422,{code,message:'Choose no more than 100 available AUD accounts for assisted setup.',retryable:false})
+  if(code==='budget_assistance_review_required')throw new SafeHttpError(422,{code,message:'Review expected income, pay dates and individual costs, or explicitly keep this draft as manual estimates.',retryable:false})
   if(code==='budget_stale_assistance')throw new SafeHttpError(409,{code,message:'The history behind these suggestions changed. Recheck it, or explicitly keep your edited amounts as manual estimates.',retryable:false})
   if(code==='budget_paused')throw new SafeHttpError(409,{code,message:'Budget planning is paused. Review the uncovered dates and carry before resuming and opening another budget.',retryable:false})
   if(code==='budget_invalid_archived_line')throw new SafeHttpError(422,{code,message:'This line is archived. Its history and reserve remain available, but future allocations stay at zero.',retryable:false})

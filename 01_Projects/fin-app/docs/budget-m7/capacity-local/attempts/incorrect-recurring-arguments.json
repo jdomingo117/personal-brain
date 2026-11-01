@@ -1,0 +1,223 @@
+{
+  "date": "2026-10-29",
+  "project": "halcyon-budget-m2-67e163d20a904119",
+  "api": "http://127.0.0.1:57521",
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M3 Pro",
+    "logical_cpus": 11,
+    "host_memory_bytes": 19327352832,
+    "postgres": "PostgreSQL 17.11 on aarch64-unknown-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+    "settings": {
+      "shared_buffers": "128MB",
+      "work_mem": "4MB",
+      "max_connections": "100"
+    }
+  },
+  "method": {
+    "sql_samples": 20,
+    "edge_samples": 5,
+    "percentile": "nearest rank; p95 of five Edge samples is the maximum, not a stable production percentile",
+    "cache": "first after fixture load/ANALYZE plus warm repetitions; no OS/shared-buffer flush and no true cold-cache claim",
+    "limits": "Existing 8s SQL cancellation bound; unchanged Edge authentication and rate limits",
+    "concurrency": "sequential request samples; retained visual-preview stack also exists on different ports"
+  },
+  "scales": [
+    {
+      "rows": 10000,
+      "fixture_started_at": "2026-10-28T13:17:31.870Z",
+      "fixture_load_ms": 989,
+      "workspace": {
+        "sql_wall_ms": [],
+        "sql_execution_ms": [],
+        "edge_ms": [
+          306,
+          260,
+          211,
+          211,
+          219
+        ],
+        "errors": [
+          {
+            "stage": "sql",
+            "sample": 0,
+            "timeout": false,
+            "message": "Error: docker failed: ERROR:  function public.budget_recurring_evidence(unknown, unknown, unknown, unknown, integer, unknown) does not exist\nLINE 1: ...c1-b764-fef01ed3f7af',8,'1'),'recurring_evidence',public.bud...\n                                                             ^\nHINT:  No function matches the given name and argument types. You might need to add explicit type casts.\n"
+          }
+        ],
+        "edge_summary": {
+          "n": 5,
+          "p50_ms": 219,
+          "p95_ms": 306,
+          "min_ms": 211,
+          "max_ms": 306,
+          "samples_ms": [
+            306,
+            260,
+            211,
+            211,
+            219
+          ]
+        }
+      },
+      "assistance": {
+        "sql_wall_ms": [
+          119,
+          123,
+          114,
+          114,
+          127,
+          122,
+          134,
+          116,
+          136,
+          121,
+          122,
+          123,
+          107,
+          110,
+          116,
+          127,
+          110,
+          109,
+          104,
+          115
+        ],
+        "sql_execution_ms": [
+          56.039,
+          53.692,
+          52.883,
+          53.772,
+          57.341,
+          51.623,
+          56.768,
+          49.472,
+          56.412,
+          53.126,
+          51.695,
+          52.494,
+          51.03,
+          50.103,
+          57.768,
+          55.986,
+          52.589,
+          49.301,
+          48.391,
+          50.121
+        ],
+        "edge_ms": [
+          67,
+          57,
+          54,
+          52,
+          53
+        ],
+        "errors": [],
+        "first_plan": [
+          {
+            "Plan": {
+              "Node Type": "Result",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 0,
+              "Total Cost": 0.26,
+              "Plan Rows": 1,
+              "Plan Width": 32,
+              "Actual Startup Time": 56.012,
+              "Actual Total Time": 56.012,
+              "Actual Rows": 1,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 69681,
+              "Shared Read Blocks": 60,
+              "Shared Dirtied Blocks": 21,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 39,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 1,
+              "Local Written Blocks": 1,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning": {
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 0.032,
+            "Triggers": [],
+            "Execution Time": 56.039
+          }
+        ],
+        "sql_summary": {
+          "n": 20,
+          "p50_ms": 52.589,
+          "p95_ms": 57.341,
+          "min_ms": 48.391,
+          "max_ms": 57.768,
+          "samples_ms": [
+            56.039,
+            53.692,
+            52.883,
+            53.772,
+            57.341,
+            51.623,
+            56.768,
+            49.472,
+            56.412,
+            53.126,
+            51.695,
+            52.494,
+            51.03,
+            50.103,
+            57.768,
+            55.986,
+            52.589,
+            49.301,
+            48.391,
+            50.121
+          ]
+        },
+        "edge_summary": {
+          "n": 5,
+          "p50_ms": 54,
+          "p95_ms": 67,
+          "min_ms": 52,
+          "max_ms": 67,
+          "samples_ms": [
+            67,
+            57,
+            54,
+            52,
+            53
+          ]
+        }
+      },
+      "recurring": {
+        "sql_wall_ms": [],
+        "sql_execution_ms": [],
+        "edge_ms": [],
+        "errors": [
+          {
+            "stage": "sql",
+            "sample": 0,
+            "timeout": false,
+            "message": "Error: docker failed: ERROR:  function public.budget_recurring_evidence(unknown, unknown, unknown, unknown, integer, unknown) does not exist\nLINE 1: EXPLAIN (ANALYZE,BUFFERS,FORMAT JSON) SELECT public.budget_r...\n                                                     ^\nHINT:  No function matches the given name and argument types. You might need to add explicit type casts.\n"
+          }
+        ]
+      }
+    }
+  ],
+  "hosted": "not measured; no hosted target authorized",
+  "failures": [
+    "10000 workspace SQL",
+    "10000 recurring SQL"
+  ]
+}

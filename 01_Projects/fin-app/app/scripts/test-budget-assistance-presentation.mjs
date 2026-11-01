@@ -1,0 +1,97 @@
+import {mkdirSync} from 'node:fs'
+import {resolve} from 'node:path'
+import {expect} from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
+import {confirmBudgetAssistance} from './lib/budgetAssistanceUI.mjs'
+
+export async function budgetAssistancePresentationChecks({repo,newUser,sql,quote,check,signedPage,snapshotSQL}){
+ const out=resolve(repo,'docs/budget-ui/bui-09b/captures');mkdirSync(out,{recursive:true})
+ const u=await newUser(),dates=JSON.parse(sql("SELECT jsonb_build_object('start',date_trunc('month',now() AT TIME ZONE 'Australia/Sydney')::date,'first',(date_trunc('month',now() AT TIME ZONE 'Australia/Sydney')-interval '6 months')::date,'today',(now() AT TIME ZONE 'Australia/Sydney')::date,'next',(date_trunc('month',now() AT TIME ZONE 'Australia/Sydney')+interval '1 month')::date);"))
+ const a=sql(`INSERT INTO public.accounts(user_id,tenant_id,name,type,balance,currency) VALUES(${quote(u.id)},${quote(u.tenant)},'Everyday evidence account','Liquid',0,'AUD') RETURNING id;`).split('\n')[0]
+ sql(`INSERT INTO public.transactions(user_id,tenant_id,account_id,date,original_description,merchant,merchant_key,category,amount,kind,kind_source,pending,transfer_candidate)
+ SELECT ${quote(u.id)},${quote(u.tenant)},${quote(a)},d::date,'Assistance evidence','Shop','bui09b-shop','Shopping',-20000,'expense','user',false,false FROM generate_series(${quote(dates.first)}::date,${quote(dates.start)}::date-1,interval '1 month') d;
+ INSERT INTO public.transactions(user_id,tenant_id,account_id,date,original_description,merchant,merchant_key,category,amount,kind,kind_source,pending,transfer_candidate)
+ SELECT ${quote(u.id)},${quote(u.tenant)},${quote(a)},d::date,'Earned income','Employer','bui09b-pay','Income',50000,'income','user',false,false FROM generate_series(${quote(dates.first)}::date,${quote(dates.start)}::date-1,interval '1 month') d;`)
+ const cover=()=>sql(`INSERT INTO public.account_activity_coverage(tenant_id,account_id,original_account_id,start_date,end_date,provenance,evidence,source_revision,confirmed_by) VALUES(${quote(u.tenant)},${quote(a)},${quote(a)},${quote(dates.first)},${quote(dates.next)},'verified_statement','{"fixture":"bui09b"}',0,${quote(u.id)});`)
+ cover()
+ const page=await signedPage(u,390),writes=[];page.on('request',r=>{if(r.url().includes('/functions/v1/manage-budget'))writes.push(r.postDataJSON())})
+ const initialIndex=await page.evaluate(()=>history.state.idx)
+ await page.getByRole('navigation').getByRole('button',{name:'Budget',exact:true}).click()
+ await expect.poll(()=>page.evaluate(()=>history.state.idx)).toBe(initialIndex+1)
+ await page.getByRole('button',{name:'Help me build a budget',exact:true}).click()
+ const panel=page.getByRole('dialog',{name:'Help me build a budget',exact:true})
+ await expect(panel).toBeFocused();check('assistance has one native modal focus owner',await panel.evaluate(()=>document.querySelectorAll('dialog:modal').length),1)
+ await panel.getByRole('button',{name:'Check my history',exact:true}).click();await expect(panel.getByRole('alert')).toContainText('Choose at least one')
+ await panel.getByRole('checkbox',{name:/Everyday evidence account/}).check()
+ await panel.getByRole('button',{name:'Check my history',exact:true}).click()
+ await expect(panel.getByRole('heading',{name:'Enough complete history for a starting point',exact:true})).toBeVisible()
+ await expect(panel).toContainText('Selected accounts: Everyday evidence account')
+ await expect(panel).toContainText(`Budget dates: ${dates.start}`)
+ check('scope and normalized budget dates stay adjacent to evidence',true)
+ await panel.getByRole('checkbox',{name:/These are the accounts and dated periods/}).check()
+ await panel.getByLabel(/Have your income/).selectOption('no')
+ await panel.getByRole('checkbox',{name:/I checked the income, regular costs/}).check()
+ await confirmBudgetAssistance(page,dates.start)
+ await panel.getByRole('checkbox',{name:/Try one optional change/}).check()
+ await panel.getByLabel('Amount to redirect from everyday spending',{exact:true}).fill('10')
+ await expect(panel).toContainText('Everyday changes from $200.00 to $190.00')
+ await panel.getByLabel('Leave room for').selectOption('goal')
+ await panel.getByLabel('Goal name',{exact:true}).fill('A little breathing room')
+ await panel.getByLabel('Estimated target (optional)',{exact:true}).fill('100')
+ await panel.getByLabel('Already set aside for this goal (AUD; enter 0 if none)',{exact:true}).fill('0')
+ await panel.getByRole('checkbox',{name:/I confirmed expected income and pay dates/}).check()
+ await expect(panel.getByText('If you keep this contribution',{exact:true})).toBeVisible()
+ await expect(panel.getByRole('button',{name:'Use this draft',exact:true})).toBeEnabled()
+ check('one change retains reviewed dates, capacity, reserve and conditional outcome guards',true)
+ for(const [n,name]of [[1,'1 · Check history'],[2,'2 · Amounts & one change'],[3,'3 · Review draft']]){
+  await panel.getByRole('button',{name,exact:true}).click();await expect(panel.locator(`[data-assistance-part="${n}"] > summary`)).toBeFocused()
+ }
+ await panel.getByLabel('Goal name',{exact:true}).fill('A little breathing room')
+ await page.keyboard.press('Escape');await expect(panel).toBeHidden()
+ await expect(page.getByRole('button',{name:'Continue history review',exact:true})).toBeFocused()
+ await page.getByRole('button',{name:'Continue history review',exact:true}).click()
+ await expect(panel.getByLabel('Goal name',{exact:true})).toHaveValue('A little breathing room')
+ await expect(panel.getByLabel('Amount to redirect from everyday spending',{exact:true})).toHaveValue('10')
+ await expect(panel.getByRole('button',{name:'Use this draft',exact:true})).toBeEnabled()
+ check('Escape/close and resume retain reviewed input and optional intent without writes',writes,[])
+ await page.evaluate(()=>history.back());await expect.poll(()=>page.evaluate(()=>history.state.idx)).toBe(initialIndex);await expect(panel).toBeHidden()
+ await page.evaluate(()=>history.forward());await expect.poll(()=>page.evaluate(()=>history.state.idx)).toBe(initialIndex+1)
+ await page.getByRole('button',{name:'Continue history review',exact:true}).click()
+ await expect(panel.getByLabel('Goal name',{exact:true})).toHaveValue('A little breathing room')
+ check('browser Back/Forward closes and resumes assistance with retained intent',writes,[])
+ // Disclosures retain controls rather than unmounting their values.
+ await panel.locator('[data-assistance-part="2"] > summary').click()
+ await panel.getByRole('button',{name:'2 · Amounts & one change',exact:true}).click()
+ await expect(panel.getByLabel('Goal name',{exact:true})).toHaveValue('A little breathing room')
+ check('section navigation opens and focuses collapsed sections without losing intent',true)
+ for(const width of [320,390,768,1024,1440])for(const dark of [false,true]){
+  await page.setViewportSize({width,height:1100});await page.evaluate(v=>document.documentElement.classList.toggle('dark',v),dark)
+  for(const [part,label]of [[1,'evidence'],[2,'one-change'],[3,'review']]){
+   await panel.getByRole('button',{name:part===1?'1 · Check history':part===2?'2 · Amounts & one change':'3 · Review draft',exact:true}).click()
+   const fit=await panel.evaluate(el=>el.scrollWidth<=el.clientWidth+1&&[...el.querySelectorAll('input,fieldset')].every(c=>c.scrollWidth<=c.clientWidth+1));if(!fit)console.log('Assistance overflow:',await panel.evaluate(el=>({panel:[el.scrollWidth,el.clientWidth],fields:[...el.querySelectorAll('input,fieldset')].filter(c=>c.scrollWidth>c.clientWidth+1).map(c=>({tag:c.tagName,type:c.type,value:c.value,width:[c.scrollWidth,c.clientWidth],parent:c.parentElement.textContent}))})))
+   check(`${width} ${dark?'dark':'light'} ${label} fits native task`,fit)
+   const scan=await new AxeBuilder({page}).include('dialog[open]').withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa']).analyze()
+   check(`${width} ${dark?'dark':'light'} ${label} accessibility`,scan.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})),[])
+   await page.screenshot({path:resolve(out,`${width}-${dark?'dark':'light'}-${label}.png`)})
+  }
+ }
+ // Refresh invalidates acceptance while retaining entered choices and old evidence.
+ sql(`INSERT INTO public.transactions(user_id,tenant_id,account_id,date,original_description,merchant,merchant_key,category,amount,kind,kind_source,pending,transfer_candidate) VALUES(${quote(u.id)},${quote(u.tenant)},${quote(a)},${quote(dates.start)},'Late source','Shop','bui09b-late','Shopping',-1,'expense','user',false,false);`);cover()
+ await panel.getByRole('button',{name:'Refresh setup data',exact:true}).click()
+ await expect(panel.getByText(/Activity changed or the latest read is unavailable/)).toBeVisible()
+ await expect(panel.getByRole('button',{name:'Use this draft',exact:true})).toBeDisabled()
+ await expect(panel.getByLabel('Goal name',{exact:true})).toHaveValue('A little breathing room')
+ check('refreshed source keeps choices and old evidence but invalidates acceptance',true)
+ await panel.getByRole('button',{name:'Check different history',exact:true}).click()
+ await panel.getByRole('button',{name:'Check my history',exact:true}).click()
+ await panel.getByLabel(/Have your income/).selectOption('no')
+ await expect(panel.getByLabel('Expected pay dates in this budget (YYYY-MM-DD, separated by commas)')).toHaveValue(dates.start)
+ await expect(panel.getByRole('checkbox',{name:/I confirm this expected/})).not.toBeChecked()
+ await expect(panel.getByRole('button',{name:'Use this draft',exact:true})).toBeDisabled()
+ check('fresh evidence retains individual input values and requires new confirmations',true)
+ await panel.getByRole('button',{name:'Enter my own amounts',exact:true}).click()
+ const manual=page.getByRole('dialog',{name:'Build your budget',exact:true})
+ await expect(manual.getByLabel('Planned for A little breathing room (AUD)',{exact:true})).toHaveValue('10.00')
+ check('manual conversion opens the existing editor and still creates no plan or write',[snapshotSQL(u).plan,writes],[null,[]])
+ await page.close()
+}

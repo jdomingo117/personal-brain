@@ -1,0 +1,421 @@
+Target: halcyon-budget-m2-8f9e548c44364dbe; API=http://127.0.0.1:57721; DB=127.0.0.1:57722/postgres; fixtures=isolated-only
+PASS new isolated target has no identities or financial data
+PASS initial migration set replayed
+PASS all Budget tables retain RLS with no anonymous access or client writes
+PASS all Budget functions deny anonymous and authenticated direct execution
+PASS Budget definer functions pin their search path
+PASS private Budget analytics is invoker-secure and inaccessible to clients
+PASS candidate rejects unauthenticated reads
+PASS candidate rejects forged JWT
+PASS candidate rejects foreign browser origin
+PASS candidate rejects non-POST reads
+PASS candidate rejects malformed JSON
+PASS candidate rejects oversized request body
+PASS candidate rejects unknown command fields
+PASS candidate owner saves private unfinished input
+PASS candidate duplicate commit retains exact receipt
+PASS candidate conflict is explicit
+PASS candidate foreign owner draft remains empty
+PASS candidate owner retains private input
+PASS candidate write limiter counts invalid request 1
+PASS candidate write limiter counts invalid request 2
+PASS candidate write limiter counts invalid request 3
+PASS candidate write limiter counts invalid request 4
+PASS candidate write limiter counts invalid request 5
+PASS candidate write limiter counts invalid request 6
+PASS candidate write limiter counts invalid request 7
+PASS candidate write limiter counts invalid request 8
+PASS candidate write limiter counts invalid request 9
+PASS candidate write limiter counts invalid request 10
+PASS candidate write limiter rejects request eleven
+PASS candidate limiter provides bounded retry guidance
+PASS successful transport audits record only operation/action references
+PASS duplicate retries produce only one authoritative operation
+PASS real Edge emits fixed-field request metrics
+PASS real Edge telemetry records success
+PASS real Edge telemetry records conflict
+PASS real Edge telemetry records denied
+PASS real Edge telemetry records rejected
+PASS real Edge telemetry records rate_limited
+PASS private payload canary is absent from actual telemetry
+PASS assistance never treats missing coverage as zero
+PASS assistance names every excluded account window
+PASS eligible assistance uses six complete calendar months
+PASS a future confirmed bill is not falsely subtracted from unrelated historical spending
+PASS income suggestion is exact median earned income
+PASS confirmed recurring dates produce a separate bill suggestion
+PASS suggestion binds method, source and 256-bit fingerprint
+PASS only matching canonical recurring history is removed from everyday medians
+PASS fortnightly assistance requires and returns aligned complete windows
+PASS foreign account selection produces no financial suggestion
+PASS activation accepts validated provenance and preserves manual goal/future intent
+PASS authenticated clients cannot call assistance SQL directly
+PASS unresolved transfer ambiguity blocks affected suggestions
+PASS counterexample contains exactly six covered aligned fortnights
+PASS six fortnights with only two complete calendar months cannot unlock a full draft
+PASS limited evidence keeps its observed windows and amounts
+PASS complete months outside the latest six cannot satisfy the calendar gate
+PASS exactly three complete months and six aligned fortnights pass both gates
+PASS three complete months do not bypass the independent six-fortnight gate
+PASS one missing day outside the six windows still blocks the third complete month
+PASS revoked coverage cannot fill the calendar boundary gap
+PASS adjacent coverage segments jointly satisfy exact calendar and anchor boundaries
+PASS every selected account must cover each complete calendar month
+PASS completing the second account restores joint eligibility
+PASS monthly minimum remains three complete months
+PASS no accounts cannot produce complete calendar evidence
+PASS eligibility checks create no budget plans or drafts
+PASS R03 target is normalized to the true calendar start and server-local date
+PASS R03 usage reads all 1100 rows and excludes pending, own transfer and future activity
+PASS R03 covered history remains eligible
+PASS R05 an unmatched current bill stays in gross usage until explicit matching
+PASS R03 source and target evidence invalidate the old fingerprint
+PASS R03 missing current coverage is unknown, never zero
+PASS R03 ambiguous current movement blocks usage without fabricating zero
+PASS R03 fixture coverage is re-confirmed after the source deletion invalidates it
+PASS R03 split allocations replace their parent exactly once
+PASS R03 future window is explicit and does not invent current usage
+PASS R03 query and preview create no saved draft or plan
+PASS R05 reference scope contains six complete calendar periods
+PASS R05 corrected query uses the signed estimator method
+PASS R05 signed samples are not floored before the median
+PASS R05 exact signed median and full observed range retain the exceptional purchase
+PASS R05 every reported period reconciles gross, credits, recurring and signed everyday effects
+PASS R05 exact cent median [1,2]
+PASS R05 exact cent median [-2,-1]
+PASS R05 exact cent median [-1,0]
+PASS R05 exact cent median [-3,-2,-1]
+PASS R05 exact cent median [0,0]
+PASS R05 exact cent median [9007199254740991,9007199254740991]
+PASS R05 exact cent median [-9007199254740991,9007199254740991]
+PASS R05 an empty median stays unknown
+PASS R05 rejects unsafe median input 9007199254740992
+PASS R05 rejects unsafe median input -9007199254740992
+PASS R05 rejects unsafe median input NULL
+PASS R05 negative half-cent median stays signed and has no automatic negative allocation
+PASS R05 missing history is excluded rather than filled with zero
+PASS R05 covered zero activity is a real zero sample, not missing history
+PASS R05 an unreviewed combined loan payment stays an expense
+PASS R05 reviewed principal/interest split replaces the parent once
+PASS R05 card purchase counts, repayment and pending hold do not double spending
+PASS R05 a canonical matched repayment excludes an expense-labelled leg
+PASS R05 durable rejection restores a derived transfer as ordinary expense
+PASS R05 reimbursement affects its receipt period and never becomes earned income
+PASS R05 split refund replaces its parent without inflating expense credits
+PASS R05 splits, repayments, pending rows, rejected transfers and reimbursements match the balance kernel
+PASS R05 repeated canonical import counts once
+PASS R05 replacement removes the old effect and changes the evidence fingerprint
+PASS R05 uncategorized settled debits stay in the single everyday pool
+PASS R05 replacement imports and uncategorized debits retain canonical parity
+PASS R05 a later regular-cost refund remains in that receipt period and reconciles separately
+PASS R05 regular-cost attribution preserves whole-ledger signed reconciliation
+PASS R05 ledger storage rejects an unsupported row before it can affect evidence
+PASS R05 complete period sums exceed int32 without rounding or overflow
+PASS R05 large exact-cent period sums retain ledger parity
+PASS R05 unassigned refunds and an unmatched bill cannot manufacture unused current room
+PASS R05 estimator queries never change the reference plan or its allocations
+PASS R05 six anchor-aligned fortnights retain exact cents across leap February
+PASS R05 legacy draft remains resumable without rewritten values
+PASS R05 an old automatic estimator draft requires fresh review before activation
+PASS R05 explicit legacy manual conversion can be saved
+PASS R05 explicit manual intent can activate without pretending to be a v2 estimate
+PASS R05 legacy conversion keeps its goal target and planned contribution
+PASS R04 observed earned income keeps its actual receipt dates
+PASS R04 dated earned income excludes refunds and own transfers
+PASS R04 reviewed setup validates against durable SQL
+PASS R04 saves individually reviewed inputs through the real Edge
+PASS R04 saving still does not activate a plan
+PASS R04 income, pay dates, individual bills, deadlines and opening reserves round-trip
+PASS R04 rejects missing/invalid income confirmation
+PASS R04 rejects missing/invalid expected pay date
+PASS R04 rejects missing/invalid out-of-window pay date
+PASS R04 rejects missing/invalid duplicate pay date
+PASS R04 rejects missing/invalid individual cost confirmation
+PASS R04 rejects missing/invalid already paid cost
+PASS R04 rejects missing/invalid unresolved essential target
+PASS R04 rejects missing/invalid changed cost without re-review
+PASS R04 rejected reviews append no draft revision
+PASS R04 intentional zero income permits an explicit known-gap draft
+PASS R04 rejects a foreign recurring reference without changing the saved draft
+PASS R04 individually reviewed setup activates separately
+PASS R04 activation preserves all protected allocations and opening reserves
+PASS R04 keeps an individual bill identity with its actual amount, cadence and occurrence start
+PASS R04 retains the annual deadline and reserve target with contributions on budget dates
+PASS R04 retains the original protected goal target and deadline
+PASS R04 manual edits remain saveable with visible unresolved confirmation
+PASS R04 exact activation receipt replays even after a newer draft and with writes disabled
+PASS R04 replay does not duplicate goal or cost configurations
+PASS R04 concurrency fixture saves reviewed inputs
+PASS R04 duplicate activation requests both wait behind the real source gate
+PASS R04 both concurrent copies return the same durable receipt
+PASS R04 concurrent receipt outcomes agree
+PASS R04 concurrent activation creates one plan and exactly three item configurations
+R04 backend activation/review scope complete; browser presentation not run.
+PASS R01 absent history suppresses forecast rather than inventing zero
+PASS R01 approved samples are monthly gross divided by full calendar days
+PASS R01 median rate stays exact and uses tomorrow through period end
+PASS R01 unassigned and historical credits do not free flexible capacity
+PASS R01 sufficient complete evidence enables within-plan estimate
+PASS R01 forecast carries exact method, source, plan, period and local date
+PASS R01 repeated forecast reads do not mutate financial state or attention history
+PASS R01 pending is conditional and excluded from settled projection
+PASS R01 pending alert is distinct from settled overspend
+PASS R01 ordinary pending growth below materiality stays reviewed
+PASS R01 changed existing pending evidence reopens without a larger total
+PASS R01 replacement of old pending evidence reopens a reviewed warning
+PASS R01 pending preference rejects a stale source/issue basis
+PASS R01 pending holds and repayment transfers do not inflate historical gross
+PASS R01 split expense replaces parent once and omits principal
+PASS R01 rejected derived transfer is restored to expense
+PASS R01 partially covered historical sample is excluded
+PASS R01 covered zero spending remains a genuine zero month
+PASS R01 missing current coverage prevents an all-clear
+PASS R01 last covered months can be older and use leap February exactly
+PASS R01 uneven month lengths retain exact rational rate until final cent
+PASS R01 material projected overspend has its own attention issue
+PASS R01 exactly $25 projected excess is below strict alert trigger
+PASS R01 one cent beyond $25 projected excess triggers warning
+PASS R01 unsafe combined allocation fails closed
+PASS R01 exactly 5 percent above a larger allocation stays below strict trigger
+PASS R01 one cent beyond 5 percent triggers warning
+PASS R01 acknowledging forecast leaves plan and projected amount unchanged
+PASS R01 changing historical assumptions reopens reviewed forecast
+PASS R01 foreign tenant cannot read the forecast
+PASS R01 actual authenticated workspace includes forecast
+PASS R01 public forecast omits source transaction details
+PASS R01 authenticated roles cannot call internal forecast derivation
+PASS R01 incomplete fixed schedule prevents flexible all-clear
+PASS R01 saved explicit fixed source mapping excludes historical bill from flexible rate
+PASS R01 fixed monthly bill is scheduled once rather than linearly paced
+PASS R01 dated fixed excess has its own forecast attention
+PASS R01 matched bill counts once and removes remaining occurrence
+PASS R01 explicit bill claim is excluded from current flexible net
+PASS R01 explicitly linked flexible refund lowers current net only
+PASS R01 future period is provisional with no fabricated actuals
+PASS R01 past period does not generate a retrospective forecast
+PASS R01 fortnight uses exact local days rather than half a month
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS R01 forecast WCAG scan 320 light
+PASS R01 no horizontal overflow 320 light
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS R01 forecast WCAG scan 320 dark
+PASS R01 no horizontal overflow 320 dark
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS R01 forecast WCAG scan 390 light
+PASS R01 no horizontal overflow 390 light
+PASS R01 failed refresh suppresses retained projected amounts and all-clear
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS R01 forecast WCAG scan 390 dark
+PASS R01 no horizontal overflow 390 dark
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS R01 forecast WCAG scan 768 light
+PASS R01 no horizontal overflow 768 light
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS R01 forecast WCAG scan 768 dark
+PASS R01 no horizontal overflow 768 dark
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS R01 forecast WCAG scan 1440 light
+PASS R01 no horizontal overflow 1440 light
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS R01 forecast WCAG scan 1440 dark
+PASS R01 no horizontal overflow 1440 dark
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS 320 light theme control stays in the header without covering money
+PASS healthy 320 light page and surface fit
+PASS healthy 320 light WCAG scan
+PASS 320 dark theme control stays in the header without covering money
+PASS healthy 320 dark page and surface fit
+PASS healthy 320 dark WCAG scan
+PASS 390 light theme control stays in the header without covering money
+PASS healthy 390 light page and surface fit
+PASS healthy 390 light WCAG scan
+PASS 390 dark theme control stays in the header without covering money
+PASS healthy 390 dark page and surface fit
+PASS healthy 390 dark WCAG scan
+PASS 768 light theme control stays in the header without covering money
+PASS healthy 768 light page and surface fit
+PASS healthy 768 light WCAG scan
+PASS 768 dark theme control stays in the header without covering money
+PASS healthy 768 dark page and surface fit
+PASS healthy 768 dark WCAG scan
+PASS 1024 light theme control stays in the header without covering money
+PASS healthy 1024 light page and surface fit
+PASS healthy 1024 light WCAG scan
+PASS 1024 dark theme control stays in the header without covering money
+PASS healthy 1024 dark page and surface fit
+PASS healthy 1024 dark WCAG scan
+PASS 1440 light theme control stays in the header without covering money
+PASS healthy 1440 light page and surface fit
+PASS healthy 1440 light WCAG scan
+PASS 1440 dark theme control stays in the header without covering money
+PASS healthy 1440 dark page and surface fit
+PASS healthy 1440 dark WCAG scan
+PASS matched candidate preserves canonical money including separate goal opening reserve and on-demand income
+PASS inline theme control preserves the actual shared preference toggle
+Candidate main-frame navigation: http://127.0.0.1:57800/
+Candidate main-frame navigation: http://127.0.0.1:57800/budget
+PASS other routes keep one floating theme control and Budget keeps one in-flow control
+PASS my-plan 320 light page and surface fit
+PASS my-plan 320 light WCAG scan
+PASS my-plan 320 dark page and surface fit
+PASS my-plan 320 dark WCAG scan
+PASS my-plan 390 light page and surface fit
+PASS my-plan 390 light WCAG scan
+PASS my-plan 390 dark page and surface fit
+PASS my-plan 390 dark WCAG scan
+PASS my-plan 768 light page and surface fit
+PASS my-plan 768 light WCAG scan
+PASS my-plan 768 dark page and surface fit
+PASS my-plan 768 dark WCAG scan
+PASS my-plan 1024 light page and surface fit
+PASS my-plan 1024 light WCAG scan
+PASS my-plan 1024 dark page and surface fit
+PASS my-plan 1024 dark WCAG scan
+PASS my-plan 1440 light page and surface fit
+PASS my-plan 1440 light WCAG scan
+PASS my-plan 1440 dark page and surface fit
+PASS my-plan 1440 dark WCAG scan
+PASS candidate layout and view inspection create no write
+PASS candidate reads rights-inclusive canonical remainder rather than planned minus spending
+PASS funding-gap 320 light funding gap precedes positive allowance
+PASS funding-gap 320 light page and surface fit
+PASS funding-gap 320 light WCAG scan
+PASS funding-gap 320 dark funding gap precedes positive allowance
+PASS funding-gap 320 dark page and surface fit
+PASS funding-gap 320 dark WCAG scan
+PASS funding-gap 390 light funding gap precedes positive allowance
+PASS funding-gap 390 light page and surface fit
+PASS funding-gap 390 light WCAG scan
+PASS funding-gap 390 dark funding gap precedes positive allowance
+PASS funding-gap 390 dark page and surface fit
+PASS funding-gap 390 dark WCAG scan
+PASS funding-gap 768 light page and surface fit
+PASS funding-gap 768 light WCAG scan
+PASS funding-gap 768 dark page and surface fit
+PASS funding-gap 768 dark WCAG scan
+PASS funding-gap 1024 light page and surface fit
+PASS funding-gap 1024 light WCAG scan
+PASS funding-gap 1024 dark page and surface fit
+PASS funding-gap 1024 dark WCAG scan
+PASS funding-gap 1440 light page and surface fit
+PASS funding-gap 1440 light WCAG scan
+PASS funding-gap 1440 dark page and surface fit
+PASS funding-gap 1440 dark WCAG scan
+PASS failed-refresh 320 light funding gap precedes positive allowance
+PASS failed-refresh 320 light page and surface fit
+PASS failed-refresh 320 light WCAG scan
+PASS failed-refresh 320 dark funding gap precedes positive allowance
+PASS failed-refresh 320 dark page and surface fit
+PASS failed-refresh 320 dark WCAG scan
+PASS failed-refresh 390 light funding gap precedes positive allowance
+PASS failed-refresh 390 light page and surface fit
+PASS failed-refresh 390 light WCAG scan
+PASS failed-refresh 390 dark funding gap precedes positive allowance
+PASS failed-refresh 390 dark page and surface fit
+PASS failed-refresh 390 dark WCAG scan
+PASS failed-refresh 768 light page and surface fit
+PASS failed-refresh 768 light WCAG scan
+PASS failed-refresh 768 dark page and surface fit
+PASS failed-refresh 768 dark WCAG scan
+PASS failed-refresh 1024 light page and surface fit
+PASS failed-refresh 1024 light WCAG scan
+PASS failed-refresh 1024 dark page and surface fit
+PASS failed-refresh 1024 dark WCAG scan
+PASS failed-refresh 1440 light page and surface fit
+PASS failed-refresh 1440 light WCAG scan
+PASS failed-refresh 1440 dark page and surface fit
+PASS failed-refresh 1440 dark WCAG scan
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS no-history 320 light page and surface fit
+PASS no-history 320 light WCAG scan
+PASS no-history 320 dark page and surface fit
+PASS no-history 320 dark WCAG scan
+PASS no-history 390 light page and surface fit
+PASS no-history 390 light WCAG scan
+PASS no-history 390 dark page and surface fit
+PASS no-history 390 dark WCAG scan
+PASS no-history 768 light page and surface fit
+PASS no-history 768 light WCAG scan
+PASS no-history 768 dark page and surface fit
+PASS no-history 768 dark WCAG scan
+PASS no-history 1024 light page and surface fit
+PASS no-history 1024 light WCAG scan
+PASS no-history 1024 dark page and surface fit
+PASS no-history 1024 dark WCAG scan
+PASS no-history 1440 light page and surface fit
+PASS no-history 1440 light WCAG scan
+PASS no-history 1440 dark page and surface fit
+PASS no-history 1440 dark WCAG scan
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS changed-history 320 light page and surface fit
+PASS changed-history 320 light WCAG scan
+PASS changed-history 320 dark page and surface fit
+PASS changed-history 320 dark WCAG scan
+PASS changed-history 390 light page and surface fit
+PASS changed-history 390 light WCAG scan
+PASS changed-history 390 dark page and surface fit
+PASS changed-history 390 dark WCAG scan
+PASS changed-history 768 light page and surface fit
+PASS changed-history 768 light WCAG scan
+PASS changed-history 768 dark page and surface fit
+PASS changed-history 768 dark WCAG scan
+PASS changed-history 1024 light page and surface fit
+PASS changed-history 1024 light WCAG scan
+PASS changed-history 1024 dark page and surface fit
+PASS changed-history 1024 dark WCAG scan
+PASS changed-history 1440 light page and surface fit
+PASS changed-history 1440 light WCAG scan
+PASS changed-history 1440 dark page and surface fit
+PASS changed-history 1440 dark WCAG scan
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS pending candidate still has no active plan
+PASS interrupted-save 320 light page and surface fit
+PASS interrupted-save 320 light WCAG scan
+PASS pending candidate still has no active plan
+PASS interrupted-save 320 dark page and surface fit
+PASS interrupted-save 320 dark WCAG scan
+PASS pending candidate still has no active plan
+PASS interrupted-save 390 light page and surface fit
+PASS interrupted-save 390 light WCAG scan
+PASS pending candidate still has no active plan
+PASS interrupted-save 390 dark page and surface fit
+PASS interrupted-save 390 dark WCAG scan
+PASS pending candidate still has no active plan
+PASS interrupted-save 768 light page and surface fit
+PASS interrupted-save 768 light WCAG scan
+PASS pending candidate still has no active plan
+PASS interrupted-save 768 dark page and surface fit
+PASS interrupted-save 768 dark WCAG scan
+PASS pending candidate still has no active plan
+PASS interrupted-save 1024 light page and surface fit
+PASS interrupted-save 1024 light WCAG scan
+PASS pending candidate still has no active plan
+PASS interrupted-save 1024 dark page and surface fit
+PASS interrupted-save 1024 dark WCAG scan
+PASS pending candidate still has no active plan
+PASS interrupted-save 1440 light page and surface fit
+PASS interrupted-save 1440 light WCAG scan
+PASS pending candidate still has no active plan
+PASS interrupted-save 1440 dark page and surface fit
+PASS interrupted-save 1440 dark WCAG scan
+PASS candidate receipt recovery commits exactly one draft with its original request
+PASS recovered draft retains exact chosen income and allowance
+PASS candidate matrix covers seven states at five widths in both themes
+PASS R01 forecast and affected candidate journeys have no browser runtime errors
+PASS only created fixture identities removed
+PASS fixture accounts and transactions removed
+PASS tenant cascades leave no Budget plans or source gates
+391 durable-boundary integration checks passed.
+Removed only disposable resources for halcyon-budget-m2-8f9e548c44364dbe; no personal stack cleanup.

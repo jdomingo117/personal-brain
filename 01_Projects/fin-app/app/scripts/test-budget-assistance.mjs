@@ -30,7 +30,7 @@ export async function runBudgetAssistanceChecks({newUser,sql,quote,check,edge,so
   check('a future confirmed bill is not falsely subtracted from unrelated historical spending',ready.body.suggestions.everyday_cents,9000)
   check('income suggestion is exact median earned income',ready.body.suggestions.income_cents,50000)
   check('confirmed recurring dates produce a separate bill suggestion',ready.body.suggestions.bills_cents,2000)
-  check('suggestion binds method, source and 256-bit fingerprint',[ready.body.method,ready.body.source_revision,ready.body.fingerprint.length],['budget-assist-v1',source(u.tenant),64])
+  check('suggestion binds method, source and 256-bit fingerprint',[ready.body.method,ready.body.source_revision,ready.body.fingerprint.length],['budget-assist-v2',source(u.tenant),64])
   sql(`INSERT INTO public.transactions(user_id,tenant_id,account_id,date,original_description,merchant,merchant_key,category,amount,kind,kind_source,pending,transfer_candidate,dedupe_hash)
     SELECT ${quote(u.id)},${quote(u.tenant)},${quote(account)},d::date+2,'M6 rent','M6 rent','m6-rent','Shopping',-2000,'expense','user',false,false,decode(md5('m6-rent-'||d),'hex') FROM generate_series(${quote(first)}::date,${quote(start)}::date-1,interval '1 month') d;`)
   const separated=await edge(u,'query-budget',request)
@@ -38,7 +38,7 @@ export async function runBudgetAssistanceChecks({newUser,sql,quote,check,edge,so
   const fortnight=await edge(u,'query-budget',{...request,frequency:'fortnightly',anchor:first})
   check('fortnightly assistance requires and returns aligned complete windows',[fortnight.status,fortnight.body.eligible,fortnight.body.period_count>=6],[200,true,true])
   const foreignRead=await edge(foreign,'query-budget',request)
-  check('foreign account selection produces no financial suggestion',[foreignRead.body.eligible,foreignRead.body.period_count,foreignRead.body.suggestions.everyday_cents],[false,0,0])
+  check('foreign account selection produces no financial suggestion',[foreignRead.body.eligible,foreignRead.body.period_count,foreignRead.body.suggestions.everyday_cents],[false,0,null])
   const activationUser=await newUser()
   const activationAccount=sql(`INSERT INTO public.accounts(user_id,tenant_id,name,type,balance,currency) VALUES(${quote(activationUser.id)},${quote(activationUser.tenant)},'Assisted activation account','Liquid',0,'AUD') RETURNING id;`).split('\n')[0]
   const everyday=randomUUID(),goalLine=randomUUID(),activationSource=source(activationUser.tenant)
@@ -50,7 +50,9 @@ export async function runBudgetAssistanceChecks({newUser,sql,quote,check,edge,so
   const activationRequest=randomUUID(),activationBody={action:'activate',request_id:activationRequest,expected_method:'budget-foundation-v1',expected_source:activationSource,expected_draft:saved.body.result.draft_version,accept_gap:false}
   const activated=JSON.parse(sql(`SELECT public.budget_command(${quote(activationUser.tenant)},${quote(activationUser.id)},${quote(activationRequest)},${quote(JSON.stringify(activationBody))}::jsonb,true);`))
   assert.equal(activated.status,'committed',JSON.stringify(activated))
+  sql(`SELECT public.budget_workspace_details(${quote(activationUser.tenant)},${quote(activationUser.id)},${quote(activated.result.plan_id)},${quote(activated.result.period_id)},public.budget_lock_source(${quote(activationUser.tenant)}),(SELECT version FROM public.budget_plans WHERE id=${quote(activated.result.plan_id)}));`)
   const activatedSnapshot=await edge(activationUser,'query-budget',{action:'workspace'})
+  assert.equal(activatedSnapshot.status,200,JSON.stringify(activatedSnapshot.body))
   const activatedGoal=activatedSnapshot.body.details.items.find(i=>i.line_id===goalLine)
   check('activation accepts validated provenance and preserves manual goal/future intent',[activatedGoal.config.type,activatedGoal.config.target_cents,activatedGoal.config.due_date,activatedSnapshot.body.future_template.allocations.find(a=>a.line_id===goalLine).amount_cents],['goal',12000,'2027-12-01',1000])
   assert.throws(()=>sql(`BEGIN;SET LOCAL ROLE authenticated;SELECT public.budget_assisted_setup(${quote(u.tenant)},${quote(u.id)},${quote(JSON.stringify(request))}::jsonb);ROLLBACK;`))

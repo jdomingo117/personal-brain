@@ -51,6 +51,8 @@ tenant/role resolution → Zod validation → your handler → audit log. Your h
 when the operation must legitimately cross a tenant boundary, and scope the query by hand when you
 do.
 
+Budget routes wrap this middleware with `_shared/budgetTelemetry.ts` and set `redactErrorDetails:true`. Budget request metrics contain fixed endpoint/status/outcome/duration fields only; keep raw financial payloads, URLs, names, credentials and identifiers out. Transport audit inserts check returned PostgREST errors and contain failures; authoritative `budget_operations` receipts remain in the financial transaction. Telemetry sink errors must preserve the original HTTP result. See `../BUDGET_OPERATIONS_RUNBOOK.md`.
+
 ## RLS and tenancy
 
 Every financial table is keyed on `tenant_id`; policies use `is_tenant_member(tenant_id)` /

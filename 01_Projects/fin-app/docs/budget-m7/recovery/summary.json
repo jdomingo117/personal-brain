@@ -1,0 +1,18 @@
+{
+  "integration_assertions": 164,
+  "focused_workspace_unit_passes": 25,
+  "script_syntax": "pass",
+  "source_files_bound": 464,
+  "changed_existing_sources_since_r06": [
+    "app/package.json",
+    "app/scripts/test-budget-durable.mjs"
+  ],
+  "final_project": "halcyon-budget-m2-579045036283479e",
+  "final_log": "integration.log",
+  "verification": "halcyon-budget-m2-579045036283479e/verification.json",
+  "cleanup": "cleanup.json",
+  "retained_preview_http_status": 200,
+  "decision": "M7.6 isolated local complete; overall release No-Go",
+  "added_source_file": "app/scripts/test-budget-recovery.mjs",
+  "backup_ignore_rule": ".gitignore: /backups/budget-m7/"
+}

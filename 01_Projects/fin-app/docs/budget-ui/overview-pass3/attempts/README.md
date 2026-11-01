@@ -1,0 +1,1 @@
+Partial captures from an earlier focused run that stopped at a legacy disclosure-navigation assumption. These are retained for traceability and excluded from the final successful capture inventory. The final goal-task proof is in ../goal-tasks/.

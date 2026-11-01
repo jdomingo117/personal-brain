@@ -1,0 +1,9 @@
+{
+  "project": "halcyon-budget-m2-44b18408f7d940c3",
+  "privileges": {
+    "anon_public_create": false,
+    "authenticated_public_create": false,
+    "anon_private_usage": false,
+    "authenticated_private_usage": false
+  }
+}

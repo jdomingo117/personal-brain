@@ -1,0 +1,201 @@
+{
+  "project": "halcyon-budget-m2-8a23491eb36a470c",
+  "scope": "Pass 1 production presentation; genuine eligible read plus response-only variants (not financial engine proof)",
+  "matrix": [
+    {
+      "state": "real",
+      "width": 320,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "real",
+      "width": 320,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "real",
+      "width": 390,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "real",
+      "width": 390,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "real",
+      "width": 1440,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "real",
+      "width": 1440,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "ordinary",
+      "width": 320,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "ordinary",
+      "width": 320,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "ordinary",
+      "width": 390,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "ordinary",
+      "width": 390,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "ordinary",
+      "width": 1440,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "ordinary",
+      "width": 1440,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "overspend",
+      "width": 320,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "overspend",
+      "width": 320,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "overspend",
+      "width": 390,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "overspend",
+      "width": 390,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "overspend",
+      "width": 1440,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "overspend",
+      "width": 1440,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "history",
+      "width": 320,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "history",
+      "width": 320,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "history",
+      "width": 390,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "history",
+      "width": 390,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "history",
+      "width": 1440,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "history",
+      "width": 1440,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "funding",
+      "width": 320,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "funding",
+      "width": 320,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "funding",
+      "width": 390,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "funding",
+      "width": 390,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "state": "funding",
+      "width": 1440,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "state": "funding",
+      "width": 1440,
+      "theme": "dark",
+      "violations": 0
+    }
+  ],
+  "boundaries": [
+    "signed",
+    "zero",
+    "future",
+    "large"
+  ],
+  "suppression": [
+    "old-date",
+    "wrong-source",
+    "failed"
+  ],
+  "keyboard_method": true,
+  "view_navigation": true,
+  "financial_writes": 0,
+  "runtime_errors": []
+}

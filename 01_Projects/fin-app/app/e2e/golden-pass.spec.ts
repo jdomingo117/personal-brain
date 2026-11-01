@@ -2,12 +2,14 @@ import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
 import { test, expect, type Page } from '@playwright/test'
+import { normalizeMerchant } from '../src/lib/csv/normalizeMerchant'
 import { createClient, type Session } from '@supabase/supabase-js'
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? ''
 const ANON = process.env.SUPABASE_ANON_KEY ?? ''
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 const TARGET = process.env.HALCYON_TEST_TARGET_ID ?? ''
+const providerDisabled = process.env.HALCYON_GOLDEN_PROVIDER_MODE === 'disabled'
 const PASSWORD = 'correct-horse-battery-staple-1'
 const SAMPLES = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../Sample datasets')
 const MACQUARIE_MAPPING = {
@@ -173,7 +175,7 @@ test.describe.serial('isolated golden pass', () => {
     await addDialog.getByLabel('Account Name').fill('Macquarie Savings')
     await addDialog.getByLabel('Account Type').selectOption('Savings')
     await addDialog.getByLabel('Last 4 digits (Optional)').fill('3965')
-    await addDialog.getByRole('button', { name: 'Add Account', exact: true }).click()
+    await addDialog.getByRole('button', { name: 'Add account', exact: true }).click()
     await expect(page.getByRole('option', { name: /Macquarie Savings/ })).toBeAttached()
 
     await importCsv(page, 'Macquarie Transactions', 'MAcq Trans.csv', 565, '3.05')
@@ -205,18 +207,57 @@ test.describe.serial('isolated golden pass', () => {
     expect(reviewed.error).toBeNull()
     expect(reviewed.count).toBe(202)
 
-    const aiRow = sourceRows.find((row) => row.category_source === 'ai')
-    expect(aiRow, 'The real corpus should exercise AI categorisation before review.').toBeTruthy()
-    await page.goto('/ledger')
-    await page.getByLabel('Search ledger').fill(aiRow!.original_description)
-    await expect(page.getByText('1 transaction', { exact: true })).toBeVisible()
-    await page.getByRole('checkbox').check()
-    await page.getByRole('button', { name: 'Review with engine (1)' }).click()
-    const reviewDialog = page.getByRole('dialog', { name: 'Review with categorisation engine' })
-    await expect(reviewDialog).toBeVisible()
-    await expect(reviewDialog.getByText('Asking the current engine for fresh suggestions…')).toHaveCount(0, { timeout: 120_000 })
-    await expect(reviewDialog.getByRole('alert')).toHaveCount(0)
-    await reviewDialog.getByRole('button', { name: 'Cancel' }).click()
+    if (!providerDisabled) {
+      // Bank mappings may now cover every statement row. Exercise the actual cold AI tier
+      // explicitly, then import its real assignment through the normal authenticated boundary.
+      const description = `Woolworths Metro golden grocery verification ${crypto.randomUUID().slice(0, 8)}`
+      const merchant = normalizeMerchant(description)
+      const classified = await invoke(session.access_token, 'categorize-merchants', {
+        merchants: [{ key: merchant.key, display: merchant.display, direction: 'outflow', sampleDescriptions: [description] }],
+      })
+      expect(classified.stats.geminiCalls).toBeGreaterThanOrEqual(1)
+      expect(classified.stats.fromAi).toBe(1)
+      expect(classified.assignments).toHaveLength(1)
+      const assignment = classified.assignments[0]
+      expect(assignment.source).toBe('ai')
+      const aiAccount = await createFixtureAccount('Golden live categorization account')
+      await invoke(session.access_token, 'upsert-transactions', {
+        transactions: [{ ...importRow(aiAccount, '2026-10-01', description, -1234, crypto.randomUUID()),
+          merchant: merchant.display, category: assignment.category, subcategory: assignment.subcategory,
+          category_source: assignment.source, category_confidence: assignment.confidence, needs_review: assignment.needsReview }],
+        target_balance: -1234, file_name: 'golden-live-ai-fixture.csv', source_row_count: 1, blocked_count: 0,
+      })
+      const row = await service.from('transactions').select('id,category,subcategory,category_source,category_confidence,needs_review,amount')
+        .eq('account_id', aiAccount).eq('original_description', description).single()
+      expect(row.error).toBeNull(); expect(row.data?.category_source).toBe('ai')
+      const cacheBefore = await service.from('merchant_rules').select('category,subcategory,source,confidence').eq('tenant_id', tenantId).eq('merchant_key', merchant.key).single()
+      expect(cacheBefore.error).toBeNull()
+      await page.goto('/ledger')
+      await page.getByLabel('Search ledger').fill(description)
+      await expect(page.getByText('1 transaction', { exact: true })).toBeVisible()
+      await page.getByRole('checkbox').check()
+      const previewResponse = page.waitForResponse(response => response.url().includes('/functions/v1/review-categorization')
+        && response.request().method() === 'POST' && response.request().postDataJSON()?.action === 'preview')
+      await page.getByRole('button', { name: 'Review selected (1)' }).click()
+      const reviewDialog = page.getByRole('dialog', { name: 'Review with categorisation engine' })
+      await expect(reviewDialog).toBeVisible()
+      const preview = await previewResponse
+      expect(preview.status()).toBe(200)
+      const reviewed = await preview.json()
+      expect(reviewed.stats.geminiCalls).toBeGreaterThanOrEqual(1)
+      expect(reviewed.stats.fromCache).toBe(0)
+      expect(reviewed.rows[0].proposed.source).toBe('ai')
+      await expect(reviewDialog.getByText('Asking the current engine for fresh suggestions…')).toHaveCount(0, { timeout: 120_000 })
+      await expect(reviewDialog.getByRole('alert')).toHaveCount(0)
+      await reviewDialog.getByRole('button', { name: 'Close preview', exact: true }).last().click()
+      const afterPreview = await service.from('transactions').select('id,category,subcategory,category_source,category_confidence,needs_review,amount').eq('id', row.data!.id).single()
+      const cacheAfter = await service.from('merchant_rules').select('category,subcategory,source,confidence').eq('tenant_id', tenantId).eq('merchant_key', merchant.key).single()
+      expect(afterPreview.error).toBeNull(); expect(cacheAfter.error).toBeNull()
+      expect(afterPreview.data).toEqual(row.data); expect(cacheAfter.data).toEqual(cacheBefore.data)
+      console.log('Live Gemini verified: cold merchant classification, uncached UI review and unchanged transaction/cache after cancellation.')
+    } else {
+      console.log('Provider-disabled candidate: real import/transfer/ledger assertions run; live AI classification and fresh review deliberately not exercised.')
+    }
 
     const accounts = await service.from('accounts').select('name,balance').eq('tenant_id', tenantId)
     expect(accounts.error).toBeNull()

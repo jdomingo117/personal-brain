@@ -1,0 +1,48 @@
+{
+  "project": "halcyon-budget-m2-8a23491eb36a470c",
+  "scope": "Final sub-threshold explanation on existing fictional preview; normal password login, zero Budget writes",
+  "matrix": [
+    {
+      "width": 320,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "width": 320,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "width": 768,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "width": 768,
+      "theme": "dark",
+      "violations": 0
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "violations": 0
+    },
+    {
+      "width": 1440,
+      "theme": "dark",
+      "violations": 0
+    }
+  ],
+  "runtime_errors": [],
+  "budget_writes": 0
+}

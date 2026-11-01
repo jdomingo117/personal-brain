@@ -1,8 +1,9 @@
 #!/usr/bin/env node
+import assert from 'node:assert/strict'
 import { spawn, spawnSync } from 'node:child_process'
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, resolve } from 'node:path'
+import { basename, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { assertSafeTestTarget } from './lib/assertSafeTestTarget.mjs'
 
@@ -15,6 +16,11 @@ const workDir = mkdtempSync(resolve(tmpdir(), 'halcyon-golden-'))
 const isolatedSupabase = resolve(workDir, 'supabase')
 let functions
 let stackStarted = false
+const candidate = process.argv.includes('--release-candidate')
+// A candidate run is provider-disabled unless the operator explicitly selects an authorized live run.
+const providerDisabled = candidate && !process.argv.includes('--live-provider')
+const cli = process.env.SUPABASE_CLI
+const cliRun = (args, options = {}) => cli ? run(cli, args, options) : run('npx', ['supabase', ...args], options)
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -32,7 +38,7 @@ function run(command, args, options = {}) {
 }
 
 function configureIsolatedStack() {
-  cpSync(resolve(repoDir, 'supabase'), isolatedSupabase, { recursive: true })
+  cpSync(resolve(repoDir, 'supabase'), isolatedSupabase, { recursive: true, filter: source => !candidate || (!basename(source).startsWith('.env') && !['.temp','.branches'].includes(basename(source))) })
   const configPath = resolve(isolatedSupabase, 'config.toml')
   let config = readFileSync(configPath, 'utf8')
   const replacements = new Map([
@@ -54,16 +60,20 @@ function configureIsolatedStack() {
   config += '\n[analytics]\nenabled = false\n'
   writeFileSync(configPath, config)
 
+  writeFileSync(resolve(workDir,'vite-candidate.config.mjs'),`import base from ${JSON.stringify(resolve(appDir,'vite.config.ts'))}; export default {...base,cacheDir:${JSON.stringify(resolve(workDir,'vite-cache'))}};\n`)
   const functionEnvPath = resolve(isolatedSupabase, '.env.local')
-  const functionEnv = readFileSync(functionEnvPath, 'utf8')
+  const functionEnv = providerDisabled ? '' : candidate
+    ? readFileSync(resolve(repoDir, 'supabase/.env.local'), 'utf8').split('\n').filter(line => /^(GEMINI_API_KEY|GEMINI_MODEL)=/.test(line)).join('\n')
+    : readFileSync(functionEnvPath, 'utf8')
   writeFileSync(
     functionEnvPath,
     `${functionEnv.trimEnd()}\nALLOWED_ORIGINS=http://127.0.0.1:55300,http://localhost:55300\n`,
+    { mode: 0o600 },
   )
 }
 
 function status() {
-  return JSON.parse(run('npx', ['supabase', 'status', '--workdir', workDir, '--output', 'json'], { capture: true }))
+  return JSON.parse(cliRun(['status', '--workdir', workDir, '--output', 'json'], { capture: true }))
 }
 
 /**
@@ -87,6 +97,7 @@ function removeResidualProjectContainers() {
   }
   const ids = (listed.stdout ?? '').split(/\s+/).filter(Boolean)
   if (ids.length === 0) return
+  for (const id of ids) { const info = JSON.parse(run('docker',['inspect',id],{capture:true}))[0]; assert.equal(info.Config.Labels['com.docker.compose.project'],projectId) }
   const removed = spawnSync('docker', ['rm', '-f', ...ids], { encoding: 'utf8' })
   if (removed.status !== 0) {
     console.error(`Could not remove residual isolated containers: ${removed.stderr ?? 'unknown Docker error'}`)
@@ -128,13 +139,19 @@ async function waitForFunctions(url) {
 }
 
 try {
+  assertSafeTestTarget({SUPABASE_URL:'http://127.0.0.1:55421',HALCYON_TEST_TARGET_ID:projectId,HALCYON_ALLOW_DESTRUCTIVE_TEST_FIXTURES:'isolated-only'})
   configureIsolatedStack()
   // Keep ephemeral local credentials out of normal test output. On failure,
   // run() still includes captured diagnostics in the thrown error.
-  run('npx', ['supabase', 'start', '--workdir', workDir], { capture: true })
   stackStarted = true
+  console.log(`Target: ${projectId}; API=http://127.0.0.1:55421; DB=127.0.0.1:55422/postgres; fixtures=isolated-only`)
+  cliRun(['start', '--workdir', workDir], { capture: true })
+  const info = JSON.parse(run('docker',['inspect',`supabase_db_${projectId}`],{capture:true}))[0]
+  assert.equal(info.Config.Labels['com.supabase.cli.project'],projectId)
+  assert.equal(run('docker',['exec',`supabase_db_${projectId}`,'psql','-XAt','-U','postgres','-d','postgres','-c','SELECT (SELECT count(*) FROM auth.users)+(SELECT count(*) FROM public.tenants)+(SELECT count(*) FROM public.accounts)+(SELECT count(*) FROM public.transactions);'],{capture:true}).trim(),'0')
   const stack = status()
   const apiUrl = stack.API_URL
+  assert.equal(apiUrl,'http://127.0.0.1:55421')
   const env = {
     SUPABASE_URL: apiUrl,
     SUPABASE_ANON_KEY: stack.ANON_KEY,
@@ -145,16 +162,19 @@ try {
     HALCYON_TEST_TARGET_ID: projectId,
     HALCYON_ALLOW_DESTRUCTIVE_TEST_FIXTURES: 'isolated-only',
     HALCYON_GOLDEN_APP_PORT: '55300',
+    HALCYON_TEST_VITE_CONFIG: resolve(workDir,'vite-candidate.config.mjs'),
     NPM_CONFIG_CACHE: npmCache,
+    ...(providerDisabled ? {HALCYON_GOLDEN_PROVIDER_MODE:'disabled',GEMINI_API_KEY:'',GEMINI_MODEL:''} : {}),
   }
   assertSafeTestTarget(env)
+  console.log(`Golden provider mode: ${providerDisabled ? 'disabled; no provider credential copied; AI refresh remains untested' : 'live provider'}`)
 
-  functions = spawn('npx', [
-    'supabase', 'functions', 'serve', '--workdir', workDir,
-    '--env-file', resolve(isolatedSupabase, '.env.local'),
+  functions = spawn(cli ?? 'npx', [
+    ...(cli ? [] : ['supabase']), 'functions', 'serve', '--workdir', workDir,
+    '--env-file', resolve(isolatedSupabase, '.env.local'), '--no-verify-jwt',
   ], { cwd: repoDir, env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'] })
-  functions.stdout.on('data', (chunk) => process.stdout.write(`[functions] ${chunk}`))
-  functions.stderr.on('data', (chunk) => process.stderr.write(`[functions] ${chunk}`))
+  functions.stdout.on('data', (chunk) => { if (!candidate) process.stdout.write(`[functions] ${chunk}`) })
+  functions.stderr.on('data', (chunk) => { if (!candidate) process.stderr.write(`[functions] ${chunk}`) })
   await waitForFunctions(apiUrl)
 
   if (suite === 'gate2') {
@@ -184,10 +204,15 @@ try {
 } finally {
   await stopFunctions()
   if (stackStarted) {
-    try { run('npx', ['supabase', 'stop', '--workdir', workDir, '--no-backup']) } catch (error) {
+    try { cliRun(['stop', '--workdir', workDir, '--no-backup'], {capture:true}) } catch (error) {
       console.error(`Could not stop isolated stack: ${error.message}`)
     } finally {
       removeResidualProjectContainers()
+      if(candidate)for(const kind of ['container','volume','network']){
+        const args=kind==='container'?['ps','-aq']:kind==='volume'?['volume','ls','-q']:['network','ls','-q']
+        const ids=run('docker',[...args,'--filter',`label=com.supabase.cli.project=${projectId}`],{capture:true}).split(/\s+/).filter(Boolean)
+        for(const id of ids){const info=JSON.parse(run('docker',[...(kind==='container'?['inspect']:[kind,'inspect']),id],{capture:true}))[0];assert.equal(kind==='container'?info.Config.Labels['com.supabase.cli.project']:info.Labels['com.supabase.cli.project'],projectId);run('docker',kind==='container'?['rm','-f',id]:[kind,'rm',id],{capture:true})}
+      }
     }
   }
   rmSync(workDir, { recursive: true, force: true })

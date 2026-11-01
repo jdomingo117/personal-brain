@@ -1,0 +1,105 @@
+{
+  "scope": "Authenticated production fixtures; viewport height 1100; measured before scrolling",
+  "matrix": [
+    {
+      "width": 320,
+      "dark": false,
+      "overflow": false,
+      "headlineTop": 566.3125,
+      "headerBottom": 501.8125,
+      "controlsTop": 4992.75,
+      "incomeTop": 881.078125,
+      "viewport": 1100
+    },
+    {
+      "width": 320,
+      "dark": true,
+      "overflow": false,
+      "headlineTop": 566.3125,
+      "headerBottom": 501.8125,
+      "controlsTop": 4992.75,
+      "incomeTop": 881.078125,
+      "viewport": 1100
+    },
+    {
+      "width": 390,
+      "dark": false,
+      "overflow": false,
+      "headlineTop": 542.8125,
+      "headerBottom": 478.3125,
+      "controlsTop": 4294.671875,
+      "incomeTop": 818.140625,
+      "viewport": 1100
+    },
+    {
+      "width": 390,
+      "dark": true,
+      "overflow": false,
+      "headlineTop": 542.8125,
+      "headerBottom": 478.3125,
+      "controlsTop": 4294.671875,
+      "incomeTop": 818.140625,
+      "viewport": 1100
+    },
+    {
+      "width": 768,
+      "dark": false,
+      "overflow": false,
+      "headlineTop": 527.3125,
+      "headerBottom": 462.8125,
+      "controlsTop": 3440.1875,
+      "incomeTop": 773.296875,
+      "viewport": 1100
+    },
+    {
+      "width": 768,
+      "dark": true,
+      "overflow": false,
+      "headlineTop": 527.3125,
+      "headerBottom": 462.8125,
+      "controlsTop": 3440.1875,
+      "incomeTop": 773.296875,
+      "viewport": 1100
+    },
+    {
+      "width": 1024,
+      "dark": false,
+      "overflow": false,
+      "headlineTop": 376.859375,
+      "headerBottom": 308.359375,
+      "controlsTop": 3123.15625,
+      "incomeTop": 617.5625,
+      "viewport": 1100
+    },
+    {
+      "width": 1024,
+      "dark": true,
+      "overflow": false,
+      "headlineTop": 376.859375,
+      "headerBottom": 308.359375,
+      "controlsTop": 3123.15625,
+      "incomeTop": 617.5625,
+      "viewport": 1100
+    },
+    {
+      "width": 1440,
+      "dark": false,
+      "overflow": false,
+      "headlineTop": 382.515625,
+      "headerBottom": 314.015625,
+      "controlsTop": 2157.421875,
+      "incomeTop": 354.015625,
+      "viewport": 1100
+    },
+    {
+      "width": 1440,
+      "dark": true,
+      "overflow": false,
+      "headlineTop": 382.515625,
+      "headerBottom": 314.015625,
+      "controlsTop": 2157.421875,
+      "incomeTop": 354.015625,
+      "viewport": 1100
+    }
+  ]
+}

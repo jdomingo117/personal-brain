@@ -1,54 +1,45 @@
 import {useEffect,useRef,useState} from 'react'
 import {useBudget} from '../contexts/BudgetContext'
-import {Button,Select} from './Controls'
+import {Button} from './Controls'
 import {fmtCents} from '../data'
 import {addDays} from '../lib/budget'
 import {moneyEntry,parseBudgetMoney} from '../lib/budgetWorkspace'
 import {nextBudgetDraft,nextBudgetSummary} from '../lib/budgetLifecycle'
-import BudgetFrequency from './BudgetFrequency'
-import BudgetAccountPolicy from './BudgetAccountPolicy'
-import BudgetRollover from './BudgetRollover'
-import BudgetControls from './BudgetControls'
+import BudgetHistory from './budget/BudgetHistory'
 
-export default function BudgetLifecycle(){
+export default function BudgetLifecycle({active=true,onOpen}:{active?:boolean;onOpen?:()=>void}){
  const b=useBudget(),s=b.snapshot!,l=s.details?.lifecycle
  const [reviewing,setReviewing]=useState(false),[carry,setCarry]=useState<'fresh'|'carry'>('fresh'),[accepted,setAccepted]=useState(false),[advance,setAdvance]=useState(false)
- const [frequencyOpen,setFrequencyOpen]=useState(false)
- const [accountOpen,setAccountOpen]=useState(false)
- const [rolloverOpen,setRolloverOpen]=useState(false)
- const [controlsOpen,setControlsOpen]=useState(false)
- useEffect(()=>setControlsOpen(false),[s.period?.id])
- useEffect(()=>setRolloverOpen(false),[s.period?.id])
- useEffect(()=>setAccountOpen(false),[s.period?.id])
- useEffect(()=>setFrequencyOpen(false),[s.period?.id])
  useEffect(()=>{setReviewing(false);setAdvance(false);setAccepted(false);setCarry(l?.carry_mode??'fresh')},[s.period?.id])
  useEffect(()=>{setReviewing(false);setAccepted(false)},[s.source_revision,s.plan?.version])
- useEffect(()=>{if(!advance&&!reviewing&&!frequencyOpen&&!accountOpen&&!rolloverOpen&&!controlsOpen)return;const warn=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue=''};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn)},[advance,reviewing,frequencyOpen,accountOpen,rolloverOpen,controlsOpen])
+ useEffect(()=>{if(!advance&&!reviewing)return;const warn=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue=''};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn)},[advance,reviewing])
+ useEffect(()=>{
+  if(!advance&&!reviewing)return
+  const leave=(event:Event)=>{if(event.defaultPrevented)return;if(!window.confirm('Leave this unsaved review or budget preview? Your saved plan and review will stay unchanged.'))event.preventDefault()}
+  window.addEventListener('budget-before-period-navigation',leave)
+  return()=>window.removeEventListener('budget-before-period-navigation',leave)
+ },[advance,reviewing])
  if(!l||!s.period||!s.plan)return null
- const facts=l.facts,previous=l.review?.payload,remaining=facts.closing_everyday_cents,policyNext=s.details?.rollover_policy?.timeline.some(e=>e.from<=s.period!.end_date)
- function go(id:string|null){if(!window.dispatchEvent(new Event('budget-before-period-navigation',{cancelable:true})))return;if((advance||reviewing||frequencyOpen||accountOpen||rolloverOpen||controlsOpen)&&!window.confirm('Leave this unsaved review or budget preview? Your saved plan and review will stay unchanged.'))return;b.selectPeriod(id)}
+ const facts=l.facts,remaining=facts.closing_everyday_cents,policyNext=s.details?.rollover_policy?.timeline.some(e=>e.from<=s.period!.end_date)
  const write=async(input:Record<string,unknown>)=>b.run(input.action==='undo'?input:{...input,plan_id:s.plan!.id,period_id:s.period!.id,expected_plan:s.plan!.version})
  const manual=!s.account_scope.some(m=>m.role==='activity'&&m.start_date<s.period!.end_date&&(!m.end_date||m.end_date>s.period!.start_date)),partial=manual||!s.coverage_complete
- return <section className="glass mt-4 p-5 space-y-4" aria-label="Budget periods and review">
-  <fieldset disabled={b.loading||b.busy||!!b.pending} className="grid gap-3 xl:grid-cols-[minmax(240px,1fr)_auto_auto_auto] xl:items-end"><label className="grid gap-2 min-w-0"><span className="field-label">Saved budget period</span><Select ariaLabel="Saved budget period" value={s.period.id} onChange={go}>{l.periods.map(p=><option key={p.id} value={p.id}>{p.start_date} – {addDays(p.end_date,-1)}</option>)}</Select></label>
-   <Button variant="ghost" disabled={!l.previous_id||b.loading||b.busy||!!b.pending} onClick={()=>go(l.previous_id)}>Previous saved budget</Button>
-   <Button variant="ghost" disabled={!l.next_id||b.loading||b.busy||!!b.pending} onClick={()=>go(l.next_id)}>Next saved budget</Button>
-   <Button variant="ghost" disabled={b.loading||b.busy||!!b.pending} onClick={()=>go(null)}>Return to current budget</Button></fieldset>
+ return <>
+  {!active&&<section className="budget-history-entry"><p>{l.state==='past'?(l.changed_since_review?'Changed since review · recorded results need another look.':'A saved budget is available to look back on.'):'Review saved periods, carry choices and the next budget in Look back.'}</p><Button variant="ghost" onClick={onOpen}>Look back at this budget</Button></section>}
+  <section hidden={!active} className="budget-history space-y-5" aria-label="Budget periods and review">
+  <header><p className="budget-eyebrow">{s.period.start_date} – {addDays(s.period.end_date,-1)} · {s.period.timezone}</p><h3 className="font-display text-2xl font-bold">{l.state==='past'?'Review this budget':l.state==='future'?'A future plan, not completed results':'Your budget is still unfolding'}</h3></header>
   {b.error&&<p className="body-copy text-neg">{b.error} Your local preview is retained; no replacement request is submitted automatically.</p>}
   <p className="body-copy">{l.state==='past'?'Completed budget · recorded activity can still change.':l.state==='future'?'Future plan · provisional, not completed actuals.':'In progress · this budget cannot be marked reviewed before its end date.'}</p>
   <p className="body-copy">{s.details?.rollover?.enabled?'Everyday amount carried across categories':'Everyday amount carried into Other'}: <strong>{facts.opening_carry_cents===null?'Unavailable':fmtCents(facts.opening_carry_cents)}</strong>. {l.provisional_carry?'This includes unreviewed or incomplete history and is provisional.':'Based on the reviewed choices shown in history.'} Carry is not new income, a bank balance or verified savings.</p>
+  {s.unallocated_cents!=null&&s.unallocated_cents<0&&<p className="outcome-panel text-warn">Saved plan funding gap: {fmtCents(s.unallocated_cents)}. Review allocations in My plan; this is separate from the everyday remainder.</p>}
   {l.state==='past'&&<>
-   <h3 className="font-display text-xl font-bold">Review this budget</h3>
    {l.review&&<p className={`outcome-panel ${l.changed_since_review?'text-warn':''}`}>{l.review.state==='reopened'?'Review reopened. Your earlier record is preserved. ':''}{l.changed_since_review?'Changed since review — source evidence or results changed. Review again before relying on these figures.':l.review.state==='reviewed'?'Reviewed. Your recorded snapshot is preserved.':''}</p>}
-   <dl className="budget-totals"><dt>Income originally planned</dt><dd>{fmtCents(facts.original_plan.income_cents)}</dd><dt>Latest planned income</dt><dd>{fmtCents(facts.latest_plan.income_cents)}</dd><dt>Latest recorded net spending</dt><dd>{facts.actuals?fmtCents(facts.actuals.net_expense_cents):'Unavailable'}</dd><dt>Everyday remainder, including carry</dt><dd>{remaining===null?'Unavailable':fmtCents(remaining)}</dd><dt>Spending explicitly excluded</dt><dd>{fmtCents(facts.excluded_cents)}</dd><dt>Unassigned credits, still separate</dt><dd>{fmtCents(facts.unassigned_credit_cents)}</dd></dl>
-   {previous&&<p className="body-copy">When last recorded: net spending {previous.actuals?fmtCents(previous.actuals.net_expense_cents):'unavailable'}, everyday remainder {previous.closing_everyday_cents===null?'unavailable':fmtCents(previous.closing_everyday_cents)}. Changes do not rewrite that record.</p>}
-   <details><summary className="min-h-11 cursor-pointer py-3">Compare allowances and recorded activity</summary><div className="data-table-wrap"><table className="data-table"><caption className="text-left detail-copy py-3">Original allowance, latest saved allowance and known recorded spending. Transfers are evidence of funding, not spending.</caption><thead><tr><th scope="col">Allowance</th><th scope="col">Originally planned</th><th scope="col">Latest plan</th><th scope="col">Recorded activity</th></tr></thead><tbody>{facts.latest_plan.allocations.map(line=>{const original=facts.original_plan.allocations.find(a=>a.line_id===line.id),item=s.details?.items.find(i=>i.line_id===line.id);return <tr key={line.id}><th scope="row">{line.name}</th><td>{original?fmtCents(original.amount_cents):'Not in original plan'}</td><td>{fmtCents(line.allocation_cents)}</td><td>{!facts.scope_valid?'Unavailable':item?.kind==='contribution'?`${fmtCents(item.bank_confirmed_cents)} bank matched · ${fmtCents(item.user_confirmed_cents)} user confirmed`:item?fmtCents(item.used_cents):'Unavailable'}</td></tr>})}</tbody></table></div></details>
+   <BudgetHistory snapshot={s} stale={b.readState!=='ready'||!!b.pending}/>
    <a href="/ledger" className="inline-flex min-h-11 items-center text-accent-ink underline">Review transactions in Ledger</a>
-   {!reviewing?<div className="flex flex-wrap gap-3"><Button disabled={!b.canWrite||!l.chain_valid} onClick={()=>setReviewing(true)}>{l.review?'Review updated results':'Review and choose what carries'}</Button>{l.review?.state==='reviewed'&&<Button disabled={!b.canWrite} variant="ghost" onClick={()=>void write({action:'reopen_review'})}>Reopen review</Button>}{s.details?.undo_operation_id&&l.review?.version===s.plan.version&&<Button disabled={!b.canWrite} variant="ghost" onClick={()=>{if(window.confirm('Undo the latest review choice? The earlier review record and ledger remain intact.'))void write({action:'undo',operation_id:s.details!.undo_operation_id})}}>Undo last review change</Button>}</div>:<div className="outcome-panel space-y-3">
+   {!reviewing?<div className="flex flex-wrap gap-3"><Button disabled={!b.canWrite||!l.chain_valid} onClick={()=>setReviewing(true)}>{l.review?'Review updated results':'Review and choose what carries'}</Button>{l.review?.state==='reviewed'&&<Button disabled={!b.canWrite} variant="ghost" onClick={()=>void write({action:'reopen_review'})}>Reopen review</Button>}{s.details?.undo_operation_id&&l.review?.version===s.plan.version&&<Button disabled={!b.canWrite} variant="ghost" onClick={()=>{if(window.confirm('Undo the latest review choice? The earlier review record and ledger remain intact.'))void write({action:'undo',operation_id:s.details!.undo_operation_id})}}>Undo last review change</Button>}</div>:<div className="budget-history-choice space-y-3">
     <fieldset disabled={!b.canWrite} className="space-y-3"><legend className="field-label">{policyNext?'Review your results; saved rollover rules determine the next boundary':'What should happen to the everyday remainder?'}</legend>
     {!policyNext&&<>
-    <label className="flex min-h-11 items-start gap-3"><input type="radio" name="carry-choice" checked={carry==='fresh'} onChange={()=>setCarry('fresh')}/><span>Start fresh next budget · carry zero. Any positive or negative variance remains visible in this review; it is not erased or converted to savings.</span></label>
-    <label className="flex min-h-11 items-start gap-3"><input type="radio" name="carry-choice" checked={carry==='carry'} onChange={()=>setCarry('carry')}/><span>Carry the everyday remainder into Other · {remaining===null?'unavailable':fmtCents(remaining)}. A shortfall reduces the next allowance; a positive remainder adds budget room, not cash.</span></label>
+    <label className="budget-settings-choice"><input type="radio" name="carry-choice" checked={carry==='fresh'} onChange={()=>setCarry('fresh')}/><span>Start fresh next budget · carry zero. Any positive or negative variance remains visible in this review; it is not erased or converted to savings.</span></label>
+    <label className="budget-settings-choice"><input type="radio" name="carry-choice" checked={carry==='carry'} onChange={()=>setCarry('carry')}/><span>Carry the everyday remainder into Other · {remaining===null?'unavailable':fmtCents(remaining)}. A shortfall reduces the next allowance; a positive remainder adds budget room, not cash.</span></label>
     <p className="body-copy">Next opening carry: <strong>{carry==='fresh'?fmtCents(0):remaining===null?'Unavailable':fmtCents(remaining)}</strong>. Bill and goal reserves stay separate. This choice is for this boundary, not an ongoing category policy.</p>
     </>}
     {partial&&<label className="flex min-h-11 items-start gap-3"><input type="checkbox" checked={accepted} onChange={e=>setAccepted(e.target.checked)}/><span>I understand this review includes known activity only. Missing account history may change carry and the results later.</span></label>}
@@ -57,11 +48,7 @@ export default function BudgetLifecycle(){
    {l.is_latest&&!advance&&s.details?.frequency_change?.state!=='pending'&&<div className="space-y-3"><p className="body-copy">Reviewing is optional. You can open the next contiguous budget without completing a review. No dates or opening reserves will be invented before this plan started.</p><Button disabled={!b.canWrite||!l.chain_valid||s.details?.controls?.paused} variant="ghost" onClick={()=>setAdvance(true)}>Plan the next budget</Button></div>}
    {advance&&<NextBudget close={()=>setAdvance(false)}/>}
   </>}
-  <BudgetFrequency open={frequencyOpen} setOpen={setFrequencyOpen}/>
-  <BudgetAccountPolicy open={accountOpen} setOpen={setAccountOpen}/>
-  <BudgetRollover open={rolloverOpen} setOpen={setRolloverOpen}/>
-  <BudgetControls open={controlsOpen} setOpen={setControlsOpen}/>
- </section>
+ </section></>
 }
 
 function NextBudget({close}:{close:()=>void}){

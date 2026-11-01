@@ -1,0 +1,22 @@
+{
+  "status": "blocked_provider_prepayment_credits",
+  "authorization": "granted",
+  "initial_project": "halcyon-golden-isolated-1793256035206",
+  "explicit_project": "halcyon-golden-isolated-1793256415844",
+  "golden_result": {
+    "failed": 1,
+    "did_not_run": 7,
+    "passed": 0
+  },
+  "model_metadata_http_status": 200,
+  "generation_http_status": 402,
+  "provider_status": "RESOURCE_EXHAUSTED",
+  "model": "gemini-2.5-flash",
+  "cold_ai_classification_passed": false,
+  "fresh_ui_review_passed": false,
+  "changed_executable_sources": [
+    "app/e2e/golden-pass.spec.ts"
+  ],
+  "browser_typecheck": "passed",
+  "no_generation_retries_after_billing_diagnosis": true
+}

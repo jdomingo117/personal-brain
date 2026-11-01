@@ -156,7 +156,7 @@ function AppFrame({
         </Routes>
       )}
 
-      {booted && <ThemeToggle />}
+      {booted && view!=='budget' && <ThemeToggle />}
       {booted && session && <ProviderSyncNotice />}
       <MilestoneToast toast={toast} />
     </ViewBridge>

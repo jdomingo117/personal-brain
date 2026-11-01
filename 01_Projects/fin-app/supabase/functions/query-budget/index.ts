@@ -1,8 +1,9 @@
+import { withBudgetTelemetry } from '../_shared/budgetTelemetry.ts'
 import { withAuth, SafeHttpError } from '../_shared/withAuth.ts'
 import { BudgetQuery,budgetFailure } from '../_shared/budgetApi.ts'
 import { budgetRecurring } from '../_shared/budgetRecurring.ts'
 
-Deno.serve(withAuth({schema:BudgetQuery,requireRole:'viewer',maxBodyBytes:262144,
+Deno.serve(withBudgetTelemetry('query-budget',withAuth({redactErrorDetails:true,schema:BudgetQuery,requireRole:'viewer',maxBodyBytes:262144,
   rateLimit:{limit:30,windowSec:60,onError:'closed'}},async ctx => {
   const workspace = ctx.body.action === 'workspace'
   if(ctx.body.action==='assisted_setup'){
@@ -76,4 +77,4 @@ Deno.serve(withAuth({schema:BudgetQuery,requireRole:'viewer',maxBodyBytes:262144
     return {...data,...(details?.lifecycle?.chain_valid===false?{scope_valid:false,state:'unavailable'}:{}),details,tenant_id:ctx.tenantId,accounts:accounts.data,account_scope:scope.data,write_enabled:Deno.env.get('BUDGET_V1_ENABLED')==='true'}
   }
   return data
-}))
+})))

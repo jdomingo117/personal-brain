@@ -1,0 +1,502 @@
+{
+  "scope": "Fictional production candidate; no personal migration or exposure",
+  "baseline": {
+    "income": 600000,
+    "everyday": 180000,
+    "spent": 151000,
+    "remaining": 29000,
+    "unallocated": 20000
+  },
+  "matrix": [
+    {
+      "state": "healthy",
+      "width": 320,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "healthy",
+      "width": 320,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "healthy",
+      "width": 390,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "healthy",
+      "width": 390,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "healthy",
+      "width": 768,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "healthy",
+      "width": 768,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "healthy",
+      "width": 1024,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "healthy",
+      "width": 1024,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "healthy",
+      "width": 1440,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "healthy",
+      "width": 1440,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "my-plan",
+      "width": 320,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "my-plan",
+      "width": 320,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "my-plan",
+      "width": 390,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "my-plan",
+      "width": 390,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "my-plan",
+      "width": 768,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "my-plan",
+      "width": 768,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "my-plan",
+      "width": 1024,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "my-plan",
+      "width": 1024,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "my-plan",
+      "width": 1440,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "my-plan",
+      "width": 1440,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "funding-gap",
+      "width": 320,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "funding-gap",
+      "width": 320,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "funding-gap",
+      "width": 390,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "funding-gap",
+      "width": 390,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "funding-gap",
+      "width": 768,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "funding-gap",
+      "width": 768,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "funding-gap",
+      "width": 1024,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "funding-gap",
+      "width": 1024,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "funding-gap",
+      "width": 1440,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "funding-gap",
+      "width": 1440,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "failed-refresh",
+      "width": 320,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "failed-refresh",
+      "width": 320,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "failed-refresh",
+      "width": 390,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "failed-refresh",
+      "width": 390,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "failed-refresh",
+      "width": 768,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "failed-refresh",
+      "width": 768,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "failed-refresh",
+      "width": 1024,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "failed-refresh",
+      "width": 1024,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "failed-refresh",
+      "width": 1440,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "failed-refresh",
+      "width": 1440,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "no-history",
+      "width": 320,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "no-history",
+      "width": 320,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "no-history",
+      "width": 390,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "no-history",
+      "width": 390,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "no-history",
+      "width": 768,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "no-history",
+      "width": 768,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "no-history",
+      "width": 1024,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "no-history",
+      "width": 1024,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "no-history",
+      "width": 1440,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "no-history",
+      "width": 1440,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "changed-history",
+      "width": 320,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "changed-history",
+      "width": 320,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "changed-history",
+      "width": 390,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "changed-history",
+      "width": 390,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "changed-history",
+      "width": 768,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "changed-history",
+      "width": 768,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "changed-history",
+      "width": 1024,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "changed-history",
+      "width": 1024,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "changed-history",
+      "width": 1440,
+      "dark": false,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "changed-history",
+      "width": 1440,
+      "dark": true,
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "interrupted-save",
+      "width": 320,
+      "dark": false,
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "interrupted-save",
+      "width": 320,
+      "dark": true,
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "interrupted-save",
+      "width": 390,
+      "dark": false,
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "interrupted-save",
+      "width": 390,
+      "dark": true,
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "interrupted-save",
+      "width": 768,
+      "dark": false,
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "interrupted-save",
+      "width": 768,
+      "dark": true,
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "interrupted-save",
+      "width": 1024,
+      "dark": false,
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "interrupted-save",
+      "width": 1024,
+      "dark": true,
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "interrupted-save",
+      "width": 1440,
+      "dark": false,
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "interrupted-save",
+      "width": 1440,
+      "dark": true,
+      "surface": "dialog[open]",
+      "violations": 0
+    }
+  ]
+}

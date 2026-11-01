@@ -1,0 +1,188 @@
+{
+  "date": "2026-10-29",
+  "runs": [
+    {
+      "name": "profile",
+      "project": "halcyon-budget-m2-df728ecbd7da45e4",
+      "log": "/tmp/halcyon-r06-profile.log",
+      "complete_checks": null,
+      "passed_assertions": 59,
+      "cleanup_logged": true,
+      "remaining_resources": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    },
+    {
+      "name": "profile-final",
+      "project": "halcyon-budget-m2-a01eca27d00544af",
+      "log": "/tmp/halcyon-r06-profile-final.log",
+      "complete_checks": 62,
+      "passed_assertions": 62,
+      "cleanup_logged": true,
+      "remaining_resources": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    },
+    {
+      "name": "capacity",
+      "project": "halcyon-budget-m2-f52739b3e8774ab2",
+      "log": "/tmp/halcyon-r06-capacity.log",
+      "complete_checks": null,
+      "passed_assertions": 0,
+      "cleanup_logged": true,
+      "remaining_resources": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    },
+    {
+      "name": "capacity-final",
+      "project": "halcyon-budget-m2-7fd2bdb19e634381",
+      "log": "/tmp/halcyon-r06-capacity-final.log",
+      "complete_checks": null,
+      "passed_assertions": 86,
+      "cleanup_logged": true,
+      "remaining_resources": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    },
+    {
+      "name": "profile-optimized",
+      "project": "halcyon-budget-m2-a3835a7dcbc3482a",
+      "log": "/tmp/halcyon-r06-profile-optimized.log",
+      "complete_checks": null,
+      "passed_assertions": 0,
+      "cleanup_logged": true,
+      "remaining_resources": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    },
+    {
+      "name": "profile-optimized-final",
+      "project": "halcyon-budget-m2-3698958f40e74006",
+      "log": "/tmp/halcyon-r06-profile-optimized-final.log",
+      "complete_checks": null,
+      "passed_assertions": 150,
+      "cleanup_logged": true,
+      "remaining_resources": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    },
+    {
+      "name": "capacity-99",
+      "project": "halcyon-budget-m2-ba3770f2a02541e6",
+      "log": "/tmp/halcyon-r06-capacity-99.log",
+      "complete_checks": null,
+      "passed_assertions": 27,
+      "cleanup_logged": true,
+      "remaining_resources": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    },
+    {
+      "name": "profile-100",
+      "project": "halcyon-budget-m2-732b6e0ff2674895",
+      "log": "/tmp/halcyon-r06-profile-100.log",
+      "complete_checks": 154,
+      "passed_assertions": 154,
+      "cleanup_logged": true,
+      "remaining_resources": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    },
+    {
+      "name": "profile-102",
+      "project": "halcyon-budget-m2-0559199147a44273",
+      "log": "/tmp/halcyon-r06-profile-102.log",
+      "complete_checks": 154,
+      "passed_assertions": 154,
+      "cleanup_logged": true,
+      "remaining_resources": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    },
+    {
+      "name": "profile-103",
+      "project": "halcyon-budget-m2-4e48534b92044556",
+      "log": "/tmp/halcyon-r06-profile-103.log",
+      "complete_checks": 154,
+      "passed_assertions": 154,
+      "cleanup_logged": true,
+      "remaining_resources": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    },
+    {
+      "name": "capacity-103",
+      "project": "halcyon-budget-m2-c8d108826baa411d",
+      "log": "/tmp/halcyon-r06-capacity-103.log",
+      "complete_checks": null,
+      "passed_assertions": 173,
+      "cleanup_logged": true,
+      "remaining_resources": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    },
+    {
+      "name": "capacity-104",
+      "project": "halcyon-budget-m2-d76a8166df44435f",
+      "log": "/tmp/halcyon-r06-capacity-104.log",
+      "complete_checks": 187,
+      "passed_assertions": 187,
+      "cleanup_logged": true,
+      "remaining_resources": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    },
+    {
+      "name": "history",
+      "project": "halcyon-budget-m2-68b426e1839346ca",
+      "log": "/tmp/halcyon-r06-history.log",
+      "complete_checks": 142,
+      "passed_assertions": 142,
+      "cleanup_logged": true,
+      "remaining_resources": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    },
+    {
+      "name": "regression",
+      "project": "halcyon-budget-m2-32c2e095fdda482c",
+      "log": "/tmp/halcyon-r06-regression.log",
+      "complete_checks": 537,
+      "passed_assertions": 537,
+      "cleanup_logged": true,
+      "remaining_resources": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    }
+  ],
+  "counts_overlap": true
+}

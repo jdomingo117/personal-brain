@@ -1,0 +1,1076 @@
+{
+  "project": "halcyon-budget-m2-579045036283479e",
+  "api": "http://127.0.0.1:57521",
+  "database": "postgres",
+  "started_at": "2026-10-29T04:49:50.839Z",
+  "scope": "Isolated local platform; separate recovery databases; no personal/hosted migration",
+  "backups": [
+    {
+      "label": "before-budget",
+      "path": "backups/budget-m7/halcyon-budget-m2-579045036283479e/before-budget.dump",
+      "bytes": 955996,
+      "sha256": "484f9faa4664beb7f899e6c3c76883e7c2ba034727023e90725149e5907fae9b",
+      "catalog_entries": 1486
+    },
+    {
+      "label": "after-budget",
+      "path": "backups/budget-m7/halcyon-budget-m2-579045036283479e/after-budget.dump",
+      "bytes": 1763894,
+      "sha256": "b23b62e23c76560ac0aadecc5a8b5abd422a5eb89c5b8f34a9d98fc3ec36f1b6",
+      "catalog_entries": 2218
+    }
+  ],
+  "restores": [
+    {
+      "label": "before-budget",
+      "database": "budget_m7_restore_fc5a0ad0e6d7",
+      "tables_compared": 81,
+      "table_parity": true,
+      "aggregate_parity": true,
+      "original_password_login": true,
+      "tenant_rls": true
+    },
+    {
+      "label": "after-budget",
+      "database": "budget_m7_restore_e3ac441868da",
+      "tables_compared": 108,
+      "table_parity": true,
+      "aggregate_parity": true,
+      "original_password_login": true,
+      "tenant_rls": true
+    }
+  ],
+  "fixture_start": "2026-09-01",
+  "legacy_manifest": {
+    "auth.users": {
+      "count": 2,
+      "sha256": "e7b246f2218a4babe65f783c3e6f9f7c78895d1c9f3a96373297b5a71f29103b"
+    },
+    "auth.sessions": {
+      "count": 2,
+      "sha256": "15ef2710f576fb0d31e29f3bbdcf95b8a0d80126a7e1c93f4aecfe2d92c7d4d9"
+    },
+    "auth.instances": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budgets": {
+      "count": 2,
+      "sha256": "2d05f49c079efd7ca5a2822c59ebd14ffa87e1de26b33a5271cff8890b2a029d"
+    },
+    "public.tenants": {
+      "count": 2,
+      "sha256": "8f45abe3d1a3b2fd12c91a86fa48763daca7324c42662702feba05df532a9a8e"
+    },
+    "auth.flow_state": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.identities": {
+      "count": 2,
+      "sha256": "a40e19d1306741d1b1c2f23bc54264e70b968512c146defbcddd178794e56234"
+    },
+    "auth.scim_users": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.accounts": {
+      "count": 2,
+      "sha256": "be2d0b287a6a47ab6bb7fef065b391d65074c74eef0c5ed3c43d3b399b021c8a"
+    },
+    "public.profiles": {
+      "count": 2,
+      "sha256": "382baee406f5ed6d60d3d2f73b50b10e1414700a773bed7276080f528de5fa81"
+    },
+    "auth.mfa_factors": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.scim_tokens": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.sso_domains": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.audit_log": {
+      "count": 4,
+      "sha256": "df5416d8de5b86c0cd01651fed4a6b54410d7b5e9904e504ea4cf92db59674fa"
+    },
+    "public.sync_runs": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.oauth_clients": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.sso_providers": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.mfa_amr_claims": {
+      "count": 2,
+      "sha256": "1ec459414fbf1985675a8042ed2e2ad281f07920de29eddad10ba3b526b832f3"
+    },
+    "auth.mfa_challenges": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.oauth_consents": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.refresh_tokens": {
+      "count": 2,
+      "sha256": "9831bad71cf267a41f723393cde86a3d62a78f8fe9ca6bf299af142ada161d3e"
+    },
+    "auth.saml_providers": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.achievements": {
+      "count": 2,
+      "sha256": "87fee43abaccebaa70b85708c464dc879204aa43f9244698620390d46bc1c478"
+    },
+    "public.transactions": {
+      "count": 8,
+      "sha256": "60748824a41117567ae72fda355f7ebbeeb4c67e751a4af8a56ed5fde2d70868"
+    },
+    "auth.one_time_tokens": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.user_sessions": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.login_attempts": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.merchant_rules": {
+      "count": 2,
+      "sha256": "ac5bad93643a18ecd8e056a37a3921502ef9e6ae03c807487c1c2c52eaac33f1"
+    },
+    "public.planning_goals": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.tenant_members": {
+      "count": 2,
+      "sha256": "87c818b589e163f57e051f0a8e09acb73a7342ba0c8b8bb27e8d47bd597a3f3c"
+    },
+    "public.transfer_links": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.upload_batches": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.audit_log_entries": {
+      "count": 4,
+      "sha256": "c620f3deacb7012c2ed0bb41d837055c6f1af037095a3f79bc39260ba17de50a"
+    },
+    "auth.saml_relay_states": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.schema_migrations": {
+      "count": 82,
+      "sha256": "5ed9bf2bd3b7e93e445e58c01bbb2799293d3d819ce2a7570da27033c51ef287"
+    },
+    "public.planning_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.static_profiles": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.mfa_recovery_codes": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.account_lockouts": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.oauth_client_states": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.webauthn_challenges": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.instrument_prices": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.user_achievements": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.oauth_authorizations": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.webauthn_credentials": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.planning_scenarios": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.transfer_decisions": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.account_connections": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.account_identifiers": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.investment_holdings": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.taxonomy_categories": {
+      "count": 17,
+      "sha256": "dcae7c9b9c1b94eb8041a093cf3c7ba27b51cac465390dc7174e60eead64f3ac"
+    },
+    "auth.custom_oauth_providers": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.mfa_recovery_code_sets": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.planning_goal_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.provider_connections": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.tenant_subcategories": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "private.provider_credentials": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.investment_activities": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.investment_cash_links": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.investment_instruments": {
+      "count": 1,
+      "sha256": "a9f4ff05440671ae28695e66683475ba8315cc5fc60721ee87d8a4b1697ba550"
+    },
+    "public.investment_tax_records": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.planning_goal_accounts": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.taxonomy_subcategories": {
+      "count": 77,
+      "sha256": "5ecea1909eaa02683a6a4a0aad19584c4228674dfe25cfc8a9dbf5be6aa8b098"
+    },
+    "public.taxonomy_migration_runs": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.transaction_allocations": {
+      "count": 4,
+      "sha256": "3a1e25e280ce63185a8f05c03030b6a44a4c3f62dd0e9a4d650af5bb480f5de5"
+    },
+    "public.transfer_match_overflow": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.planning_scenario_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.investment_cash_decisions": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.merchant_recurrence_hints": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.taxonomy_category_aliases": {
+      "count": 12,
+      "sha256": "e09aa333e245866d06d4903ed4ebd685403ba6f37b71bfd24d4fa3dae1b4ebf1"
+    },
+    "public.taxonomy_migration_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.investment_price_sync_runs": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.planning_rebaseline_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.recurring_series_overrides": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.transaction_category_edits": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.taxonomy_subcategory_aliases": {
+      "count": 42,
+      "sha256": "103ea4e08ef2adf28932ae951b0d64923ff75736774da59e683b8ade2c4f1c70"
+    },
+    "public.transaction_allocation_edits": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.investment_account_valuations": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.classification_review_policies": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.recurring_series_override_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.transaction_classification_edits": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "legacy_totals": {
+    "ledger": [
+      {
+        "rows": 4,
+        "tenant_id": "a236f906-3e44-42dc-be88-8b7a91ecfb99",
+        "account_id": "cff1c238-7026-4ed2-80f2-ffb90c153d2a",
+        "signed_cents": 569500
+      },
+      {
+        "rows": 4,
+        "tenant_id": "c1c030fc-34d7-45ce-88de-ba6ca90b019f",
+        "account_id": "9fead32e-f083-4d65-b2e5-fd804caad284",
+        "signed_cents": 569500
+      }
+    ],
+    "accounts": [
+      {
+        "id": "9fead32e-f083-4d65-b2e5-fd804caad284",
+        "balance": 123456,
+        "currency": "AUD",
+        "tenant_id": "c1c030fc-34d7-45ce-88de-ba6ca90b019f"
+      },
+      {
+        "id": "cff1c238-7026-4ed2-80f2-ffb90c153d2a",
+        "balance": 123456,
+        "currency": "AUD",
+        "tenant_id": "a236f906-3e44-42dc-be88-8b7a91ecfb99"
+      }
+    ],
+    "analytics": [
+      {
+        "kind": "expense",
+        "rows": 1,
+        "tenant_id": "a236f906-3e44-42dc-be88-8b7a91ecfb99",
+        "signed_cents": -12000
+      },
+      {
+        "kind": "income",
+        "rows": 1,
+        "tenant_id": "a236f906-3e44-42dc-be88-8b7a91ecfb99",
+        "signed_cents": 600000
+      },
+      {
+        "kind": "refund",
+        "rows": 1,
+        "tenant_id": "a236f906-3e44-42dc-be88-8b7a91ecfb99",
+        "signed_cents": 1500
+      },
+      {
+        "kind": "transfer",
+        "rows": 1,
+        "tenant_id": "a236f906-3e44-42dc-be88-8b7a91ecfb99",
+        "signed_cents": -20000
+      },
+      {
+        "kind": "expense",
+        "rows": 1,
+        "tenant_id": "c1c030fc-34d7-45ce-88de-ba6ca90b019f",
+        "signed_cents": -12000
+      },
+      {
+        "kind": "income",
+        "rows": 1,
+        "tenant_id": "c1c030fc-34d7-45ce-88de-ba6ca90b019f",
+        "signed_cents": 600000
+      },
+      {
+        "kind": "refund",
+        "rows": 1,
+        "tenant_id": "c1c030fc-34d7-45ce-88de-ba6ca90b019f",
+        "signed_cents": 1500
+      },
+      {
+        "kind": "transfer",
+        "rows": 1,
+        "tenant_id": "c1c030fc-34d7-45ce-88de-ba6ca90b019f",
+        "signed_cents": -20000
+      }
+    ]
+  },
+  "legacy_sequences": [
+    {
+      "cycle": false,
+      "data_type": "bigint",
+      "max_value": 9223372036854776000,
+      "min_value": 1,
+      "cache_size": 1,
+      "last_value": 2,
+      "schemaname": "auth",
+      "start_value": 1,
+      "increment_by": 1,
+      "sequencename": "refresh_tokens_id_seq",
+      "sequenceowner": "supabase_auth_admin"
+    },
+    {
+      "cycle": false,
+      "data_type": "bigint",
+      "max_value": 9223372036854776000,
+      "min_value": 1,
+      "cache_size": 1,
+      "last_value": 4,
+      "schemaname": "public",
+      "start_value": 1,
+      "increment_by": 1,
+      "sequencename": "audit_log_id_seq",
+      "sequenceowner": "postgres"
+    },
+    {
+      "cycle": false,
+      "data_type": "bigint",
+      "max_value": 9223372036854776000,
+      "min_value": 1,
+      "cache_size": 1,
+      "last_value": null,
+      "schemaname": "public",
+      "start_value": 1,
+      "increment_by": 1,
+      "sequencename": "login_attempts_id_seq",
+      "sequenceowner": "postgres"
+    },
+    {
+      "cycle": false,
+      "data_type": "bigint",
+      "max_value": 9223372036854776000,
+      "min_value": 1,
+      "cache_size": 1,
+      "last_value": null,
+      "schemaname": "public",
+      "start_value": 1,
+      "increment_by": 1,
+      "sequencename": "taxonomy_migration_events_id_seq",
+      "sequenceowner": "postgres"
+    }
+  ],
+  "budget_manifest": {
+    "auth.users": {
+      "count": 2,
+      "sha256": "596d3b2489834d50fe54b0f3749c9815006129fdb47b2b34b359c8f90a4bc723"
+    },
+    "auth.sessions": {
+      "count": 4,
+      "sha256": "5fcd024d6fd24ae0d4aa68ced1205b1162e9bd9d9d9baff6ac683e9d8a5825fd"
+    },
+    "auth.instances": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budgets": {
+      "count": 2,
+      "sha256": "2d05f49c079efd7ca5a2822c59ebd14ffa87e1de26b33a5271cff8890b2a029d"
+    },
+    "public.tenants": {
+      "count": 2,
+      "sha256": "8f45abe3d1a3b2fd12c91a86fa48763daca7324c42662702feba05df532a9a8e"
+    },
+    "auth.flow_state": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.identities": {
+      "count": 2,
+      "sha256": "a40e19d1306741d1b1c2f23bc54264e70b968512c146defbcddd178794e56234"
+    },
+    "auth.scim_users": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.accounts": {
+      "count": 2,
+      "sha256": "be2d0b287a6a47ab6bb7fef065b391d65074c74eef0c5ed3c43d3b399b021c8a"
+    },
+    "public.profiles": {
+      "count": 2,
+      "sha256": "382baee406f5ed6d60d3d2f73b50b10e1414700a773bed7276080f528de5fa81"
+    },
+    "auth.mfa_factors": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.scim_tokens": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.sso_domains": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.audit_log": {
+      "count": 12,
+      "sha256": "5654b9c51bb545e610130dcf7dfd7cda898318a08de3091162ad37f8a7d81788"
+    },
+    "public.sync_runs": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.oauth_clients": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.sso_providers": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.mfa_amr_claims": {
+      "count": 4,
+      "sha256": "b5d9495d390f847cd1bc32b735420e60f58092f1c898348cae40420f569e88cd"
+    },
+    "auth.mfa_challenges": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.oauth_consents": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.refresh_tokens": {
+      "count": 4,
+      "sha256": "f001905f9a1515567086280c6c4c099779ae37d61f133fa1fcf764b60d002070"
+    },
+    "auth.saml_providers": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.achievements": {
+      "count": 2,
+      "sha256": "87fee43abaccebaa70b85708c464dc879204aa43f9244698620390d46bc1c478"
+    },
+    "public.budget_lines": {
+      "count": 2,
+      "sha256": "517ac632f7ab4a6c5b7c3fa2972dd22a6eb80b40b7c927961f5d72dede44d2a3"
+    },
+    "public.budget_plans": {
+      "count": 1,
+      "sha256": "8645de42829861c73e1c84c91ae06349b839c5c7af019d2ed4e2271f57a7e9c7"
+    },
+    "public.transactions": {
+      "count": 8,
+      "sha256": "60748824a41117567ae72fda355f7ebbeeb4c67e751a4af8a56ed5fde2d70868"
+    },
+    "auth.one_time_tokens": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_drafts": {
+      "count": 2,
+      "sha256": "b444ac6fc994f55dfd60a30ffbdb0fff42673726c830dbcf8b9aabad6e1fa1f2"
+    },
+    "public.user_sessions": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_periods": {
+      "count": 2,
+      "sha256": "1297bb28c1df3da661e6df29dba97b740b04194527a9e4b1f2629b5f6a81178c"
+    },
+    "public.login_attempts": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.merchant_rules": {
+      "count": 2,
+      "sha256": "ac5bad93643a18ecd8e056a37a3921502ef9e6ae03c807487c1c2c52eaac33f1"
+    },
+    "public.planning_goals": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.tenant_members": {
+      "count": 2,
+      "sha256": "87c818b589e163f57e051f0a8e09acb73a7342ba0c8b8bb27e8d47bd597a3f3c"
+    },
+    "public.transfer_links": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.upload_batches": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.audit_log_entries": {
+      "count": 6,
+      "sha256": "03b5d7f9c83c5b23cad83b1527552d362e1cf170cbe9d94af26e5e27d389a969"
+    },
+    "auth.saml_relay_states": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.schema_migrations": {
+      "count": 82,
+      "sha256": "5ed9bf2bd3b7e93e445e58c01bbb2799293d3d819ce2a7570da27033c51ef287"
+    },
+    "public.planning_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.static_profiles": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.mfa_recovery_codes": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.account_lockouts": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_revisions": {
+      "count": 5,
+      "sha256": "f41e492cf84a39a5c294d5ac1322d7a53723945af590c60f97f60f9ec05bfc04"
+    },
+    "auth.oauth_client_states": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.webauthn_challenges": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_operations": {
+      "count": 8,
+      "sha256": "2c38a05213509ecbdffb65023c28764fcb47c89c42d494d16d8d95943538bd92"
+    },
+    "public.instrument_prices": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.user_achievements": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.oauth_authorizations": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.webauthn_credentials": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_allocations": {
+      "count": 10,
+      "sha256": "6e74a43fe573e9817db650ef17ec611ff8438782fb1ec66833c8e256567fa346"
+    },
+    "public.planning_scenarios": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.transfer_decisions": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.account_connections": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.account_identifiers": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.investment_holdings": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.taxonomy_categories": {
+      "count": 17,
+      "sha256": "dcae7c9b9c1b94eb8041a093cf3c7ba27b51cac465390dc7174e60eead64f3ac"
+    },
+    "auth.custom_oauth_providers": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "auth.mfa_recovery_code_sets": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_control_moves": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_history_facts": {
+      "count": 1,
+      "sha256": "1684af8b4bb5e5ef2bf7e5ed5fbdd513507c624cb08a97798cb4ea96b0e66aee"
+    },
+    "public.budget_reserve_moves": {
+      "count": 1,
+      "sha256": "bcb21743f00fbdca982ce42e208c43a0bdc2612af949d32442652853ad23b823"
+    },
+    "public.budget_source_claims": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.planning_goal_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.provider_connections": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.tenant_subcategories": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "private.provider_credentials": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_control_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_item_revisions": {
+      "count": 1,
+      "sha256": "c05ae0e85fc5a24c4f18368d964b701c205f73816ab5bc61862824b3e3d69c5b"
+    },
+    "public.budget_manual_funding": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_period_reviews": {
+      "count": 1,
+      "sha256": "16434d847cd932da1e890c94e427b0826d247efa00989b7993e8e013f41bee81"
+    },
+    "public.investment_activities": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.investment_cash_links": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_claim_reversals": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_draft_revisions": {
+      "count": 3,
+      "sha256": "629afb19e42da5dd0fa7b442653ab5a60b60b8c45773b6b5d0b49eaaa015e08b"
+    },
+    "public.budget_limit_revisions": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_source_versions": {
+      "count": 2,
+      "sha256": "1afa1e3092c879531f8b1f7832870070ebda2a5559606811b4130fc04c8cb643"
+    },
+    "public.investment_instruments": {
+      "count": 1,
+      "sha256": "a9f4ff05440671ae28695e66683475ba8315cc5fc60721ee87d8a4b1697ba550"
+    },
+    "public.investment_tax_records": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.planning_goal_accounts": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.taxonomy_subcategories": {
+      "count": 77,
+      "sha256": "5ecea1909eaa02683a6a4a0aad19584c4228674dfe25cfc8a9dbf5be6aa8b098"
+    },
+    "public.budget_account_policies": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_attention_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.taxonomy_migration_runs": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.transaction_allocations": {
+      "count": 4,
+      "sha256": "3a1e25e280ce63185a8f05c03030b6a44a4c3f62dd0e9a4d650af5bb480f5de5"
+    },
+    "public.transfer_match_overflow": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_frequency_changes": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_projection_claims": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_rollover_policies": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.planning_scenario_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.account_activity_coverage": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.investment_cash_decisions": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.merchant_recurrence_hints": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.taxonomy_category_aliases": {
+      "count": 12,
+      "sha256": "e09aa333e245866d06d4903ed4ebd685403ba6f37b71bfd24d4fa3dae1b4ebf1"
+    },
+    "public.taxonomy_migration_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.budget_account_memberships": {
+      "count": 1,
+      "sha256": "b216dc54775bf993da2caab519dcec4c797effeea6febbc81a8dfb475568cf37"
+    },
+    "public.budget_impact_preparations": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.investment_price_sync_runs": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.planning_rebaseline_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.recurring_series_overrides": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.transaction_category_edits": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.taxonomy_subcategory_aliases": {
+      "count": 42,
+      "sha256": "103ea4e08ef2adf28932ae951b0d64923ff75736774da59e683b8ade2c4f1c70"
+    },
+    "public.transaction_allocation_edits": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.investment_account_valuations": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.classification_review_policies": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.recurring_series_override_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "public.transaction_classification_edits": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "budget_totals": {
+    "ledger": [
+      {
+        "rows": 4,
+        "tenant_id": "a236f906-3e44-42dc-be88-8b7a91ecfb99",
+        "account_id": "cff1c238-7026-4ed2-80f2-ffb90c153d2a",
+        "signed_cents": 569500
+      },
+      {
+        "rows": 4,
+        "tenant_id": "c1c030fc-34d7-45ce-88de-ba6ca90b019f",
+        "account_id": "9fead32e-f083-4d65-b2e5-fd804caad284",
+        "signed_cents": 569500
+      }
+    ],
+    "accounts": [
+      {
+        "id": "9fead32e-f083-4d65-b2e5-fd804caad284",
+        "balance": 123456,
+        "currency": "AUD",
+        "tenant_id": "c1c030fc-34d7-45ce-88de-ba6ca90b019f"
+      },
+      {
+        "id": "cff1c238-7026-4ed2-80f2-ffb90c153d2a",
+        "balance": 123456,
+        "currency": "AUD",
+        "tenant_id": "a236f906-3e44-42dc-be88-8b7a91ecfb99"
+      }
+    ],
+    "analytics": [
+      {
+        "kind": "expense",
+        "rows": 1,
+        "tenant_id": "a236f906-3e44-42dc-be88-8b7a91ecfb99",
+        "signed_cents": -12000
+      },
+      {
+        "kind": "income",
+        "rows": 1,
+        "tenant_id": "a236f906-3e44-42dc-be88-8b7a91ecfb99",
+        "signed_cents": 600000
+      },
+      {
+        "kind": "refund",
+        "rows": 1,
+        "tenant_id": "a236f906-3e44-42dc-be88-8b7a91ecfb99",
+        "signed_cents": 1500
+      },
+      {
+        "kind": "transfer",
+        "rows": 1,
+        "tenant_id": "a236f906-3e44-42dc-be88-8b7a91ecfb99",
+        "signed_cents": -20000
+      },
+      {
+        "kind": "expense",
+        "rows": 1,
+        "tenant_id": "c1c030fc-34d7-45ce-88de-ba6ca90b019f",
+        "signed_cents": -12000
+      },
+      {
+        "kind": "income",
+        "rows": 1,
+        "tenant_id": "c1c030fc-34d7-45ce-88de-ba6ca90b019f",
+        "signed_cents": 600000
+      },
+      {
+        "kind": "refund",
+        "rows": 1,
+        "tenant_id": "c1c030fc-34d7-45ce-88de-ba6ca90b019f",
+        "signed_cents": 1500
+      },
+      {
+        "kind": "transfer",
+        "rows": 1,
+        "tenant_id": "c1c030fc-34d7-45ce-88de-ba6ca90b019f",
+        "signed_cents": -20000
+      }
+    ]
+  },
+  "budget_sequences": [
+    {
+      "cycle": false,
+      "data_type": "bigint",
+      "max_value": 9223372036854776000,
+      "min_value": 1,
+      "cache_size": 1,
+      "last_value": 4,
+      "schemaname": "auth",
+      "start_value": 1,
+      "increment_by": 1,
+      "sequencename": "refresh_tokens_id_seq",
+      "sequenceowner": "supabase_auth_admin"
+    },
+    {
+      "cycle": false,
+      "data_type": "bigint",
+      "max_value": 9223372036854776000,
+      "min_value": 1,
+      "cache_size": 1,
+      "last_value": 12,
+      "schemaname": "public",
+      "start_value": 1,
+      "increment_by": 1,
+      "sequencename": "audit_log_id_seq",
+      "sequenceowner": "postgres"
+    },
+    {
+      "cycle": false,
+      "data_type": "bigint",
+      "max_value": 9223372036854776000,
+      "min_value": 1,
+      "cache_size": 1,
+      "last_value": null,
+      "schemaname": "public",
+      "start_value": 1,
+      "increment_by": 1,
+      "sequencename": "login_attempts_id_seq",
+      "sequenceowner": "postgres"
+    },
+    {
+      "cycle": false,
+      "data_type": "bigint",
+      "max_value": 9223372036854776000,
+      "min_value": 1,
+      "cache_size": 1,
+      "last_value": null,
+      "schemaname": "public",
+      "start_value": 1,
+      "increment_by": 1,
+      "sequencename": "taxonomy_migration_events_id_seq",
+      "sequenceowner": "postgres"
+    }
+  ],
+  "disable_preservation": true,
+  "reenable_preservation": true,
+  "completed_at": "2026-10-29T04:50:18.540Z",
+  "migration_count": 104
+}

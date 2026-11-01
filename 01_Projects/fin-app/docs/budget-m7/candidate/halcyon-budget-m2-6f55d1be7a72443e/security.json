@@ -1,0 +1,1312 @@
+{
+  "project": "halcyon-budget-m2-6f55d1be7a72443e",
+  "api": "http://127.0.0.1:57521",
+  "migration_count": 104,
+  "inventory": {
+    "tables": [
+      {
+        "rls": true,
+        "name": "budget_account_memberships",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_account_policies",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_allocations",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_attention_events",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_claim_reversals",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_control_events",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_control_moves",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_draft_revisions",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_drafts",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_frequency_changes",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_history_facts",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_impact_preparations",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_item_revisions",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_limit_revisions",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_lines",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_manual_funding",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_operations",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_period_reviews",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_periods",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_plans",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_projection_claims",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_reserve_moves",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_revisions",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_rollover_policies",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_source_claims",
+        "anonymous_access": false,
+        "authenticated_write": false
+      },
+      {
+        "rls": true,
+        "name": "budget_source_versions",
+        "anonymous_access": false,
+        "authenticated_write": false
+      }
+    ],
+    "functions": [
+      {
+        "name": "budget_activity_amounts_r06_reference(uuid,uuid,date,date)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_activity_amounts(uuid,uuid,date,date)",
+        "config": [
+          "search_path=public, pg_temp",
+          "plan_cache_mode=force_custom_plan",
+          "enable_nestloop=off",
+          "jit=off"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_activity_r06_reference(uuid,uuid,date,date)",
+        "config": [
+          "search_path=public, extensions, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_activity(uuid,uuid,date,date)",
+        "config": [
+          "search_path=public, extensions, pg_temp",
+          "plan_cache_mode=force_custom_plan",
+          "enable_nestloop=off",
+          "jit=off"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_apply_rollover_limits()",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_assert_owner(uuid,uuid)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_assistance_metadata(jsonb)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_assisted_setup_r06_reference(uuid,uuid,jsonb)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_assisted_setup(uuid,uuid,jsonb)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s",
+          "plan_cache_mode=force_custom_plan",
+          "enable_nestloop=off",
+          "jit=off"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_attention_facts_r06_reference(uuid,uuid,uuid,uuid,bigint,bigint,jsonb,boolean)",
+        "config": [
+          "search_path=public, extensions, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_attention_facts(uuid,uuid,uuid,uuid,bigint,bigint,jsonb,boolean)",
+        "config": [
+          "search_path=public, extensions, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_attention_issue(text,text,text,numeric,numeric,date,integer,jsonb,jsonb)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": false,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_begin_impact(uuid,uuid,text,jsonb)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_claim_activity(uuid,uuid,date,date)",
+        "config": [
+          "search_path=public, extensions, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_command_accounts(uuid,uuid,uuid,jsonb,boolean)",
+        "config": [
+          "search_path=public, extensions, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_command_before_assistance(uuid,uuid,uuid,jsonb,boolean)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_command_before_impact(uuid,uuid,uuid,jsonb,boolean)",
+        "config": [
+          "search_path=public, extensions, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_command_controls(uuid,uuid,uuid,jsonb,boolean)",
+        "config": [
+          "search_path=public, extensions, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_command_frequency(uuid,uuid,uuid,jsonb,boolean)",
+        "config": [
+          "search_path=public, extensions, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_command_lifecycle(uuid,uuid,uuid,jsonb,boolean)",
+        "config": [
+          "search_path=public, extensions, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_command_m2(uuid,uuid,uuid,jsonb,boolean)",
+        "config": [
+          "search_path=public, extensions, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=5s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_command_m4(uuid,uuid,uuid,jsonb,boolean)",
+        "config": [
+          "search_path=public, extensions, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_command_rollover(uuid,uuid,uuid,jsonb,boolean)",
+        "config": [
+          "search_path=public, extensions, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_command(uuid,uuid,uuid,jsonb,boolean)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_control_delta(uuid,uuid,uuid)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_control_gap(uuid,uuid,uuid)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_control_state(uuid)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_details_accounts(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_details_frequency(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_details_lifecycle(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_details_m4_before_controls(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_details_m4_evidence_reference(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_details_m4_r06_unmemoized(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_details_m4_uncached(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_details_m4(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_details_rollover(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_details(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_forecast_facts_r06_reference(uuid,uuid,uuid,uuid,bigint,bigint,jsonb)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_forecast_facts_r06_uncached(uuid,uuid,uuid,uuid,bigint,bigint,jsonb)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s",
+          "plan_cache_mode=force_custom_plan",
+          "enable_nestloop=off",
+          "jit=off"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_forecast_facts(uuid,uuid,uuid,uuid,bigint,bigint,jsonb)",
+        "config": [
+          "search_path=public, extensions, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_funding_sources_bank(uuid,uuid,date,date)",
+        "config": [
+          "search_path=public, extensions, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_funding_sources(uuid,uuid,date,date)",
+        "config": [
+          "search_path=public, extensions, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_history_status(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_immutable_control_move()",
+        "config": null,
+        "definer": false,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_immutable_history()",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": false,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_immutable_period()",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": false,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_impact_intent(jsonb)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": false,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_impact_proof(uuid,uuid)",
+        "config": [
+          "search_path=public, extensions, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_invalidate_source()",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_lifecycle_before_navigation(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_lifecycle_pool_reference(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_lifecycle_pool(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_lifecycle(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_live_claims_full_source_reference(uuid,uuid)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_live_claims_reference(uuid,uuid)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_live_claims(uuid,uuid)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_lock_source(uuid)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_median_cents(bigint[])",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": false,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_money(jsonb)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": false,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_occurrence_dates(date,text,date,date)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": false,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_partition_chain_reference(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_partition_chain(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_prepare_history(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_prepare_selected_read(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_preview_account_scope_unprepared(uuid,uuid,jsonb)",
+        "config": [
+          "search_path=public, extensions, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_preview_account_scope(uuid,uuid,jsonb)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_preview_control_unprepared(uuid,uuid,jsonb)",
+        "config": [
+          "search_path=public, extensions, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_preview_control(uuid,uuid,jsonb)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_preview_rollover_unprepared(uuid,uuid,jsonb)",
+        "config": [
+          "search_path=public, extensions, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_preview_rollover(uuid,uuid,jsonb)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_query_m4_r06_unmemoized(uuid,uuid,jsonb)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_query_m4_uncached_r06_reference(uuid,uuid,jsonb)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=5s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_query_m4_uncached(uuid,uuid,jsonb)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=5s",
+          "plan_cache_mode=force_custom_plan",
+          "enable_nestloop=off",
+          "jit=off"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_query_m4(uuid,uuid,jsonb)",
+        "config": [
+          "search_path=public, pg_temp",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_query(uuid,uuid,jsonb)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_recurring_evidence_r06_reference(uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_recurring_evidence_r06_uncached(uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s",
+          "plan_cache_mode=force_custom_plan",
+          "enable_nestloop=off",
+          "jit=off"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_recurring_evidence(uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, extensions, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_replace_account_scope(uuid,uuid,date,date,jsonb,jsonb)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_review_impact(uuid,uuid,text,jsonb,boolean)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_revision_semantics(uuid)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_rollover_at(uuid,date)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_scope_facts(uuid,uuid,uuid,uuid,bigint,bigint,text)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_scope_impact_before_claim_cache(uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_scope_impact_before_history(uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_scope_impact_unprepared(uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_scope_impact(uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_sources_page(uuid,uuid,jsonb)",
+        "config": [
+          "search_path=public, pg_temp",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_touch_source(uuid,date)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_validate_account_ref()",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_validate_setup_before_assistance(uuid,jsonb)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_validate_setup(uuid,jsonb)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_validate_template_pointer()",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_workspace_details_uncached(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_workspace_details(uuid,uuid,uuid,uuid,bigint,bigint)",
+        "config": [
+          "search_path=public, pg_temp",
+          "lock_timeout=2s",
+          "statement_timeout=8s"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_write_revision_before_controls(uuid,uuid,uuid,bigint,bigint,bigint,bigint,jsonb,boolean)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      },
+      {
+        "name": "budget_write_revision(uuid,uuid,uuid,bigint,bigint,bigint,bigint,jsonb,boolean)",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "anonymous_execute": false,
+        "authenticated_execute": false
+      }
+    ],
+    "private_analytics": {
+      "invoker": true,
+      "anonymous_read": false,
+      "authenticated_read": false
+    }
+  },
+  "telemetry_samples": [
+    {
+      "event": "budget.request.v1",
+      "endpoint": "query-budget",
+      "status": 401,
+      "outcome": "denied",
+      "duration_ms": 1
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "query-budget",
+      "status": 401,
+      "outcome": "denied",
+      "duration_ms": 6
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "query-budget",
+      "status": 403,
+      "outcome": "denied",
+      "duration_ms": 0
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "query-budget",
+      "status": 405,
+      "outcome": "rejected",
+      "duration_ms": 0
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "query-budget",
+      "status": 400,
+      "outcome": "rejected",
+      "duration_ms": 34
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 413,
+      "outcome": "rejected",
+      "duration_ms": 1
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "query-budget",
+      "status": 422,
+      "outcome": "rejected",
+      "duration_ms": 7
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 200,
+      "outcome": "success",
+      "duration_ms": 30
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 200,
+      "outcome": "success",
+      "duration_ms": 10
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 409,
+      "outcome": "conflict",
+      "duration_ms": 9
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "query-budget",
+      "status": 200,
+      "outcome": "success",
+      "duration_ms": 19
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "query-budget",
+      "status": 200,
+      "outcome": "success",
+      "duration_ms": 6
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 422,
+      "outcome": "rejected",
+      "duration_ms": 20
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 422,
+      "outcome": "rejected",
+      "duration_ms": 6
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 422,
+      "outcome": "rejected",
+      "duration_ms": 5
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 422,
+      "outcome": "rejected",
+      "duration_ms": 6
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 422,
+      "outcome": "rejected",
+      "duration_ms": 5
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 422,
+      "outcome": "rejected",
+      "duration_ms": 5
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 422,
+      "outcome": "rejected",
+      "duration_ms": 4
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 422,
+      "outcome": "rejected",
+      "duration_ms": 5
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 422,
+      "outcome": "rejected",
+      "duration_ms": 4
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 422,
+      "outcome": "rejected",
+      "duration_ms": 5
+    },
+    {
+      "event": "budget.request.v1",
+      "endpoint": "manage-budget",
+      "status": 429,
+      "outcome": "rate_limited",
+      "duration_ms": 3
+    }
+  ],
+  "transport_audit_schema_only": true,
+  "authoritative_duplicate_count": 1
+}

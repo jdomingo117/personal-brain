@@ -1,3 +1,4 @@
+import {openGoalDetails,openAllowanceTools} from './lib/budgetOverviewUI.mjs'
 import {randomUUID} from 'node:crypto'
 import {expect} from '@playwright/test'
 
@@ -58,6 +59,7 @@ export async function budgetM4Interactions({newUser,sql,quote,check,signedPage,s
 
  const g=await fixture(),purchase=g.tx(-20000),refund=g.tx(5000,'refund')
  const phone=await signedPage(g.u,390,true)
+ await openGoalDetails(phone,g.goal)
  const article=phone.locator('article').filter({has:phone.getByRole('heading',{name:'Flight ticket',exact:true})})
  await article.getByRole('button',{name:'Adjust Flight ticket',exact:true}).click()
  task=phone.getByRole('dialog')
@@ -76,13 +78,14 @@ export async function budgetM4Interactions({newUser,sql,quote,check,signedPage,s
  await task.getByRole('button',{name:'Review match'}).click();await task.getByRole('button',{name:'Save match',exact:true}).click()
  await expect(task).toHaveCount(0);await expect(article).toContainText('Purchases after matched refunds: $150.00')
  check('phone purchase and linked refund preserve net achievement',true)
+ await openAllowanceTools(phone)
  await phone.getByRole('button',{name:'Move an allowance',exact:true}).click()
  task=phone.getByRole('dialog');await task.getByLabel('From',{exact:true}).selectOption(g.goal);await task.getByLabel('To',{exact:true}).selectOption(g.everyday)
  await task.getByRole('checkbox',{name:'Release existing reserve rights instead of moving unused new allocation'}).check()
  await task.getByLabel('Amount to move (AUD)',{exact:true}).fill('50')
  await task.getByRole('button',{name:'Review move'}).click();await expect(task).toContainText('less protection')
  await task.getByRole('button',{name:'Save allowance move',exact:true}).click();await expect(task).toHaveCount(0)
- await phone.reload();await expect(phone.getByRole('button',{name:'Undo last budget change',exact:true})).toBeVisible()
+ await phone.reload();await openGoalDetails(phone,g.goal);await expect(phone.getByRole('button',{name:'Undo last budget change',exact:true})).toBeVisible()
  phone.once('dialog',d=>d.accept());await phone.getByRole('button',{name:'Undo last budget change',exact:true}).click()
  await expect(article).toContainText('$250.00')
  check('phone release preview, balanced save, reload and compatible undo work together',true)
@@ -93,6 +96,7 @@ export async function budgetM4Interactions({newUser,sql,quote,check,signedPage,s
  const c=await fixture()
  const custom=sql(`INSERT INTO public.tenant_subcategories(tenant_id,category_id,display_name,created_by) VALUES(${quote(c.u.tenant)},'shopping','Winter equipment',${quote(c.u.id)}) RETURNING id;`).split('\n')[0]
  const tablet=await signedPage(c.u,768,true)
+ await openAllowanceTools(tablet)
  await tablet.getByRole('button',{name:'Category limits',exact:true}).click();task=tablet.getByRole('dialog')
  await task.getByLabel('Category',{exact:true}).selectOption('shopping');await task.getByLabel('Category allowance (AUD)',{exact:true}).fill('200')
  await task.getByRole('button',{name:'Add category limit',exact:true}).click()

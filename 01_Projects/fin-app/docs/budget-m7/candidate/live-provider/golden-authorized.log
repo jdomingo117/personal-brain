@@ -1,0 +1,71 @@
+
+> halcyon-app@0.1.0 test:golden:budget-candidate
+> node scripts/run-golden-pass.mjs --release-candidate --live-provider
+
+Target: halcyon-golden-isolated-1793256035206; API=http://127.0.0.1:55421; DB=127.0.0.1:55422/postgres; fixtures=isolated-only
+Golden provider mode: live provider
+[WebServer] (node:78224) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 8 tests using 1 worker
+
+(node:78227) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/8] e2e/golden-pass.spec.ts:133:3 › isolated golden pass › creates accounts, imports real statements, resolves the 203-link batch, and reviews categorisation
+  1) e2e/golden-pass.spec.ts:133:3 › isolated golden pass › creates accounts, imports real statements, resolves the 203-link batch, and reviews categorisation 
+
+    Error: The real corpus should exercise AI categorisation before review.
+
+    expect(received).toBeTruthy()
+
+    Received: undefined
+
+      209 |     if (!providerDisabled) {
+      210 |     const aiRow = sourceRows.find((row) => row.category_source === 'ai')
+    > 211 |     expect(aiRow, 'The real corpus should exercise AI categorisation before review.').toBeTruthy()
+          |                                                                                       ^
+      212 |     await page.goto('/ledger')
+      213 |     await page.getByLabel('Search ledger').fill(aiRow!.original_description)
+      214 |     await expect(page.getByText('1 transaction', { exact: true })).toBeVisible()
+        at /private/var/folders/9x/g5gs98n95kj0m53j3g8dcypw0000gn/T/halcyon-m77-patched-source-b_vxbgaq/app/e2e/golden-pass.spec.ts:211:87
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/golden/golden-pass-isolated-golde-a6ad1--and-reviews-categorisation/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/golden/golden-pass-isolated-golde-a6ad1--and-reviews-categorisation/error-context.md
+
+    Error Context: test-results/golden/golden-pass-isolated-golde-a6ad1--and-reviews-categorisation/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/golden/golden-pass-isolated-golde-a6ad1--and-reviews-categorisation/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/golden/golden-pass-isolated-golde-a6ad1--and-reviews-categorisation/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[2/8] e2e/golden-pass.spec.ts:235:3 › isolated golden pass › enforces the 5,000-source-row boundary while preserving one server-generated reconciliation anchor
+[3/8] e2e/golden-pass.spec.ts:311:3 › isolated golden pass › keeps the categorisation endpoint boundary at 300 merchants
+[4/8] e2e/golden-pass.spec.ts:323:3 › isolated golden pass › preserves sequential-import counts, partial-overlap dedupe and one replacement reconciliation anchor
+[5/8] e2e/golden-pass.spec.ts:371:3 › isolated golden pass › rolls back the complete import when reconciliation would exceed integer-cent range
+[6/8] e2e/golden-pass.spec.ts:394:3 › isolated golden pass › allows CSV history before connected-account cutover but rejects provider-owned dates and reconciliation
+[7/8] e2e/golden-pass.spec.ts:448:3 › isolated golden pass › persists a saved CSV profile by fingerprint without duplicate layouts
+[8/8] e2e/golden-pass.spec.ts:481:3 › isolated golden pass › resolves active tenant custom taxonomy pairs and rejects invalid or cross-tenant pairs before import
+  1 failed
+    e2e/golden-pass.spec.ts:133:3 › isolated golden pass › creates accounts, imports real statements, resolves the 203-link batch, and reviews categorisation 
+  7 did not run
+file:///private/var/folders/9x/g5gs98n95kj0m53j3g8dcypw0000gn/T/halcyon-m77-patched-source-b_vxbgaq/app/scripts/run-golden-pass.mjs:35
+    throw new Error(`${command} ${args.join(' ')} failed${details ? `\n${details}` : ''}`)
+          ^
+
+Error: npx playwright test --config playwright.golden.config.ts failed
+    at run (file:///private/var/folders/9x/g5gs98n95kj0m53j3g8dcypw0000gn/T/halcyon-m77-patched-source-b_vxbgaq/app/scripts/run-golden-pass.mjs:35:11)
+    at file:///private/var/folders/9x/g5gs98n95kj0m53j3g8dcypw0000gn/T/halcyon-m77-patched-source-b_vxbgaq/app/scripts/run-golden-pass.mjs:202:5
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+Node.js v26.0.0

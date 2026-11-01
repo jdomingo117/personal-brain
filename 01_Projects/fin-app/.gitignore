@@ -3,3 +3,4 @@ backups/*.dump
 backups/*.sql
 backups/*.tar
 
+/backups/budget-m7/

@@ -1,7 +1,8 @@
+import {openBudgetSettings,stayInBudgetSettings,closeBudgetSettings} from './lib/budgetSettingsUI.mjs'
 import {randomUUID} from 'node:crypto'
 import {expect} from '@playwright/test'
 
-export async function budgetRolloverInteractions({newUser,sql,quote,check,signedPage,snapshotSQL,settled}){
+export async function budgetRolloverInteractions({newUser,sql,quote,check,signedPage,snapshotSQL,settled,captureSettings}){
  const u=await newUser(),line=randomUUID(),shopping=randomUUID(),food=randomUUID()
  const account=sql(`INSERT INTO public.accounts(user_id,tenant_id,name,type,balance,currency) VALUES(${quote(u.id)},${quote(u.tenant)},'Rollover browser fictional','Liquid',0,'AUD') RETURNING id;`).split('\n')[0]
  const start=sql(`SELECT date_trunc('month',now() AT TIME ZONE 'Australia/Sydney')::date;`)
@@ -11,8 +12,10 @@ export async function budgetRolloverInteractions({newUser,sql,quote,check,signed
  fixture({action:'set_limits',limits:[{id:shopping,category_id:'shopping',subcategory_id:null,custom_subcategory_id:null,amount_cents:3000},{id:food,category_id:'food-and-drink',subcategory_id:null,custom_subcategory_id:null,amount_cents:2000}]})
  for(const [amount,category] of [[-4000,'Shopping'],[-500,'Food & drink'],[-1000,'Travel']])sql(`INSERT INTO public.transactions(user_id,tenant_id,account_id,date,original_description,merchant,merchant_key,category,amount,kind,kind_source,pending) VALUES(${quote(u.id)},${quote(u.tenant)},${quote(account)},${quote(start)},'Rollover browser fixture','Rollover fixture','rollover fixture',${quote(category)},${amount},'expense','user',false);`)
  const phone=await signedPage(u,390,true),region=phone.getByRole('region',{name:'Rollover and category settings',exact:true})
+ await openBudgetSettings(phone)
  await region.getByRole('button',{name:'Change rollover rules',exact:true}).click()
  const form=region.getByRole('form',{name:'Rollover rules preview',exact:true})
+ if(captureSettings)await captureSettings(phone,form,'rollover-edit')
  await form.getByRole('button',{name:'Roll all active balances forward',exact:true}).click()
  await expect(form.getByRole('combobox',{name:'Balance rule for Other',exact:true})).toHaveValue('carry')
  await form.getByRole('button',{name:'Keep all active positive balances aside',exact:true}).click()
@@ -21,10 +24,37 @@ export async function budgetRolloverInteractions({newUser,sql,quote,check,signed
  check('parent rollover shortcuts change category and Other rules before an explicit preview',true)
  await form.getByRole('combobox',{name:'Balance rule for Shopping',exact:true}).selectOption('carry')
  await form.getByRole('combobox',{name:'Balance rule for Food & drink',exact:true}).selectOption('retain')
- phone.once('dialog',d=>d.dismiss());await phone.getByRole('button',{name:'Return to current budget',exact:true}).click()
+ await stayInBudgetSettings(phone)
  await expect(form.getByRole('combobox',{name:'Balance rule for Shopping',exact:true})).toHaveValue('carry')
+
+ let releaseCheck
+ if(captureSettings){
+  let calls=0;const gate=new Promise(resolve=>{releaseCheck=resolve})
+  await phone.route('**/functions/v1/query-budget',async route=>{
+   const input=route.request().postDataJSON()
+   if(input?.action==='preview_rollover'){
+    if(++calls===2)await gate
+    // Small fixtures normally take the <=12-period fast path. Exercise the real
+    // durable function here; financial API behavior is covered by the normal runs.
+    const result=JSON.parse(sql(`SELECT public.budget_review_impact(${quote(u.tenant)},${quote(u.id)},'rollover',${quote(JSON.stringify(input))}::jsonb,true);`))
+    await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(result)})
+   }else await route.continue()
+  })
+ }
  await form.getByRole('button',{name:'Review rollover effects',exact:true}).click()
+ if(captureSettings){
+  try{
+   const progress=form.getByRole('progressbar',{name:'Complete checks saved',exact:true})
+   await expect(progress).toHaveAttribute('value','1')
+   await expect(progress).toHaveAttribute('max','2')
+   await expect(form).toContainText('No rollover change has been saved')
+   check('rollover complete-history check count stays inside the active settings panel',true)
+   await captureSettings(phone,form,'rollover-preparing')
+  }finally{releaseCheck()}
+ }
+
  await expect(form).toContainText('Preview ready')
+ if(captureSettings)await phone.unroute('**/functions/v1/query-budget')
  const next=form.locator('details').filter({hasText:'Next budget preview'})
  await expect(next).toContainText('$15.00');await expect(next).toContainText('-$10.00')
  await expect(form.getByRole('button',{name:'Save future rollover rules',exact:true})).toBeDisabled()
@@ -32,6 +62,7 @@ export async function budgetRolloverInteractions({newUser,sql,quote,check,signed
  await expect(form.getByRole('button',{name:'Save future rollover rules',exact:true})).toBeDisabled()
  await form.getByRole('checkbox',{name:/I understand missing or unavailable history/}).check()
  check('phone rollover preview shows signed child carry and separate protected money',true)
+ if(captureSettings)await captureSettings(phone,form,'rollover-review')
  await form.evaluate(el=>el.scrollIntoView({block:'start'}));await settled(phone)
  await phone.screenshot({path:'/tmp/halcyon-budget-rollover-phone.png',fullPage:true})
  check('rollover controls and effect tables do not overflow phone workspace',await phone.locator('.budget-workspace').evaluate(el=>el.scrollWidth>el.clientWidth),false)
@@ -41,7 +72,7 @@ export async function budgetRolloverInteractions({newUser,sql,quote,check,signed
  await form.getByRole('button',{name:'Save future rollover rules',exact:true}).click()
  await expect(region).toContainText('Saved rules from')
  check('future rollover save leaves current actuals and period unchanged',[snapshotSQL(u).period.start_date,snapshotSQL(u).actuals.net_expense_cents],[start,5500])
- await phone.reload();await expect(region).toContainText('Saved rules from')
+ await phone.reload();await openBudgetSettings(phone);await expect(region).toContainText('Saved rules from')
  check('future rollover policy survives authenticated reload',true)
  phone.once('dialog',d=>d.accept());await region.getByRole('button',{name:'Undo last rollover change',exact:true}).click()
  await expect(region.getByRole('button',{name:'Change rollover rules',exact:true})).toBeEnabled()
@@ -55,6 +86,7 @@ export async function budgetRolloverInteractions({newUser,sql,quote,check,signed
  await form.getByRole('button',{name:'Review rollover effects',exact:true}).click()
  await expect(form).toContainText('Preview ready');await expect(next).toContainText('Food & drink');await expect(next).toContainText('$15.00')
  check('category removal keeps its identity and requires a visible signed destination',true)
+ if(captureSettings)await captureSettings(phone,form,'removed-category-review')
  // Changing any rule invalidates the exact confirmation without losing choices.
  await form.getByRole('checkbox',{name:/I reviewed the dates, category changes/}).check()
  await form.getByRole('combobox',{name:'Balance rule for Shopping',exact:true}).selectOption('carry')

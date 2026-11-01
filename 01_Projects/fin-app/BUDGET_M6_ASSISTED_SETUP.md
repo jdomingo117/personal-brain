@@ -19,6 +19,11 @@ related:
 
 ## Outcome and boundary
 
+**M7.1 audit qualification:** [[BUDGET_M7_RELEASE_VERIFICATION]] identifies R01–R05 gaps against
+the frozen requirements. The implementation and run results below remain historical evidence;
+the blanket SG01–SG08/engineering closure claims are superseded by that audited matrix. Forecast
+suppression, in particular, does not establish the eligible forecast required by AC20.
+
 **M6 is engineering-complete.** Migration 91,
 `20261022170000_budget_assisted_setup.sql`, implements the approved deterministic assisted-setup
 path inside the authenticated Budget setup flow. It is an optional starting draft, not a second

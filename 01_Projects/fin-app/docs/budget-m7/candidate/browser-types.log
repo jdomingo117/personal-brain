@@ -1,0 +1,4 @@
+
+> halcyon-app@0.1.0 test:browser:typecheck
+> tsc --noEmit -p e2e/tsconfig.json
+

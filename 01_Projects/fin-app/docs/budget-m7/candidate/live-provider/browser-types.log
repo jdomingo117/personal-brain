@@ -1,0 +1,4 @@
+Final test selectors verified 2026-10-29 using the patched isolated installation.
+> npm run test:browser:typecheck
+> tsc --noEmit -p e2e/tsconfig.json
+Exit code: 0

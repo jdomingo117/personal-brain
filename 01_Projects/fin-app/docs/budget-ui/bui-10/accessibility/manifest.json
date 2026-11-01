@@ -1,0 +1,581 @@
+{
+  "scope": "Fictional production Budget candidate; automated Chromium, not human certification",
+  "scans": [
+    {
+      "state": "320px light reduce empty",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "320px light reduce manual setup",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px light reduce setup review",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px light reduce active overview",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "320px light reduce Change budget frequency",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px light reduce Change budget frequency reviewed effects",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px light reduce Change budget accounts",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px light reduce Change budget accounts reviewed effects",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px light reduce Change rollover rules",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px light reduce Change rollover rules reviewed effects",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px light reduce Manage budget and allowances",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px light reduce Manage budget and allowances reviewed effects",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px light reduce goal dialog",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px light reduce read failure retains workspace",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "320px dark reduce empty",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "320px dark reduce manual setup",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px dark reduce setup review",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px dark reduce active overview",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "320px dark reduce Change budget frequency",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px dark reduce Change budget frequency reviewed effects",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px dark reduce Change budget accounts",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px dark reduce Change budget accounts reviewed effects",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px dark reduce Change rollover rules",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px dark reduce Change rollover rules reviewed effects",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px dark reduce Manage budget and allowances",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px dark reduce Manage budget and allowances reviewed effects",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px dark reduce goal dialog",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px dark reduce read failure retains workspace",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "1440px light no-preference empty",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "1440px light no-preference manual setup",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "1440px light no-preference setup review",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "1440px light no-preference active overview",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "1440px light no-preference Change budget frequency",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "1440px light no-preference Change budget frequency reviewed effects",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "1440px light no-preference Change budget accounts",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "1440px light no-preference Change budget accounts reviewed effects",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "1440px light no-preference Change rollover rules",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "1440px light no-preference Change rollover rules reviewed effects",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "1440px light no-preference Manage budget and allowances",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "1440px light no-preference Manage budget and allowances reviewed effects",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "1440px light no-preference goal dialog",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "1440px light no-preference read failure retains workspace",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "720px dark reduce empty",
+      "viewport": {
+        "width": 720,
+        "height": 1050
+      },
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "720px dark reduce manual setup",
+      "viewport": {
+        "width": 720,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "720px dark reduce setup review",
+      "viewport": {
+        "width": 720,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "720px dark reduce active overview",
+      "viewport": {
+        "width": 720,
+        "height": 1050
+      },
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "720px dark reduce Change budget frequency",
+      "viewport": {
+        "width": 720,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "720px dark reduce Change budget frequency reviewed effects",
+      "viewport": {
+        "width": 720,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "720px dark reduce Change budget accounts",
+      "viewport": {
+        "width": 720,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "720px dark reduce Change budget accounts reviewed effects",
+      "viewport": {
+        "width": 720,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "720px dark reduce Change rollover rules",
+      "viewport": {
+        "width": 720,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "720px dark reduce Change rollover rules reviewed effects",
+      "viewport": {
+        "width": 720,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "720px dark reduce Manage budget and allowances",
+      "viewport": {
+        "width": 720,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "720px dark reduce Manage budget and allowances reviewed effects",
+      "viewport": {
+        "width": 720,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "720px dark reduce goal dialog",
+      "viewport": {
+        "width": 720,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "720px dark reduce read failure retains workspace",
+      "viewport": {
+        "width": 720,
+        "height": 1050
+      },
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "320px assisted scope",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px assisted scope error",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px assisted evidence",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px assisted what-if",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px dark assisted evidence",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px limited history",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": "dialog[open]",
+      "violations": 0
+    },
+    {
+      "state": "320px historical review",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": ".budget-workspace",
+      "violations": 0
+    },
+    {
+      "state": "320px dark historical comparison table",
+      "viewport": {
+        "width": 320,
+        "height": 1050
+      },
+      "surface": ".budget-workspace",
+      "violations": 0
+    }
+  ]
+}

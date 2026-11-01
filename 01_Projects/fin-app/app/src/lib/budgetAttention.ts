@@ -1,11 +1,14 @@
 import {addDays} from './budget'
 export type AttentionIssue={key:string;kind:string;label:string;gap_cents:number|null;available_cents:number|null;threshold_cents:number;due_date:string|null;priority:number;line_id?:string;count?:number;issue_hash:string;state:'active'|'acknowledged'|'snoozed';reopened:boolean;reopen_reason:'expired'|'gap_worsened'|'due_date_changed'|'evidence_changed'|null;until:string|null}
-export type BudgetAttention={items:AttentionIssue[];total:number;active_count:number;version:string;as_of:string;editable:boolean;undo_operation_id:string|null;forecast_available:false}
+export type BudgetAttention={items:AttentionIssue[];total:number;active_count:number;version:string;as_of:string;editable:boolean;undo_operation_id:string|null;forecast_available:boolean}
 /** This token binds a form to a server fact, not a locally recomputed gap. */
 export function attentionToken(issue:AttentionIssue,source:string,plan:string,version:string){return JSON.stringify([issue.key,issue.issue_hash,source,plan,version])}
 export function defaultAttentionDate(asOf:string,end:string){return [addDays(asOf,7),end].sort()[0]}
 export function validAttentionDate(date:string,asOf:string,end:string){return /^\d{4}-\d{2}-\d{2}$/.test(date)&&date>asOf&&date<=end&&(()=>{try{return addDays(date,0)===date}catch{return false}})()}
 export function attentionMessage(i:AttentionIssue){switch(i.kind){
+ case 'projected_overspend':return 'This estimate uses recorded net flexible spending plus the median of three covered monthly daily gross rates for the remaining days. It is not settled overspending, available cash or a guarantee.'
+ case 'fixed_projected_overspend':return 'Matched net charges plus remaining scheduled occurrences exceed this bill’s allowance by more than the material threshold. Dates and explicit matches determine this estimate; bills are not paced across days.'
+ case 'pending_overage':return 'Pending flexible charges may exceed the allowance if they settle. They are separate from settled spending and are not added to the historical finish estimate.'
  case 'funding_gap':return 'The allowances in this budget add up to more than your expected income and one-off cash top-up.'
  case 'future_funding_gap':return 'Your continuing allowances need more expected income. A one-off cash top-up does not repeat.'
  case 'overspend':return 'Recorded spending is above this allowance, including any carried amount. The shortfall stays in your budget even after review.'

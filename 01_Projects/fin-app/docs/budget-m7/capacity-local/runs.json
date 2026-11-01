@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-29",
+  "runs": [
+    {
+      "label": "initial_guard_failure",
+      "project": "halcyon-budget-m2-00928d9fdd7044fe",
+      "log": "/tmp/halcyon-m75-local.log",
+      "passed_assertions_before_exit": 35,
+      "overall_process_passed": false,
+      "cleanup_logged": true
+    },
+    {
+      "label": "history_and_forecast_passed_then_benchmark_argument_failure",
+      "project": "halcyon-budget-m2-67e163d20a904119",
+      "log": "/tmp/halcyon-m75-local-final.log",
+      "passed_assertions_before_exit": 183,
+      "overall_process_passed": false,
+      "cleanup_logged": true
+    },
+    {
+      "label": "coverage_invalidated_by_fixture_cleanup",
+      "project": "halcyon-budget-m2-37920a32725c4cc6",
+      "log": "/tmp/halcyon-m75-ledger.log",
+      "passed_assertions_before_exit": 66,
+      "overall_process_passed": false,
+      "cleanup_logged": true
+    },
+    {
+      "label": "final_complete_measurement_latency_gate_failed",
+      "project": "halcyon-budget-m2-95a0dd1b685e464d",
+      "log": "/tmp/halcyon-m75-ledger-final.log",
+      "passed_assertions_before_exit": 76,
+      "overall_process_passed": false,
+      "cleanup_logged": true
+    }
+  ],
+  "counts_overlap": true,
+  "note": "All four processes exited nonzero. The complete history/mixed and R01 subchecks passed in run2 before a separate harness argument failure. Final run4 measured every size and failed its real latency gate. Never present these as a passing full suite or add their counts as unique checks."
+}

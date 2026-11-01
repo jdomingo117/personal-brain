@@ -1,0 +1,224 @@
+{
+  "scope": "Non-shipping fictional design study; no financial API calls",
+  "matrix": [
+    {
+      "scenario": "pending",
+      "width": 320,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "pending",
+      "width": 320,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "pending",
+      "width": 390,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "pending",
+      "width": 390,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "pending",
+      "width": 1440,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "pending",
+      "width": 1440,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "healthy",
+      "width": 320,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "healthy",
+      "width": 320,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "healthy",
+      "width": 390,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "healthy",
+      "width": 390,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "healthy",
+      "width": 1440,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "healthy",
+      "width": 1440,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "overspend",
+      "width": 320,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "overspend",
+      "width": 320,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "overspend",
+      "width": 390,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "overspend",
+      "width": 390,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "overspend",
+      "width": 1440,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "overspend",
+      "width": 1440,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "history",
+      "width": 320,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "history",
+      "width": 320,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "history",
+      "width": 390,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "history",
+      "width": 390,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "history",
+      "width": 1440,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "history",
+      "width": 1440,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "funding",
+      "width": 320,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "funding",
+      "width": 320,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "funding",
+      "width": 390,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "funding",
+      "width": 390,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "funding",
+      "width": 1440,
+      "theme": "light",
+      "fit": true,
+      "wcag_violations": 0
+    },
+    {
+      "scenario": "funding",
+      "width": 1440,
+      "theme": "dark",
+      "fit": true,
+      "wcag_violations": 0
+    }
+  ],
+  "runtime_errors": [],
+  "financial_requests": [],
+  "unexpected_external_requests": [],
+  "phone_stage": 390,
+  "keyboard_disclosure": true,
+  "dialog_focus_return": true,
+  "r01_source_files_verified_unchanged": 447,
+  "study_source_sha256": "04d9a150cc5368c8437ac738224b078afc4339bc4f42dc07500b928421517ec4",
+  "harness_sha256": "d619310bd24adb1ff0e2f27fc7571668ad0e89c1e8a730f43c16316f4964cf40"
+}

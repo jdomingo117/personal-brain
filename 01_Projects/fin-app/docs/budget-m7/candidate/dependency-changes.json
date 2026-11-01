@@ -1,0 +1,130 @@
+{
+  "scope": "Validated dependency lock vs retained pre-update installation",
+  "versions_changed": [
+    {
+      "package": "@vitest/expect",
+      "before": "4.1.10",
+      "after": "4.1.12",
+      "dev": true
+    },
+    {
+      "package": "@vitest/mocker",
+      "before": "4.1.10",
+      "after": "4.1.12",
+      "dev": true
+    },
+    {
+      "package": "@vitest/pretty-format",
+      "before": "4.1.10",
+      "after": "4.1.12",
+      "dev": true
+    },
+    {
+      "package": "@vitest/runner",
+      "before": "4.1.10",
+      "after": "4.1.12",
+      "dev": true
+    },
+    {
+      "package": "@vitest/snapshot",
+      "before": "4.1.10",
+      "after": "4.1.12",
+      "dev": true
+    },
+    {
+      "package": "@vitest/spy",
+      "before": "4.1.10",
+      "after": "4.1.12",
+      "dev": true
+    },
+    {
+      "package": "@vitest/utils",
+      "before": "4.1.10",
+      "after": "4.1.12",
+      "dev": true
+    },
+    {
+      "package": "baseline-browser-mapping",
+      "before": "2.10.38",
+      "after": "2.11.34",
+      "dev": true
+    },
+    {
+      "package": "browserslist",
+      "before": "4.28.2",
+      "after": "4.29.5",
+      "dev": true
+    },
+    {
+      "package": "caniuse-lite",
+      "before": "1.0.30001799",
+      "after": "1.0.30001819",
+      "dev": true
+    },
+    {
+      "package": "chai",
+      "before": "6.2.2",
+      "after": "6.3.0",
+      "dev": true
+    },
+    {
+      "package": "electron-to-chromium",
+      "before": "1.5.376",
+      "after": "1.5.467",
+      "dev": true
+    },
+    {
+      "package": "nanoid",
+      "before": "3.3.13",
+      "after": "3.3.20",
+      "dev": true
+    },
+    {
+      "package": "node-releases",
+      "before": "2.0.48",
+      "after": "2.0.60",
+      "dev": true
+    },
+    {
+      "package": "postcss",
+      "before": "8.5.15",
+      "after": "8.5.32",
+      "dev": true
+    },
+    {
+      "package": "source-map-js",
+      "before": "1.2.1",
+      "after": "1.2.2",
+      "dev": true
+    },
+    {
+      "package": "tinyrainbow",
+      "before": "3.1.1",
+      "after": "3.2.0",
+      "dev": true
+    },
+    {
+      "package": "update-browserslist-db",
+      "before": "1.2.3",
+      "after": "1.3.4",
+      "dev": true
+    },
+    {
+      "package": "vite",
+      "before": "6.4.3",
+      "after": "6.4.5",
+      "dev": true
+    },
+    {
+      "package": "vitest",
+      "before": "4.1.10",
+      "after": "4.1.12",
+      "dev": true
+    }
+  ],
+  "runtime_package_versions_changed": 0,
+  "primary_node_modules_modified": false,
+  "validated_installation": "/var/folders/9x/g5gs98n95kj0m53j3g8dcypw0000gn/T/halcyon-m77-patched-source-b_vxbgaq/app",
+  "vite": "6.4.5",
+  "vitest": "4.1.12"
+}

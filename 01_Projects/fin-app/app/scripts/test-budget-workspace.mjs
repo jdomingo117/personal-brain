@@ -1,15 +1,23 @@
+import {openGoalDetails} from './lib/budgetOverviewUI.mjs'
+import {confirmBudgetAssistance} from './lib/budgetAssistanceUI.mjs'
 /** Called only inside test-budget-durable's freshly provisioned, guarded disposable stack. */
 import {spawn} from 'node:child_process'
+import {writeFileSync} from 'node:fs'
+import {resolve} from 'node:path'
 import {chromium,expect} from '@playwright/test'
 import assert from 'node:assert/strict'
 import {budgetM4Interactions} from './test-budget-m4-interactions.mjs'
 import {budgetM5Interactions} from './test-budget-m5-interactions.mjs'
 
-export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,check,edge,attentionOnly=false,temporalOnly=false,temporalFixtures=[],historyFixture,assistanceFixture}) {
- const url='http://127.0.0.1:57300'
+export async function runBudgetWorkspaceChecks({repo,api,browserPort=57300,viteCache,anon,newUser,sql,quote,check,edge,sqlAsync,forecastFixture,attentionOnly=false,temporalOnly=false,temporalFixtures=[],historyFixture,assistanceFixture,accessibilityOnly=false}) {
+ assert([57300,57600,57800].includes(browserPort),'Only reserved isolated Budget browser ports are allowed')
+ if(browserPort!==57300)assert(process.argv.includes('--release-candidate')&&api===`http://127.0.0.1:${browserPort===57800?57721:57521}`)
+ const url=`http://127.0.0.1:${browserPort}`
  // Never reuse a dev server whose environment/identity could belong to the personal stack.
  try{await fetch(url);throw Error('Private Budget browser port is already occupied')}catch(e){if(!String(e).includes('fetch failed'))throw e}
- const vite=spawn(process.execPath,['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','57300','--strictPort'],{cwd:`${repo}/app`,env:{...process.env,HALCYON_GOLDEN_SUPABASE_TARGET:api,VITE_SUPABASE_URL:`${url}/supabase`,VITE_SUPABASE_ANON_KEY:anon,VITE_BUDGET_V1_ENABLED:'true'},stdio:['ignore','pipe','pipe']})
+ const config=viteCache?resolve(viteCache,'../vite-candidate.config.mjs'):null
+ if(config)writeFileSync(config,`import base from ${JSON.stringify(resolve(repo,'app/vite.config.ts'))}; export default {...base,cacheDir:${JSON.stringify(viteCache)}};\n`)
+ const vite=spawn(process.execPath,['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port',String(browserPort),'--strictPort',...(config?['--config',config]:[])],{cwd:`${repo}/app`,env:{...process.env,HALCYON_GOLDEN_SUPABASE_TARGET:api,VITE_SUPABASE_URL:`${url}/supabase`,VITE_SUPABASE_ANON_KEY:anon,VITE_BUDGET_V1_ENABLED:'true'},stdio:['ignore','pipe','pipe']})
  vite.stdout.on('data',()=>{});vite.stderr.on('data',()=>{})
  let browser
  const errors=[]
@@ -19,7 +27,7 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
   async function signedPage(user,width=1440,hasPlan=false) {
    const context=await browser.newContext({viewport:{width,height:1050},reducedMotion:'reduce'})
    await context.addInitScript(({session,key})=>localStorage.setItem(key,JSON.stringify(session)),{session:user.session,key:'sb-127-auth-token'})
-   const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message))
+   const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.on('console',message=>{if(message.text().startsWith('[vite]'))console.log('Budget test dev-server:',message.text())})
    await page.goto(`${url}/budget`)
    await expect(page.getByRole('heading',{name:'Budget',exact:true})).toBeVisible({timeout:30000})
    try{await expect(page.getByRole('button',{name:hasPlan?'My plan':'Enter my own amounts',exact:true})).toBeVisible({timeout:15000})}catch(e){
@@ -31,6 +39,20 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
   }
   const user=await newUser(),phoneUser=await newUser()
   const snapshotSQL=u=>JSON.parse(sql(`SELECT public.budget_query(${quote(u.tenant)},${quote(u.id)},'{"action":"snapshot"}');`))
+  if(forecastFixture){
+   const {runBudgetForecastBrowserChecks}=await import('./test-budget-forecast.mjs')
+   await runBudgetForecastBrowserChecks({fixture:forecastFixture,signedPage,check,repo})
+   if(process.argv.includes('--overview-pass3')){
+    const args={repo,newUser,sql,quote,check,edge,signedPage,snapshotSQL,settled}
+    const {budgetHeroChecks}=await import('./test-budget-hero.mjs');await budgetHeroChecks({...args,captureRoot:'docs/budget-ui/overview-pass3/hero',taskPanel:false})
+    const {budgetGoalChecks}=await import('./test-budget-goals.mjs');await budgetGoalChecks(args)
+    const {budgetCommitmentChecks}=await import('./test-budget-commitments.mjs');await budgetCommitmentChecks(args)
+    const {budgetAttentionInteractions}=await import('./test-budget-attention-interactions.mjs');await budgetAttentionInteractions({...args,matrix:true})
+   }
+   if(process.argv.includes('--candidate-only')){const {budgetCandidateChecks}=await import('./test-budget-candidate.mjs');await budgetCandidateChecks({repo,newUser,sql,quote,check,signedPage,snapshotSQL,settled})}
+   check('R01 forecast and affected candidate journeys have no browser runtime errors',errors,[])
+   return
+  }
   if(historyFixture){
    const {budgetHistoryInteractions}=await import('./test-budget-history-interactions.mjs')
    await budgetHistoryInteractions({fixture:historyFixture,browser,url,sql,quote,check,newUser})
@@ -38,11 +60,126 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
    return
   }
   async function settled(page){await expect.poll(()=>page.locator('.budget-workspace .glass').evaluateAll(els=>els.every(el=>Number(getComputedStyle(el).opacity)>.99&&!/blur\((?!0px)/.test(getComputedStyle(el).filter))),{timeout:10000}).toBe(true)}
+  if(process.argv.includes('--candidate-only')){
+   const {budgetCandidateChecks}=await import('./test-budget-candidate.mjs')
+   await budgetCandidateChecks({repo,newUser,sql,quote,check,signedPage,snapshotSQL,settled})
+   check('candidate journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--hero-only')){
+   const {budgetHeroChecks}=await import('./test-budget-hero.mjs')
+   await budgetHeroChecks({repo,newUser,sql,quote,check,edge,signedPage,snapshotSQL,settled,...(process.argv.includes('--checks-overview')?{captureRoot:'docs/budget-ui/bui-06b/overview'}:{})})
+   check('header/hero journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--assistance-ui-only')){
+   const {budgetAssistancePresentationChecks}=await import('./test-budget-assistance-presentation.mjs')
+   await budgetAssistancePresentationChecks({repo,newUser,sql,quote,check,signedPage,snapshotSQL})
+   const {runBudgetInputReviewChecks}=await import('./test-budget-input-review.mjs')
+   await runBudgetInputReviewChecks({newUser,sql,quote,check,edge,signedPage,snapshotSQL,assistanceFixture,sqlAsync})
+   const {runBudgetReadinessChecks}=await import('./test-budget-readiness.mjs')
+   await runBudgetReadinessChecks({newUser,sql,quote,check,edge,signedPage})
+   const {runBudgetEligibilityChecks}=await import('./test-budget-eligibility.mjs')
+   await runBudgetEligibilityChecks({newUser,sql,quote,check,edge,signedPage})
+   const {runBudgetEstimatorChecks}=await import('./test-budget-estimator.mjs')
+   await runBudgetEstimatorChecks({newUser,sql,quote,check,edge,signedPage})
+   check('assistance presentation and R02–R05 journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--estimator-only')){
+   const {runBudgetEstimatorChecks}=await import('./test-budget-estimator.mjs')
+   await runBudgetEstimatorChecks({newUser,sql,quote,check,edge,signedPage})
+   check('estimator journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--input-review-only')){
+   const {runBudgetInputReviewChecks}=await import('./test-budget-input-review.mjs')
+   await runBudgetInputReviewChecks({newUser,sql,quote,check,edge,signedPage,snapshotSQL,assistanceFixture,sqlAsync})
+   const {runBudgetReadinessChecks}=await import('./test-budget-readiness.mjs')
+   await runBudgetReadinessChecks({newUser,sql,quote,check,edge,signedPage})
+   const {runBudgetEligibilityChecks}=await import('./test-budget-eligibility.mjs')
+   await runBudgetEligibilityChecks({newUser,sql,quote,check,edge,signedPage})
+   check('input review, readiness and eligibility journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--readiness-only')){
+   const {runBudgetReadinessChecks}=await import('./test-budget-readiness.mjs')
+   await runBudgetReadinessChecks({newUser,sql,quote,check,edge,signedPage})
+   check('readiness journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--eligibility-only')){
+   const {runBudgetEligibilityChecks}=await import('./test-budget-eligibility.mjs')
+   await runBudgetEligibilityChecks({newUser,sql,quote,check,edge,signedPage})
+   check('eligibility journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--setup-only')){
+   const {budgetSetupChecks}=await import('./test-budget-setup.mjs')
+   await budgetSetupChecks({repo,newUser,sql,quote,check,edge,signedPage,snapshotSQL,settled})
+   check('Manual setup journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--lookback-only')){
+   const {budgetLookbackChecks}=await import('./test-budget-lookback.mjs')
+   await budgetLookbackChecks({repo,newUser,sql,quote,check,edge,signedPage,snapshotSQL,settled})
+   check('Look back journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--plan-only')){
+   const {budgetPlanChecks}=await import('./test-budget-plan.mjs')
+   await budgetPlanChecks({repo,newUser,sql,quote,check,edge,signedPage,snapshotSQL,settled})
+   check('My plan journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--settings-only')){
+   const {budgetSettingsChecks}=await import('./test-budget-settings.mjs')
+   await budgetSettingsChecks({repo,newUser,sql,quote,check,edge,signedPage,snapshotSQL,settled})
+   check('settings journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--goals-only')){
+   const {budgetGoalChecks}=await import('./test-budget-goals.mjs')
+   await budgetGoalChecks({repo,newUser,sql,quote,check,edge,signedPage,snapshotSQL,settled})
+   check('goal presentation journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--commitments-only')){
+   const {budgetCommitmentChecks}=await import('./test-budget-commitments.mjs')
+   await budgetCommitmentChecks({repo,newUser,sql,quote,check,edge,signedPage,snapshotSQL,settled})
+   check('commitment journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--everyday-only')){
+   const {budgetPresentationChecks}=await import('./test-budget-presentation.mjs')
+   await budgetPresentationChecks({repo,newUser,sql,quote,check,edge,signedPage,snapshotSQL,settled,everyday:true})
+   check('everyday row journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--presentation-only')){
+   const {budgetPresentationChecks}=await import('./test-budget-presentation.mjs')
+   await budgetPresentationChecks({repo,newUser,sql,quote,check,edge,signedPage,snapshotSQL,settled})
+   check('presentation journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(process.argv.includes('--task-panel-only')){
+   const {budgetTaskPanelChecks}=await import('./test-budget-task-panel.mjs')
+   await budgetTaskPanelChecks({repo,newUser,sql,quote,check,signedPage,snapshotSQL,settled})
+   check('task-panel journeys have no browser runtime errors',errors,[])
+   return
+  }
+  if(accessibilityOnly){
+   const {budgetAccessibilityChecks}=await import('./test-budget-accessibility.mjs')
+   await budgetAccessibilityChecks({repo,signedPage,newUser,assistanceFixture,check,settled,sql,quote,edge})
+   check('accessibility journeys have no runtime errors',errors,[])
+   return
+  }
   if(assistanceFixture){
    const phoneAssisted=await signedPage(assistanceFixture.user,390)
    await phoneAssisted.getByRole('button',{name:'Help me build a budget',exact:true}).click()
-   const assistanceRegion=phoneAssisted.locator('section[aria-labelledby="assisted-setup-title"]')
+   const assistanceRegion=phoneAssisted.getByRole('dialog',{name:'Help me build a budget',exact:true})
    await expect(assistanceRegion).toBeFocused()
+   await phoneAssisted.getByLabel('Start with the period containing').fill(sql("SELECT (date_trunc('month',now() AT TIME ZONE 'Australia/Sydney')+interval '1 month')::date;"))
    await phoneAssisted.getByRole('checkbox',{name:/Assistance fictional account/}).check()
    await phoneAssisted.getByRole('button',{name:'Check my history',exact:true}).click()
    await expect(phoneAssisted.getByRole('heading',{name:'Enough complete history for a starting point'})).toBeVisible()
@@ -51,15 +188,19 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
    await phoneAssisted.getByRole('checkbox',{name:/These are the accounts and dated periods/}).check()
    await phoneAssisted.getByLabel(/Have your income/).selectOption('no')
    await phoneAssisted.getByRole('checkbox',{name:/I checked the income/}).check()
+   await confirmBudgetAssistance(phoneAssisted,sql("SELECT (date_trunc('month',now() AT TIME ZONE 'Australia/Sydney')+interval '1 month')::date;"))
    await phoneAssisted.getByRole('checkbox',{name:/Try one optional change/}).check()
+   await phoneAssisted.getByRole('checkbox',{name:/This change is for the selected future budget/}).check()
    await phoneAssisted.getByLabel('Amount to redirect from everyday spending').fill('10')
    await phoneAssisted.getByLabel('Leave room for').selectOption('goal')
    await phoneAssisted.getByLabel('Goal name').fill('Phone bike fund')
    await phoneAssisted.getByLabel('Estimated target (optional)').fill('120')
    await phoneAssisted.getByLabel('Needed by (optional)').fill('2027-12-01')
+   await phoneAssisted.getByLabel('Already set aside for this goal (AUD; enter 0 if none)').fill('0')
+   await phoneAssisted.getByRole('checkbox',{name:/I confirmed expected income and pay dates/}).check()
    await expect(phoneAssisted.getByText(/This is a schedule calculation, not a guarantee or money already saved/)).toBeVisible()
    await expect(phoneAssisted.getByText(/No money moves/)).toBeVisible()
-   check('390px assisted setup has no horizontal overflow',await phoneAssisted.locator('.budget-workspace').evaluate(el=>el.scrollWidth>el.clientWidth),false)
+   check('390px assisted setup has no horizontal overflow',await assistanceRegion.evaluate(el=>el.scrollWidth>el.clientWidth),false)
    await phoneAssisted.evaluate(()=>document.documentElement.classList.add('dark'))
    await settled(phoneAssisted);await phoneAssisted.screenshot({path:'/tmp/halcyon-budget-m6-phone.png',fullPage:true})
    const untouchedDraft=JSON.parse(sql(`SELECT public.budget_query(${quote(assistanceFixture.user.tenant)},${quote(assistanceFixture.user.id)},'{"action":"draft"}');`))
@@ -83,18 +224,23 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
 
    const assisted=await signedPage(assistanceFixture.user)
    await assisted.getByRole('button',{name:'Help me build a budget',exact:true}).click()
+   await assisted.getByLabel('Start with the period containing').fill(sql("SELECT (date_trunc('month',now() AT TIME ZONE 'Australia/Sydney')+interval '1 month')::date;"))
    await assisted.getByRole('checkbox',{name:/Assistance fictional account/}).check()
    await assisted.getByRole('button',{name:'Check my history',exact:true}).click()
    await expect(assisted.getByRole('heading',{name:'Enough complete history for a starting point'})).toBeVisible()
    await assisted.getByRole('checkbox',{name:/These are the accounts and dated periods/}).check()
    await assisted.getByLabel(/Have your income/).selectOption('no')
    await assisted.getByRole('checkbox',{name:/I checked the income/}).check()
+   await confirmBudgetAssistance(assisted,sql("SELECT (date_trunc('month',now() AT TIME ZONE 'Australia/Sydney')+interval '1 month')::date;"))
    await assisted.getByRole('checkbox',{name:/Try one optional change/}).check()
+   await assisted.getByRole('checkbox',{name:/This change is for the selected future budget/}).check()
    await assisted.getByLabel('Amount to redirect from everyday spending').fill('10')
    await assisted.getByLabel('Leave room for').selectOption('goal')
    await assisted.getByLabel('Goal name').fill('Bike fund')
    await assisted.getByLabel('Estimated target (optional)').fill('120')
    await assisted.getByLabel('Needed by (optional)').fill('2027-12-01')
+   await assisted.getByLabel('Already set aside for this goal (AUD; enter 0 if none)').fill('0')
+   await assisted.getByRole('checkbox',{name:/I confirmed expected income and pay dates/}).check()
    await assisted.getByRole('button',{name:'Use this draft',exact:true}).click()
    await expect(assisted.getByLabel('Expected income this period (AUD)',{exact:true})).toHaveValue('500.00')
    await expect(assisted.getByLabel('Planned for Everyday spending (AUD)',{exact:true})).toHaveValue('80.00')
@@ -103,6 +249,7 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
    check('using assistance does not activate a budget',snapshotSQL(assistanceFixture.user).plan,null)
    await assisted.getByRole('button',{name:'Review my plan'}).click()
    await assisted.getByRole('button',{name:'Save setup draft'}).click()
+   await expect(assisted.getByRole('button',{name:'Review saved draft',exact:true})).toBeEnabled()
    check('assisted draft still requires separate activation',snapshotSQL(assistanceFixture.user).plan,null)
    sql(`UPDATE public.accounts SET name='Assistance fictional account updated' WHERE id=${quote(assistanceFixture.account)};`)
    await assisted.reload()
@@ -112,6 +259,7 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
    await expect(assisted.getByLabel('Planned for Bike fund (AUD)',{exact:true})).toHaveValue('10.00')
    await assisted.getByRole('button',{name:'Review my plan'}).click()
    await assisted.getByRole('button',{name:'Save setup draft'}).click()
+   await expect(assisted.getByRole('button',{name:'Review saved draft',exact:true})).toBeEnabled()
    const converted=JSON.parse(sql(`SELECT public.budget_query(${quote(assistanceFixture.user.tenant)},${quote(assistanceFixture.user.id)},'{"action":"draft"}');`)).draft
    check('stale assisted draft conversion preserves goal intent and labels provenance manual',[converted.assistance.manual,converted.assistance.goal_intent.name,converted.assistance.goal_intent.target_cents,converted.assistance.goal_intent.needed_by,[...new Set(Object.values(converted.assistance.provenance))]],[true,'Bike fund',12000,'2027-12-01',['user-estimate-preserved-from-assisted-draft']])
    await assisted.reload()
@@ -131,7 +279,7 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
   if(temporalOnly){check('combined temporal journeys have no browser runtime errors',errors,[]);return}
   if(attentionOnly){
    const {budgetAttentionInteractions}=await import('./test-budget-attention-interactions.mjs')
-   await budgetAttentionInteractions({newUser,sql,quote,check,signedPage,snapshotSQL,settled})
+   await budgetAttentionInteractions({repo,newUser,sql,quote,check,edge,signedPage,snapshotSQL,settled,matrix:process.argv.includes('--checks-only')})
    check('focused attention journeys have no browser runtime errors',errors,[])
    return
   }
@@ -160,6 +308,7 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
   // Beyond PostgREST's page cap: UI must read the canonical complete SQL aggregate.
   sql(`INSERT INTO public.transactions(user_id,tenant_id,account_id,date,original_description,merchant,merchant_key,category,amount,kind,kind_source,pending) SELECT ${quote(user.id)},${quote(user.tenant)},${quote(aud)},${quote(active.period.start_date)}::date,'Budget browser fixture','Fixture','fixture','Shopping',-1,'expense','user',false FROM generate_series(1,1005);`)
   await page.getByRole('button',{name:'Refresh saved data'}).click()
+  await page.getByRole('button',{name:'About these figures',exact:true}).click()
   await expect(page.getByText('Partial or no account history',{exact:true})).toBeVisible()
   await expect(page.locator('.glass').filter({has:page.getByRole('heading',{name:'What’s recorded so far',exact:true})}).locator('dd').filter({hasText:'$10.05'})).toHaveCount(2)
   check('desktop displays complete 1005-row SQL totals without coverage overclaim',true)
@@ -222,6 +371,7 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
   await phone.getByRole('button',{name:'Save setup draft'}).click()
   await phone.getByRole('button',{name:'Review saved draft'}).click()
   await phone.getByRole('button',{name:'Start this budget'}).click()
+  await phone.getByRole('button',{name:'About these figures',exact:true}).click()
   await expect(phone.getByText('You’re planning manually, without account activity.',{exact:true})).toBeVisible()
   const small=snapshotSQL(phoneUser)
   check('phone no-bank zero-income fortnightly setup activates',[small.period.frequency,small.revision.income_cents],['fortnightly',0])
@@ -248,6 +398,7 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
   check('read failure preserves last verified workspace with explicit warning',true)
   await phone.unroute('**/functions/v1/query-budget')
   await phone.getByRole('button',{name:'Refresh saved data'}).click()
+  await phone.getByRole('button',{name:'View allowance activity',exact:true}).click()
   await phone.getByRole('button',{name:'Save for something',exact:true}).click()
   let task=phone.getByRole('dialog',{name:'Save for something',exact:true})
   await expect(task).toBeFocused()
@@ -259,6 +410,7 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
   await task.getByRole('checkbox',{name:'I understand this leaves a funding gap in the current or future plan.'}).check()
   await task.getByRole('button',{name:'Save savings goal',exact:true}).click()
   await expect(task).toHaveCount(0)
+  const savedGoal=snapshotSQL(phoneUser).lines.find(l=>l.name==='Snowboard browser goal');await openGoalDetails(phone,savedGoal.id)
   const goalArticle=phone.locator('article').filter({has:phone.getByRole('heading',{name:'Snowboard browser goal',exact:true})})
   await expect(goalArticle).toContainText('$400.00')
   check('phone goal creation saves one allocation and a separate opening reserve',true)
@@ -273,7 +425,7 @@ export async function runBudgetWorkspaceChecks({repo,api,anon,newUser,sql,quote,
   await expect(goalArticle).toContainText('$400.00')
   await expect(goalArticle).toContainText('$100.00')
   check('phone manual evidence does not add reserve credit again',true)
-  await phone.reload()
+  await phone.reload();await openGoalDetails(phone,savedGoal.id)
   await expect(phone.getByRole('button',{name:'Undo last budget change',exact:true})).toBeVisible()
   check('compatible latest undo remains discoverable after reload',true)
   await phone.evaluate(()=>document.documentElement.classList.add('dark'))

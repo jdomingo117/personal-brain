@@ -14,7 +14,9 @@ function canonical(value,key=''){
  if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).sort().map(k=>[k,canonical(value[k],k)]))
  return value
 }
-const digest=value=>createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex')
+// Forecast checked_at is the read transaction time, not a financial fact.
+// Compare every other field, including the complete forecast and attention.
+const digest=value=>{const stable=structuredClone(value);if(stable.forecast)delete stable.forecast.checked_at;return createHash('sha256').update(JSON.stringify(canonical(stable))).digest('hex')}
 
 export async function verifyBudgetHistory({user:u,plan,period,first,everyday,goal,limit,account,measurements,sql,quote,check,edge,source,newUser,commandSQL}){
  const version=()=>sql(`SELECT version FROM public.budget_plans WHERE id=${quote(plan)};`)
@@ -40,6 +42,7 @@ export async function verifyBudgetHistory({user:u,plan,period,first,everyday,goa
  let t=performance.now(),ready=await edge(u,'query-budget',{action:'workspace'})
  measurements.warm_edge_ms=Math.round(performance.now()-t);measurements.batch_ms=times
  check('prepared real workspace loads a complete canonical chain',ready.status,200)
+ check('prepared workspace retains forecast and attention composition',!!ready.body.details.forecast&&!!ready.body.details.attention)
  check('complete prepared goal and signed category carry reconcile',[ready.body.details.items.find(i=>i.line_id===goal).reserve_cents,ready.body.details.items.find(i=>i.line_id===everyday).remaining_cents],[50000+measurements.periods*10000,measurements.periods*(100000-measurements.transactions/measurements.periods*100)])
  const {recurring_evidence,recurring_unavailable,...preparedDetails}=ready.body.details
  let reference

@@ -2,7 +2,45 @@
 
 This index serves as a mental map of the system's architecture and current state for development purposes.
 
+## Budget M7.7 candidate/security/operations — 29 October 2026
+
+**M7.7 local candidate verified — 29 October 2026.** [[BUDGET_M7_CANDIDATE_OPERATIONS]] records final patched-installation passes: 560 lifecycle, 391 forecast/assistance/candidate assertions, eight provider-disabled golden tests, 78 passing WCAG scans, 609 unit passes/14 existing skips, types/build and eight telemetry-summary assertions. Budget now has fixed-field privacy-safe request metrics and redacted audit/error diagnostics. Compatible development dependency updates (Vite 6.4.5 / Vitest 4.1.12 in the lock) clear 17 npm advisory entries; no runtime dependency version or financial SQL changed. All sixteen M7.7 test projects, including the two live attempts, are cleaned up. [[BUDGET_OPERATIONS_RUNBOOK]] supplies private-exposure/monitoring/recovery procedures. The owner subsequently authorized the live Gemini categorization test; [[BUDGET_M7_LIVE_CATEGORIZATION]] records two isolated attempts and a definitive generation HTTP402 / RESOURCE_EXHAUSTED response: prepayment credits are depleted. Live classification/fresh-review remains unpassed pending owner-restored credits and a rerun; no billing change was attempted. Human/hosted/M7.8 gates remain open; No-Go. No deployment or personal migration.
+
+`supabase/functions/_shared/budgetTelemetry.ts` wraps `manage-budget` and `query-budget` with content-free endpoint/status/outcome/duration samples. `withAuth.ts` offers Budget error redaction and detects returned audit-insert errors without failing commits. `app/src/lib/budgetTelemetry.test.ts` exercises privacy/response/sink-error and middleware paths; `test-budget-security.mjs` inventories 26 tables/97 functions and probes auth/CORS/schema/body/rate boundaries; `summarize-budget-telemetry.mjs` and its standalone tests aggregate strict records. Guarded release candidates have separate 57521/57600 and alternate 57721/57800 profiles plus per-project Vite caches. Golden candidate mode excludes general personal env and defaults to no provider key/AI refresh; exact label/empty-target checks and cleanup remain. The package/lock security patch is verified in a separate install; retained preview/primary node_modules stay unchanged. Public evidence is under `docs/budget-m7/candidate/`; current procedure/qualifications are in the two linked records.
+
+## Budget M7.6 migration/recovery — 29 October 2026
+
+**M7.6 isolated migration/recovery rehearsal complete — 29 October 2026.** [[BUDGET_M7_MIGRATION_RECOVERY]] records 164 passing final assertions: populated forward migration from 64 to 104 migrations, pre-/post-Budget auth/application backups restored into separate databases, exact 81/108-table content and sequence parity, original-user password sign-in, tenant RLS, signed-cent totals, recorded review/reserves/edited drafts and receipt preservation with writes disabled/re-enabled. The focused workspace suite passes 25 tests. All three rehearsal projects are cleaned up; private fictional backups remain ignored outside Docker, and preview96/personal data are unchanged. Next engineering: M7.7 final candidate cross-feature/security/operations review. M7.3/M7.4 human, M7.5 hosted/cold/load and M7.8 release gates remain open; No-Go.
+
+`app/scripts/test-budget-recovery.mjs` runs only through the guarded durable provisioner's `--recovery-only --secondary-ports` branch (`npm run test:budget:recovery`). It boots the legacy migration prefix, archives auth/application data privately, migrates populated fixtures forward, restores into two fresh databases and tests original Auth identities and write-toggle preservation. `/backups/budget-m7/` is ignored; raw dumps/catalogs remain mode 0600 in mode 0700 project directories. Public evidence/source hashes/cleanup are under `docs/budget-m7/recovery/`. No new production migration or runtime source change.
+
+## Budget R06 optimization — 29 October 2026
+
+**R06 local performance admission verified — 29 October 2026.** [[BUDGET_M7_R06_OPTIMIZATION]] records schema 104 and passing original 10k/100k/1m targets: at 1m, workspace SQL p95 744.926ms, five warm API samples maximum 835ms, assistance API maximum 2,635ms. The first same-generation checkpoint miss was 4,325.854ms SQL; warm p95 is not a first-load/hosted guarantee. Separate suites pass 187 capacity, 142 history and 537 backend assertions; unit 595/14 existing skips, types and script syntax pass. Money/API/UI semantics are preserved, all fourteen run projects are cleaned up, and preview96/personal data are unchanged. M7.5 hosted/cold/load qualification remains pending; next M7.6 isolated migration/restore preparation. Human and release gates remain open / No-Go.
+
+Migrations 98–104 add the private invoker-secure `budget_transactions_analytic` projection (including an explicit private parent-category helper), complete issue-demanded evidence, function-local bulk planning, streaming activity, statement-local selected-fact reuse and forecast/recurring fields on the existing private `budget_history_facts`. The wrappers recheck role/source/plan/date/scope and actual input fingerprints before using derived reads; attention stays live. Public analytics, Edge payloads and frontend sources remain unchanged. Five harness files add canonical/evidence/cache differential checks and backend-only validation modes. Final evidence and 462 source hashes are under `docs/budget-m7/r06-optimization/`; final timing samples are under `docs/budget-m7/r06-capacity/`.
+
+## Budget M7.5 capacity — 29 October 2026
+
+**M7.5 local measurements complete with findings — 29 October 2026.** [[BUDGET_M7_CAPACITY]] records 10k/100k/1m mixed-ledger measurements and the corrected-schema five-/ten-year history proof. Migration 97 restores the history guard bypassed by R01; it is verified only on disposable targets. New finding R06 remains open: 100k workspace SQL misses 1s; 1m workspace times out at 8s and assistance slightly exceeds 3s. The benchmark correctly fails admission. Next is SQL profiling/optimization and the same benchmark rerun. Hosted checks remain pending by explicit owner instruction. Preview retained on schema 96; personal database untouched. Human/operational/release gates remain open / No-Go.
+
+`test-budget-capacity.mjs` adds repeated SQL/API timing, mixed dense fixtures, signed aggregate parity, paging and import/read checks. The guarded provisioner reserves 57521/57522 for capacity mode. `20261029000000_budget_forecast_history_guard.sql` restores `budget_workspace_details` admission/context handling and composes R01 in `budget_workspace_details_uncached`; service-role boundaries remain asserted. Evidence and source hashes: `docs/budget-m7/capacity-local/`.
+
+## Budget copy refinement — 28 October 2026
+
+**Approved Overview copy refinement complete — 28 October 2026.** [[BUDGET_OVERVIEW_COPY_REFINEMENT]] records the positive pending-overage sentence, explicit everyday-spending forecast heading/period end, and threshold policy retained in details. Six width/theme browser accessibility checks, future/stale guards, full TypeScript and production build pass; zero Budget writes. Only two presentation components differ from the pass-three source baseline. Prior owner acceptance remains recorded; this follow-up has engineering verification. Human and operational release gates remain open / No-Go.
+
+## Current Budget verification — 28 October 2026
+
+**Owner Overview comparison accepted — 28 October 2026.** The owner confirmed all three clarity questions: “All 3 questions are a yes. We can resume to the next steps”. The three production passes and owner presentation checkpoint are complete. [[BUDGET_M7_HUMAN_VALIDATION]] now provides the observed accessibility protocol and independent beginner walkthrough. A human beginner tester is no longer available; screen-reader observation is not yet arranged. The owner requested an AI beginner-perspective critique, which does not close either human gate. M7.3/M7.4 results remain pending; M7.5–M7.8 and release remain open / No-Go.
+
+The owner-requested AI beginner critique is recorded in `docs/budget-ui/human-validation/ai-critique.md`: five copy/disclosure findings; no live interaction or human result is claimed. Recommendations are not yet implemented.
+
+The participant-only task card is `docs/budget-ui/human-validation/participant-tasks.md`; the moderator guide and blank results are alongside it. Preparation only; no new implementation/test pass is claimed.
+
 ## Architecture Overview
+**R01 engineering complete — 28 October 2026.** [[BUDGET_R01_SPENDING_FORECAST]] records forward migration 96 and the owner-approved median of three monthly daily gross rates, date-aware fixed bills, separate pending warnings and conservative unavailable states. Verification: 79 final forecast checks, 243 combined forecast/affected-candidate checks with 78 passing WCAG scans plus eight final threshold-explanation scans, 472 lifecycle checks, 589 unit passes/14 existing skips, full/focused/browser types and production build. These are separate runs, not additive unique checks. All 17 BUI presentation bursts remain delivered; R01–R05 engineering findings are now corrected. Next is the R01 affected-flow owner checkpoint and M7.3 observed human accessibility/M7.4 independent beginner walkthroughs, followed by M7.5–M7.8 operational/release gates. Release remains **No-Go**. No personal migration, deployment or commit occurred.
+
 The application is a modern finance tracker built with a React frontend and a Supabase backend.
 - **Frontend:** React, TypeScript, Vite, TailwindCSS (located in `app/`).
 - **Backend:** Supabase Local Development Environment (located in `supabase/`).
@@ -228,7 +266,7 @@ uncovered exact date windows and known activity with explicit carry acceptance; 
 Archive retains current history/allocations, zeroes only that line's future refill and explicitly
 keeps/releases/transfers signed reserve rights. Everyday movements enter later carry once; native
 reserve releases use adjusted rights. Voided/archived destinations and archived refill are rejected.
-`BudgetControls.tsx` supplies inline responsive controls inside `BudgetLifecycle`; `budgetControls.ts`
+`BudgetControls.tsx` supplies responsive controls inside the single native `budget/BudgetSettings.tsx` host; `budgetControls.ts`
 and its tests bind intent and opaque versions. Existing item/frequency/plan controls expose archived
 and paused states. Strict Edge `preview_control`/`set_control`, full-chain fresh hashes, atomic
 idempotent receipts and compatible append-only Undo apply. `test-budget-controls.mjs` and
@@ -352,7 +390,120 @@ stack query/migration, flag enablement, hosted latency guarantee or M6/M7 closur
 Regression: **432 isolated SQL/Edge/browser checks across 89 migrations; 503 unit tests passed/14
 existing skips; focused Budget TypeScript/build passed**, responsive journeys and cleanup verified.
 
-**M6 assisted setup — engineering-complete, 22 October 2026:**
+**Budget concept-to-production UI handover — BUI-04 engineering complete, 25 October 2026:**
+[`BUDGET_UI_IMPLEMENTATION_HANDOFF.md`](BUDGET_UI_IMPLEMENTATION_HANDOFF.md) responds to owner
+feedback that the real Budget lost the approved concept's hierarchy and feels text-heavy. It
+defines 17 separately requested BUI bursts, canonical display-field mappings, component/task
+boundaries, responsive/theme/focus specifications, selective shadcn adoption, visual acceptance
+and test/resume requirements. BUI-01 is complete in
+[`BUDGET_BUI_01_REFERENCE_MAP.md`](BUDGET_BUI_01_REFERENCE_MAP.md): 24 production action
+families, canonical/nullable field gaps, state coverage, one task-exit/navigation policy
+and release-fix/visual gates. `docs/budget-ui/bui-01/` contains the reproducible capture
+script, 36 concept PNGs and measured geometry at five widths in both themes.
+[`BUDGET_BUI_02_TASK_PANEL.md`](BUDGET_BUI_02_TASK_PANEL.md) records the production
+goal create/edit pilot in `components/BudgetTaskPanel.tsx`: native top-layer modal,
+opaque theme surface, single in-panel dirty-exit decision, body scroll and opener focus.
+`hooks/useBudgetNavigationGuard.ts` installs at stable `BudgetProvider`, coordinating
+registered goal-task route/POP/period requests; `BudgetContext` preserves history indices
+and pending-goal recovery. Other tasks retain their existing host. Financial form
+construction and command/receipt semantics remain unchanged. No dependency/migration.
+`scripts/test-budget-task-panel.mjs` runs via guarded `--task-panel-only --workspace`;
+62 focused isolated checks/91 migrations, 12 fresh axe scans, 13 production captures,
+full/focused/browser types, 516 unit tests (14 skips) and build pass. Exact target cleanup
+verified; old orphaned disposable preview stopped with backup retained.
+[`BUDGET_BUI_03_PRESENTATION_ADAPTER.md`](BUDGET_BUI_03_PRESENTATION_ADAPTER.md) records
+`lib/budgetPresentation.ts`: bounded canonical display models with independent value
+availability, basis, coverage, freshness, provisional status and provenance. It uses
+server everyday/carry/rights/Other facts, separate goal evidence and preserved history;
+no feed aggregation or invented balance. `components/BudgetValue.tsx` formats known
+cents via `fmtCents` and represents unavailable values explicitly. Existing Budget
+totals/everyday/category sections consume it. `BudgetContext` distinguishes read
+failure/preparation/invalidated facts from command errors; pending outcomes qualify
+retained money. Nullable item balance and scalar Other types now match the wire.
+`budgetPresentation.test.ts` adds 43 semantic cases; guarded `--presentation-only --workspace`
+runs `scripts/test-budget-presentation.mjs`. 559 unit passes/14 skips, full/focused/browser
+types/build, 32 focused and 208 item/workspace isolated checks (separate totals/targets),
+four axe scans and seven production captures pass. Both exact test projects cleaned;
+no migration, financial kernel/command-body change or personal exposure.
+[`BUDGET_BUI_04_HEADER_HERO.md`](BUDGET_BUI_04_HEADER_HERO.md) records
+`components/budget/BudgetPageHeader.tsx` / `BudgetHero.tsx`: compact saved-period and
+three-view navigation, qualified everyday/income hero, signed gaps, inline calculation
+and links to retained detail/control sections. `BudgetLifecycle` supplies its existing
+exit confirmation through the header's period-navigation event; provider guards and
+all financial commands remain unchanged. `budget.css` adds a Budget-local quiet plane
+and container-responsive editorial layout; shell/other routes unchanged. Shared local
+calendar helpers use lifecycle `as_of`; adapter preserves period transition metadata.
+Guarded `scripts/test-budget-hero.mjs` (`--hero-only --workspace`) includes task/recovery
+regression, geometry and captures under `docs/budget-ui/bui-04/`. 121 focused / 472 full
+lifecycle isolated checks (separate targets/totals), 22 axe scans, 31 captures, 559 unit
+passes/14 skips, types/syntax/build pass. Both exact test projects cleaned. Engineering
+complete; owner header/hero visual approval received 26 October 2026. BUI-05a everyday rows are complete in
+[`BUDGET_BUI_05A_EVERYDAY_ROWS.md`](BUDGET_BUI_05A_EVERYDAY_ROWS.md). New
+`components/budget/BudgetEveryday.tsx` consumes the existing adapter and task owner:
+category/Other rows, canonical shared total, signed overages, optional native detail,
+responsive labels and single-pool limits-off mode. 51 focused isolated checks, ten
+axe scans and 14 captures verify geometry and category removal through the real UI.
+208 existing item/workspace checks also pass on a separate isolated target;
+both exact projects are cleaned. BUI-05b is complete in
+[`BUDGET_BUI_05B_COMMITMENTS.md`](BUDGET_BUI_05B_COMMITMENTS.md): new
+`components/budget/BudgetCommitments.tsx` groups saved bills/reserves/transfers into
+native per-line disclosures; `BudgetItems` retains all forms, occurrences and recurring
+update controls. Canonical summaries and evidence preserve qualifications and stable IDs.
+45 focused / 208 item-workspace checks on separate disposable targets, ten axe scans,
+11 captures, unit/types/build pass; exact projects cleaned. BUI-06a is complete in
+[`BUDGET_BUI_06A_GOALS.md`](BUDGET_BUI_06A_GOALS.md): new
+`components/budget/BudgetGoals.tsx` supplies featured card, compact native disclosures,
+local decorative SVG and qualified canonical values. Its reserve-only track never adds
+funding evidence; existing goal timing uses server as-of dates and suppresses unknown/stale
+facts. Original task forms/recovery remain in `BudgetItems`; old inline goal rendering removed.
+88 focused / 208 item-workspace checks on separate targets, 22 axe scans, 24 captures,
+unit/types/build pass; exact projects cleaned. BUI-06b is engineering-complete in
+[`BUDGET_BUI_06B_CHECKS_GUIDANCE.md`](BUDGET_BUI_06B_CHECKS_GUIDANCE.md):
+`BudgetItems` assembles primary everyday/commitments and secondary goals/attention,
+with explicit item write gates retaining historical read navigation. `Budget.tsx`
+keeps recorded figures/guide in optional details and lifecycle below the overview;
+hero links reveal/focus their targets. `BudgetAttention` retains its original controller,
+adds compact explanations and explicit unavailable forecast, and opens exact category/
+allowance details for inspection. 87 attention / 121 overview-recovery / 472 full
+lifecycle checks on separate fresh targets, 33 axe scans, 62 captures and static/unit/
+build checks pass. Legacy monetary/disclosure assertions retain exact financial checks.
+Owner overview review was accepted on 26 October 2026; R01 remains open; BUI-07a settings host is complete in [[BUDGET_BUI_07A_SETTINGS_HOST]]: 91 focused / 472 lifecycle / 263 accessibility checks (64 audited states), 22 focused axe scans and 23 captures pass on separate disposable targets, alongside unit/types/build. BUI-07b frequency/accounts presentation is complete in [[BUDGET_BUI_07B_FREQUENCY_ACCOUNTS]]: 171 focused / 472 lifecycle checks on separate fresh targets, 62 axe scans, 63 captures, unit/types/build pass. BUI-07c rollover/lifecycle presentation is complete in [[BUDGET_BUI_07C_ROLLOVER_LIFECYCLE]]: 320 focused / 472 lifecycle checks on separate fresh targets, 112 axe scans, 113 captures, 32 keyboard-scroll checks and unit/types/build pass. Signed effects and in-form preparation counts remain visible. BUI-08a My plan is complete in [[BUDGET_BUI_08A_MY_PLAN]]: 68 focused / 472 lifecycle checks on separate fresh targets, 20 axe scans, 20 captures, 561 unit passes/14 skips and types/build pass. Saved current/future allocations, one-off cash and reserves remain separate; existing edit/recovery behavior is preserved. BUI-08b Look back is complete in [[BUDGET_BUI_08B_LOOK_BACK]]: 180 focused / 472 lifecycle checks on separate fresh targets, 70 axe scans, 70 captures, 8 keyboard-scroll checks, 565 unit passes/14 skips and types/build pass. Original/latest/recorded facts and carry/next-period controllers remain distinct. BUI-09a manual setup is complete in [[BUDGET_BUI_09A_MANUAL_SETUP]]: 193 focused / 472 lifecycle checks on separate fresh targets, 72 axe scans, 73 captures, 565 unit passes/14 skips and types/build pass. Close/Back retain setup; draft save and saved-draft activation remain separate. All 17 presentation bursts are delivered; owner visual acceptance is recorded. BUI-11 is complete in [[BUDGET_BUI_11_OWNER_HANDBACK]]: on 27 October 2026 the owner explicitly replied “Accept the visual presentation”. The engineering handback removes two unused Look back placeholder CSS rules; all other 440 BUI-10 source hashes match. Fresh 586 unit passes/14 skips, full/focused/browser types and build pass. BUI-10 remains the live-test baseline, rather than being claimed as a new BUI-11 run. Presentation acceptance does not close R01 or M7 human/release gates. BUI-10 is complete in [[BUDGET_BUI_10_CANDIDATE_VERIFICATION]]: 263 accessibility checks/64 states, 187 candidate checks/70 state-width-theme scans, and 472 lifecycle checks on separate fresh targets across 95 migrations. All 134 axe scans pass; 144 captures and manifests record seven financial/recovery states and the assembled UI. 586 unit passes/14 skips, full/focused/browser types and build pass. A phone theme-control overlap was fixed by reusing the shared toggle in the Budget header; other routes retain their floating control. No personal migration or exposure. BUI-09b is complete in [[BUDGET_BUI_09B_ASSISTANCE]]: retained native assistance task, numbered evidence/amounts/review sections, preserved optional-change controller, signed planning receipt, explicit fresh review and Close/Back focus recovery. 221 combined presentation/R02–R05 and 472 lifecycle checks pass on separate fresh targets across 95 migrations, with 42 combined WCAG scans, 30 presentation captures, 586 unit passes/14 skips and types/build. No personal migration. R02 eligibility is corrected in [[BUDGET_R02_ELIGIBILITY]]; R03 is corrected in [[BUDGET_R03_READINESS]]; R04 is complete in [[BUDGET_R04_INPUT_REVIEW]]; R05 is complete in [[BUDGET_R05_SIGNED_ESTIMATOR]] (73 reference / 98 dependency / 472 lifecycle checks across 95 migrations, 586 unit passes/14 skips). R01 engineering is complete in [[BUDGET_R01_SPENDING_FORECAST]]; next is affected human verification; M7 human/release gates remain open.
+Final
+M7.3/M7.4 human validation follows the revised stable presentation, with fresh automated evidence
+required. Frozen financial behavior and R01–R05 release findings are unchanged.
+
+**Manual Budget validation environment — 25 October 2026:**
+`npm run preview:budget:manual` adds `--manual-preview` to the existing guarded disposable
+provisioner. `app/scripts/preview-budget-manual.mjs` creates a sample active budget/goal and a
+fresh-setup identity, verifies real UI password login and enabled Budget controls, then retains
+Vite at 127.0.0.1:57300 and the isolated API until explicitly stopped. Runtime-only fictional
+credentials are saved with mode 0600 inside the disposable work directory. Signal-driven shutdown
+returns to scoped fixture/project cleanup. Normal test mode still exits and cleans up automatically.
+This enables M7.3 owner validation without changing the personal app's flags or database. Human
+validation results remain open.
+
+**M7.2 automated accessibility audit — complete, 22 October 2026:**
+[`BUDGET_M7_ACCESSIBILITY.md`](BUDGET_M7_ACCESSIBILITY.md) records 64 rendered-state scans and
+260 focused isolated checks across 91 migrations, with axe/overflow/target-height, real keyboard
+scrolling and focus, themes, reduced motion and error-state evidence. `test-budget-accessibility.mjs`
+uses development-only `@axe-core/playwright`; `npm run test:budget:accessibility` selects its guarded
+fresh-project mode through the existing durable/workspace runners. Budget comparison wrappers are
+labelled focusable regions; `useBudgetInlineFocus.ts` restores account/frequency form focus;
+`budget.css` adds disclosure/scroll focus, target/border and motion-preference rules. Full/focused/
+browser TypeScript, 516 unit tests (14 skips) and build pass. M7.3 human/native-zoom/accessibility
+checks are next; R01–R05 and release No-Go remain. No personal-stack work or exposure occurred.
+
+**M7.1 baseline audit — complete, release verification in progress, 22 October 2026:**
+[`BUDGET_M7_RELEASE_VERIFICATION.md`](BUDGET_M7_RELEASE_VERIFICATION.md) maps every AC01–AC49 and
+SG01–SG09 to production evidence, current gaps, commands and responsibility, and records chunks
+M7.1–M7.8. R01–R05 qualify M6's earlier blanket closure: forecasting, fortnightly eligibility,
+settled-use/outcome readiness, input confirmation/preservation and canonical estimator edge cases
+remain open. Release remains No-Go. The Planning UI now translates persisted `net_worth` to
+calculator `netWorth`; full/focused/browser TypeScript, 516 unit tests (14 skips) and production
+build pass. Existing Vite chunk advisory remains. At this checkpoint M7.2 was next; database evidence was
+carried forward from M6, with no personal-stack work or exposure performed.
+
+**M6 assisted setup — historical engineering closeout, qualified by M7.1 above, 22 October 2026:**
 [`BUDGET_M6_ASSISTED_SETUP.md`](BUDGET_M6_ASSISTED_SETUP.md) records the production implementation,
 acceptance traceability and M7 release handoff. The milestone closes deterministic suggestions,
 editable evidence provenance, one bounded what-if, explicit stale/manual conversion and final
@@ -744,3 +895,107 @@ with the target guards in [SYSTEM_INTEGRITY.md](SYSTEM_INTEGRITY.md) enabled:
 
 ---
 *Note to AI Agents: Keep this index concise and update it when structural or architectural changes are made.*
+
+BUI-07a component ownership: `budget/BudgetSettings.tsx` routes the existing frequency,
+account policy, rollover and lifecycle controllers once. `BudgetLifecycle` retains
+historical review/carry and next-period actions. `BudgetTaskPanel` adds route-reset
+and recovery-only completion options for settings; goal completion keeps its original
+default. Button-only rollover draft actions expose semantic dirty markers. See
+[[BUDGET_BUI_07A_SETTINGS_HOST]] for host verification; [[BUDGET_BUI_07B_FREQUENCY_ACCOUNTS]] records completed grouped forms. [[BUDGET_BUI_07C_ROLLOVER_LIFECYCLE]] records completed rollover/lifecycle presentation and visible native preparation counts. [[BUDGET_BUI_08A_MY_PLAN]] records completed saved allocation composition and edit entry. [[BUDGET_BUI_08B_LOOK_BACK]] records completed historical presentation and preserved review/next-period choices. [[BUDGET_BUI_09A_MANUAL_SETUP]] records completed retained setup and separate draft activation. R02 eligibility is corrected in [[BUDGET_R02_ELIGIBILITY]]. R03 is corrected in [[BUDGET_R03_READINESS]]. R04 is complete in [[BUDGET_R04_INPUT_REVIEW]]. R05 is complete in [[BUDGET_R05_SIGNED_ESTIMATOR]]. BUI-09b is complete in [[BUDGET_BUI_09B_ASSISTANCE]]. BUI-10 is complete in [[BUDGET_BUI_10_CANDIDATE_VERIFICATION]]. BUI-11 is complete with owner presentation acceptance in [[BUDGET_BUI_11_OWNER_HANDBACK]]. R01 engineering is complete in [[BUDGET_R01_SPENDING_FORECAST]]; next is affected human verification.
+
+`components/budget/BudgetPlan.tsx` renders qualified saved allocation values from
+`budgetPresentation.ts`; it does not total money or build requests. `Budget.tsx`
+keeps the existing editor and focuses it on entry. Its My plan activity route keeps
+`BudgetItems` mounted but hidden until Overview is selected. Missing future values
+remain unavailable. See [[BUDGET_BUI_08A_MY_PLAN]] for current/future and recovery proof.
+
+`components/budget/BudgetHistory.tsx` presents existing lifecycle facts and immutable
+saved review payloads; it does not calculate history or construct commands.
+`BudgetLifecycle.tsx` retains carry/reopen/Undo/next-budget controllers and stays
+mounted while Look back is hidden. The page exposes a compact Look back entry on
+other views. Current/future plans cannot be marked reviewed, and no-account latest
+observations remain unavailable. See [[BUDGET_BUI_08B_LOOK_BACK]].
+
+BUI-09a retains the existing inactive `BudgetEditor` in the native task surface.
+`BudgetTaskPanel` adds optional `open`, `retainOnClose` and description props;
+existing goal/settings defaults are unchanged. Closed setup keeps its mounted
+input state and context intent, with explicit session/reload copy. Saved draft
+review uses a separate native task; only Start this budget sends activation.
+No financial request body changed. See [[BUDGET_BUI_09A_MANUAL_SETUP]].
+
+### R02 assistance eligibility correction — 26 October 2026
+
+[[BUDGET_R02_ELIGIBILITY]] records forward migration
+`20261026000000_budget_assistance_calendar_gate.sql` (92): assistance requires
+three complete comparable calendar months within the latest six complete months,
+plus six covered aligned 14-day windows for fortnightly plans. The response carries
+calendar evidence; client draft/what-if/outcome gates fail closed without it.
+20 red / 34 green focused checks, 472 lifecycle checks and 568 unit passes
+(14 skips), types/syntax/build pass. No personal migration. Next R03 readiness;
+UI remains 14/17 and release gates remain open.
+
+### R03 assistance readiness — 26 October 2026
+
+[[BUDGET_R03_READINESS]] records forward migration
+`20261026010000_budget_assistance_readiness.sql` (93), with canonical complete
+target-period usage, null for unavailable evidence, normalized windows/timezone
+and target evidence in the fingerprint. Reviewed client changes enforce unused
+current room or explicit future intent. Conditional goal timing checks opening
+reserve, signed capacity and actual remaining schedules, shows exact deadline
+shortfalls and stays within twelve months. 39 focused / 472 lifecycle checks,
+four WCAG scans/four captures, 574 unit passes/14 skips and types/build pass.
+No personal migration. Next R04 confirmation/preservation, then R05/BUI-09b.
+UI remains 14/17 and final release gates remain open.
+
+### R04 individual inputs and preservation — 26 October 2026
+
+[[BUDGET_R04_INPUT_REVIEW]] records migration
+`20261026020000_budget_assistance_input_review.sql` (94), durable chosen
+income/pay dates, individually reviewed bill/reserve terms and atomic cost
+configuration at activation. `budgetAssistanceReview.ts` selectively merges
+confirmed fields, retaining protected lines, reserves, goal intent, top-up and
+destinations. `BudgetAssistanceInputs` collects the individual review;
+`BudgetSetupInputSummary` exposes the saved terms and confirmation state.
+Rechecks keep edited values and clear confirmations; manual fallback retains
+valid inputs without a history-derived spending cut. Dated canonical income
+observations remain separate from expected pay. Paid costs require manual
+matching; unresolved essential costs and known future gaps suppress goal outcomes.
+98 final combined / 472 lifecycle checks on separate fresh targets, eight WCAG
+scans, 583 unit passes/14 skips and types/build pass. No personal migration.
+Next R05, then BUI-09b; UI remains 14/17 and release gates remain open.
+
+### R05 signed estimator — 26 October 2026
+
+[[BUDGET_R05_SIGNED_ESTIMATOR]] records migration `20261026030000_budget_assistance_signed_estimator.sql` (95), method v2, signed median/range and canonical reconciliation, explicit nonnegative manual allowances, conservative current gross spending with unassigned credits separate, exact-cent guards and preserved legacy manual/receipt behavior. `test-budget-estimator.mjs` supplies independent canonical reference vectors and browser proof. 73 reference / 98 dependency / 472 lifecycle checks on separate fresh targets, four focused WCAG scans, 586 unit passes/14 skips and types/build pass. No personal migration. Next BUI-09b; UI remains 14/17, R01 and M7 release gates remain open.
+
+### BUI-09b assistance presentation — 27 October 2026
+
+BUI-09b is complete in [[BUDGET_BUI_09B_ASSISTANCE]]: retained native assistance task, numbered evidence/amounts/review sections, preserved optional-change controller, signed planning receipt, explicit fresh review and Close/Back focus recovery. 221 combined presentation/R02–R05 and 472 lifecycle checks pass on separate fresh targets across 95 migrations, with 42 combined WCAG scans, 30 presentation captures, 586 unit passes/14 skips and types/build. No personal migration. The existing native panel remains the sole focus owner; no dependency, calculation, command or migration change. `test-budget-assistance-presentation.mjs` records five widths and both themes. UI progress is 15/17; next BUI-10, then BUI-11 owner handback. R01 and M7 human/release gates remain open.
+
+### BUI-10 candidate verification — 27 October 2026
+
+BUI-10 is complete in [[BUDGET_BUI_10_CANDIDATE_VERIFICATION]]: 263 accessibility checks/64 states, 187 candidate checks/70 state-width-theme scans, and 472 lifecycle checks on separate fresh targets across 95 migrations. All 134 axe scans pass; 144 captures and manifests record seven financial/recovery states and the assembled UI. 586 unit passes/14 skips, full/focused/browser types and build pass. A phone theme-control overlap was fixed by reusing the shared toggle in the Budget header; other routes retain their floating control. No personal migration or exposure. `test-budget-candidate.mjs` and the refreshed accessibility harness capture current native tasks and preserved canonical financial values. The source manifest records the uncommitted candidate by file hash. UI is 16/17; BUI-11 owner handback is next. R01 and M7 human/release gates remain open.
+
+### BUI-11 owner acceptance and handback — 27 October 2026
+
+BUI-11 is complete in [[BUDGET_BUI_11_OWNER_HANDBACK]]: on 27 October 2026 the owner explicitly replied “Accept the visual presentation”. The engineering handback removes two unused Look back placeholder CSS rules; all other 440 BUI-10 source hashes match. Fresh 586 unit passes/14 skips, full/focused/browser types and build pass. BUI-10 remains the live-test baseline, rather than being claimed as a new BUI-11 run. Presentation acceptance does not close R01 or M7 human/release gates. [[BUDGET_UI_IMPLEMENTATION_HANDOFF]] now records all 17 presentation bursts delivered. `docs/budget-ui/bui-11/cleanup-delta.json` proves the exact two-rule CSS delta from the candidate; active task/controller code and the separate non-shipping concept entry are retained. No personal fixtures/migration, deployment or commit occurred. R01 has since been completed in [[BUDGET_R01_SPENDING_FORECAST]]; affected human and M7 operational/release gates remain.
+
+### R01 spending forecast — 28 October 2026
+
+[[BUDGET_R01_SPENDING_FORECAST]] records engineering closure of the final R01–R05 finding. Migration `20261027000000_budget_spending_forecast.sql` (96) adds service-only `budget_forecast_facts` and composes it into workspace/attention reads, without adding financial tables or changing immutable financial snapshots. `app/src/lib/budgetForecast.ts` validates exact source/version/date and complete-month/safe-cent facts; `app/src/components/budget/BudgetForecast.tsx` presents flexible/fixed projections, separate pending warnings and inspectable dates/method inside existing checks. `budgetAttention.ts`/`BudgetAttention.tsx` retain preferences/reopening and separate projected gaps from real-money shortfall totals. `test-budget-forecast.mjs` and `preview-budget-forecast.mjs` provide guarded disposable proof and the eighth fictional preview account. Final evidence is in `docs/budget-ui/r01/`; human accessibility/comprehension, capacity, authorized migration/restore, final cross-feature/security and release authorization remain open. Release remains No-Go.
+
+### Budget Overview simplification study — 28 October 2026
+
+[[BUDGET_OVERVIEW_SIMPLIFICATION_STUDY]] records the owner-authorized hierarchy and desktop/phone review proposal after the R01 walkthrough passed but exposed text overload. `app/budget-overview-study.html` is a non-shipping fictional standalone entry with a recorded/estimated comparison plot, one priority decision, compact bill/goal summaries and five state variants. `app/scripts/test-budget-overview-study.mjs` verifies its responsive/accessibility/local interaction behavior and zero financial API calls. Screenshots and evidence are under `docs/budget-ui/overview-simplification/`. Production route/components/calculations remain unchanged; owner feedback is next.
+
+### Overview simplification pass 1 — 28 October 2026
+
+[[BUDGET_OVERVIEW_PASS_1_SUMMARY_FORECAST]] records the owner-authorized first production pass. `BudgetHero.tsx` now hosts `BudgetForecast.tsx`; the checks component no longer duplicates it. `budgetForecastComparison.ts` supplies guarded display geometry, with six boundary unit cases. The forecast uses direct amount-based copy, solid/hatched comparison and optional method/fixed dates. `test-budget-overview-pass1.mjs` verifies the real eligible preview plus explicitly response-only display states, 30 WCAG/fit cases, seven boundaries/guards, disclosure/navigation and zero Budget writes. Income, attention controller, bills/goals and canonical financial/backend functions are preserved. Evidence: `docs/budget-ui/overview-pass1/`. Ready for separately requested pass two.
+
+### Overview simplification pass 2 — 28 October 2026
+
+[[BUDGET_OVERVIEW_PASS_2_ATTENTION_COMMITMENTS_GOALS]] records the owner-authorized second production pass. `BudgetHero.tsx` hosts canonical attention and moves ordinary income detail into a disclosure; `Budget.tsx` keeps Overview mounted across views for retained review state. `BudgetItems.tsx` retains allowance tools and all original tasks, while `BudgetCommitments.tsx` and `BudgetGoals.tsx` compact line summaries and preserve their detailed evidence/controllers. `BudgetAttention.tsx` shows one server-ordered priority and reachable all/reviewed checks, with existing reminder commands behind options. `test-budget-overview-pass2.mjs` verifies real fictional acknowledgement/Undo, unchanged financial facts, original tasks, retained/stale choices, 30 full-workspace WCAG/fit cases and display-only edge variants. Backend/calculation sources are unchanged. Evidence: `docs/budget-ui/overview-pass2/`; next pass three assembled verification.
+
+### Overview simplification pass 3 — 28 October 2026
+
+[[BUDGET_OVERVIEW_PASS_3_VERIFICATION]] records fresh 472-check lifecycle and 442-check assembled runs across 96 migrations, 131 passing accessibility scans, a 70-case candidate matrix and 595 unit passes/14 skips. `app/scripts/lib/budgetOverviewUI.mjs` provides explicit native disclosure navigation for legacy journeys. `test-budget-workspace.mjs --overview-pass3` composes the forecast, hero, goal, commitment, attention and candidate suites with isolated capture paths. The only production delta is a qualified phone funding-gap notice above the allowance in `BudgetHero.tsx`/`budget.css`; financial/backend sources are identical to pass two. Final evidence is in `docs/budget-ui/overview-pass3/`. Preview `halcyon-budget-m2-c65dd04871874dcb` / PID 80255 is retained for the pending owner comparison. M7 human and operational/release gates remain open.

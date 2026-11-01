@@ -1,3 +1,4 @@
+import {forecastReadProblem} from '../lib/budgetForecast'
 import {useEffect,useRef,useState} from 'react'
 import {useBudget} from '../contexts/BudgetContext'
 import {Button,DateInput} from './Controls'
@@ -16,29 +17,37 @@ export default function BudgetAttention(){
  useEffect(()=>{if(selected)heading.current?.focus()},[selected])
  if(!a||!s.plan||!s.period)return null
  const issue=a.items.find(i=>i.key===selected),currentToken=issue?attentionToken(issue,s.source_revision,s.plan.version,a.version):'',stale=!!selected&&(!issue||token!==currentToken),editable=b.canWrite&&a.editable
- const active=a.items.filter(i=>i.state==='active'),shown=all?a.items:active.slice(0,3),money=a.items.filter(i=>i.state!=='active'&&i.gap_cents!==null)
+ const active=a.items.filter(i=>i.state==='active'),shown=all?a.items:active.slice(0,1),money=a.items.filter(i=>i.state!=='active'&&i.gap_cents!==null&&!['projected_overspend','fixed_projected_overspend','pending_overage'].includes(i.kind))
  function focusBack(){requestAnimationFrame(()=>{const buttons=root.current?.querySelectorAll<HTMLButtonElement>('button[data-issue]');const target=Array.from(buttons??[]).find(el=>el.dataset.issue===lastKey.current);(target??root.current?.querySelector<HTMLElement>('h3'))?.focus()})}
  function open(i:AttentionIssue){if(selected&&!window.confirm('Leave the unsaved review choice? Your saved budget and earlier review preferences will stay unchanged.'))return;lastKey.current=i.key;setSelected(i.key);setToken(attentionToken(i,s.source_revision,s.plan!.version,a!.version));setAccepted(false);setChoice('acknowledged');setDate(defaultAttentionDate(a!.as_of,s.period!.end_date))}
  function close(){setSelected(null);setAccepted(false);focusBack()}
- function inspect(i:AttentionIssue){const el=document.querySelector<HTMLElement>(i.line_id?`[data-budget-line="${i.line_id}"]`:'[aria-label="Bills and savings goals"]');if(el){el.tabIndex=-1;el.focus();el.scrollIntoView({block:'start',behavior:'auto'})}}
- return <section ref={root} aria-label="Budget checks" className="glass mt-4 p-5 space-y-4">
-  <h3 tabIndex={-1} className="font-display text-xl font-bold">A few things to check</h3>
-  <p className="body-copy">{a.active_count} to check · {a.total-active.length} reviewed or snoozed. Reviewing changes reminders, not your allowances, spending or bank balance.</p>
+ function inspect(i:AttentionIssue){
+  const category=i.key.startsWith('category:')?document.querySelector<HTMLElement>(`[data-budget-category="${CSS.escape(i.key.slice(9))}"]`):null
+  const el=category??document.querySelector<HTMLElement>(i.line_id?`[data-budget-line="${i.line_id}"]`:'[aria-label="Bills and savings goals"]')
+  if(el){const detail=category?.querySelector('details');if(detail)detail.open=true;for(let parent=el.parentElement;parent;parent=parent.parentElement)if(parent instanceof HTMLDetailsElement)parent.open=true;el.tabIndex=-1;el.focus();el.scrollIntoView({block:'start',behavior:'auto'})}
+ }
+
+ return <section ref={root} aria-label="Budget checks" className="budget-checks">
+  <h3 tabIndex={-1} className="font-display text-xl font-bold">{active.length?'Start here':'Budget checks'}</h3>
+  <p className="budget-checks-count">{a.active_count} to check · {a.total-active.length} reviewed or snoozed.</p>
   {s.details?.controls?.paused&&<p className="detail-copy">Your budget is paused, but real bills and recorded spending can still need attention.</p>}
-  {active.length===0&&<p className="outcome-panel">{a.total?'Nothing new to review right now. Earlier checks remain available below.':'No issues detected in the available information. This is not a guarantee that every payment is recorded or that money is available to spend.'}</p>}
+  {active.length===0&&<p className="outcome-panel">{!a.forecast_available||forecastReadProblem(s,b.readState,!!b.pending)?'A complete spending estimate is unavailable. Review the estimate’s history and evidence in the overview; no overall Within plan conclusion is available.':a.total?'Nothing new to review right now. Earlier checks remain available below.':'No issues detected in the available information. This is not a guarantee that every payment is recorded or that money is available to spend.'}</p>}
   {money.length>0&&<div className="space-y-2"><h4 className="font-semibold">These gaps still remain</h4><p className="detail-copy">Reviewed or snoozed does not mean resolved. Parent and category amounts can overlap—do not add these together.</p><ul className="space-y-2 body-copy">{money.map(i=><li key={i.key} className="flex flex-wrap justify-between gap-2"><span>{i.label} · {i.state==='snoozed'?`show again ${i.until}`:'reviewed'}</span><strong className="tabular-nums">{fmtCents(-i.gap_cents!)}</strong></li>)}</ul></div>}
-  <ul className="space-y-4">{shown.map(i=><li key={i.key} className="outcome-panel space-y-3" aria-label={`Budget check: ${i.label}`}>
+  <ul className="budget-check-list">{shown.map(i=><li key={i.key} className="budget-check-row" aria-label={`Budget check: ${i.label}`}>
    <div className="flex flex-wrap justify-between gap-2"><h4 className="font-semibold">{i.label}</h4><span className="detail-copy">{i.state==='active'?'Needs a look':i.state==='snoozed'?`Snoozed until ${i.until}`:'Reviewed'}{i.due_date?` · ${i.kind==='bill_unmatched'?'Payment date':'Target date'} ${i.due_date}`:''}</span></div>
-   <p className="body-copy">{attentionMessage(i)}</p>
-   {i.gap_cents!==null&&<p className="body-copy">{i.kind==='bill_unmatched'?'Still to match':'Plan shortfall'}: <strong className="tabular-nums">{fmtCents(-i.gap_cents)}</strong></p>}
+   <details className="budget-check-explanation"><summary>Why this needs a look</summary><p className="body-copy">{attentionMessage(i)}</p></details>
+   {i.gap_cents!==null&&(i.kind==='pending_overage'?<p className="body-copy">Pending charges could put you <strong className="tabular-nums">{fmtCents(i.gap_cents)}</strong> over your allowance.</p>:<p className="body-copy">{i.kind==='bill_unmatched'?'Still to match':['projected_overspend','fixed_projected_overspend'].includes(i.kind)?'Projected overage':'Plan shortfall'}: <strong className="tabular-nums">{fmtCents(-i.gap_cents)}</strong></p>)}
    {i.reopened&&<p className="detail-copy text-warn">{i.reopen_reason==='expired'?'Time to check again.':i.reopen_reason==='gap_worsened'?'This shortfall has grown enough to need another look.':i.reopen_reason==='due_date_changed'?'The date changed, so this needs another look.':'The relevant evidence changed, so this needs another look.'}</p>}
-   <div className="flex flex-wrap gap-3">
-    {i.line_id||i.kind==='overspend'?<Button variant="ghost" onClick={()=>inspect(i)}>Inspect allowance</Button>:['changed_matches','unassigned_credits','uncategorized'].includes(i.kind)?<a href="/ledger" className="inline-flex min-h-11 items-center text-accent-ink underline">Review in Ledger</a>:i.kind==='check_data'?<a href="/accounts" className="inline-flex min-h-11 items-center text-accent-ink underline">Check accounts and imports</a>:<Button variant="ghost" disabled={!editable||!s.details?.lifecycle?.is_latest} onClick={()=>{if(!selected||window.confirm('Leave this unsaved review choice and adjust the plan? No review preference has been saved.'))b.setEditing(fromSnapshot(s))}}>Adjust plan</Button>}
+   <div className="budget-priority-actions">
+    {i.kind==='pending_overage'?<a href="/ledger" className="inline-flex min-h-11 items-center">Review pending charges</a>:i.line_id||i.kind==='overspend'?<Button variant="ghost" onClick={()=>inspect(i)}>Inspect allowance</Button>:['changed_matches','unassigned_credits','uncategorized'].includes(i.kind)?<a href="/ledger" className="inline-flex min-h-11 items-center text-accent-ink underline">Review in Ledger</a>:i.kind==='check_data'?<a href="/accounts" className="inline-flex min-h-11 items-center text-accent-ink underline">Check accounts and imports</a>:<Button variant="ghost" disabled={!editable||!s.details?.lifecycle?.is_latest} onClick={()=>{if(!selected||window.confirm('Leave this unsaved review choice and adjust the plan? No review preference has been saved.'))b.setEditing(fromSnapshot(s))}}>Adjust plan</Button>}
+    <details className="budget-review-options"><summary>Reminder options</summary><p className="detail-copy">Reviewing changes reminders, not money or allowances.</p>
+    {i.kind==='pending_overage'&&<Button variant="ghost" onClick={()=>inspect(i)}>Inspect allowance</Button>}
     {i.state!=='active'&&<Button variant="ghost" disabled={!editable} onClick={()=>{if(window.confirm('Show this check again now? Your budget amounts stay unchanged.'))void b.run({action:'set_attention',plan_id:s.plan!.id,period_id:s.period!.id,expected_plan:s.plan!.version,expected_attention:a.version,issue_key:i.key,issue_hash:i.issue_hash,state:'active',until:null})}}>Show this again now</Button>}
     <button type="button" data-issue={i.key} disabled={!editable} className="min-h-11 rounded-lg border border-[var(--hair)] px-4 py-3 disabled:opacity-50" onClick={()=>open(i)}>Review this check</button>
+    </details>
    </div>
   </li>)}</ul>
-  {a.total>0&&<Button variant="ghost" onClick={()=>setAll(!all)}>{all?'Show priority checks':`See all ${a.total} budget checks`}</Button>}
+  {(all||a.total>shown.length)&&<Button variant="ghost" onClick={()=>setAll(!all)}>{all?'Show priority check':`See all ${a.total} budget checks`}</Button>}
   {!a.editable&&<p className="detail-copy">Earlier and future checks are read-only. Reminder preferences are available for the budget currently in progress.</p>}
   {selected&&<form aria-busy={b.busy} aria-label="Review budget check" className="outcome-panel space-y-4" onSubmit={async e=>{e.preventDefault();if(!issue||stale||!accepted)return;const result=await b.run({action:'set_attention',plan_id:s.plan!.id,period_id:s.period!.id,expected_plan:s.plan!.version,expected_attention:a.version,issue_key:issue.key,issue_hash:issue.issue_hash,state:choice,until:choice==='snoozed'?date:null});if(result)close()}}>
    <h4 ref={heading} tabIndex={-1} className="font-semibold">Choose when to look at this again · {issue?.label??'Check changed'}</h4>

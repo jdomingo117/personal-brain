@@ -64,22 +64,22 @@ hand to find the transfer-linker gap.
 
 ## Recent changes
 
-- 2026-10-22 — Closed M6 assisted setup: 472 isolated checks across 91 migrations and 516 unit tests passed; M7 release verification is next.
+- 2026-10-29 — [[BUDGET_M7_LIVE_CATEGORIZATION]] records owner-authorized live attempts blocked by Gemini HTTP402/depleted prepayment credits; explicit real-AI test corrected and browser types pass, both projects/temporary credentials cleaned. Owner restores credits then rerun; No-Go.
 
-- 2026-10-22 — Closed M5 with complete impact preparation and atomic Save/Undo; 451 full/145 focused isolated checks across 90 migrations and 511 unit tests passed, M6 assisted setup is next.
+- 2026-10-29 — [[BUDGET_M7_CANDIDATE_OPERATIONS]] verifies M7.7 local candidate (560/391 assertions, eight provider-disabled golden tests, 78 WCAG scans, 609 unit passes) and adds privacy-safe telemetry/ops. Compatible dev-lock patch clears 17 npm findings; primary preview/install preserved, fourteen projects cleaned. Live-provider approval plus human/hosted/release gates remain, No-Go.
 
-- 2026-10-22 — Optimized complete impact prefixes, source/claim and allocation aggregates; dense ten-year save/Undo and 432 regression checks across 89 migrations pass, mixed-history atomic-save gate remains open.
+- 2026-10-29 — [[BUDGET_M7_MIGRATION_RECOVERY]] completes M7.6 locally: 164 assertions, two auth/application restores with original-user sign-in, exact table/sequence/cents parity and disable/re-enable preservation; 25 focused unit tests pass. Private backups retained, three isolated projects cleaned, preview/personal unchanged. Next M7.7; human/hosted/release gates open, No-Go.
 
-- 2026-10-22 — Implemented protected long-history workspace preparation/resumption and fresh impact-fact reuse; 432 full/55 focused checks across 83 migrations and 503 unit tests passed, ten-year impact-preview scale remains open.
+- 2026-10-29 — [[BUDGET_M7_R06_OPTIMIZATION]] verifies schema104 local capacity admission with canonical financial/evidence and cache invalidation proof; 187/142/537 separate suites pass. Cold rebuild/hosted qualifications remain; preview/personal data unchanged, No-Go.
 
-- 2026-10-22 — Verified M5 cross-period frequency/policy/goal integration and fixed historical period dropdown inventory; 432 full/44 focused isolated checks across 81 migrations, performance/resumption remains open.
+- 2026-10-29 — [[BUDGET_M7_CAPACITY]] measures 10k/100k/1m and restores history admission via migration 97 in disposable targets. R06 capacity remains open: 100k SQL target missed, 1m workspace timeout and assistance target miss. Exact cleanup verified; preview96 retained, hosted deferred by owner; No-Go.
 
-- 2026-10-22 — Implemented M5 attention review/snooze/materiality with separate versions, persistent gaps and guarded Undo; 388 full/40 focused isolated checks and 496 unit tests passed, wider M5 gates remain open.
+- 2026-10-28 — [[BUDGET_OVERVIEW_COPY_REFINEMENT]] implements the three approved copy changes. Six width/theme axe/copy checks, future/stale guards, TypeScript/build pass; two presentation files changed, zero Budget writes. Human/operational gates remain open; No-Go.
 
-- 2026-10-21 — Implemented M5 budget pause/resume and signed line archive/disposition with guarded Undo; 360 isolated checks/493 unit tests passed, attention and wider M5 gates remain open.
+- 2026-10-28 — Owner accepted all three real Overview clarity questions; [[BUDGET_M7_HUMAN_VALIDATION]] prepares observed accessibility and independent beginner sessions. Human tester no longer available; AI critique complete in `docs/budget-ui/human-validation/ai-critique.md`, with copy/disclosure recommendations; actual human observations pending. Production sources unchanged; release No-Go.
 
-- 2026-10-21 — Implemented M5 category/Other signed rollover, protected/transfer/release disposition and next-category controls; 322 isolated checks/490 unit tests passed, wider M5 gates remain open.
+- 2026-10-28 — [[BUDGET_OVERVIEW_PASS_3_VERIFICATION]] engineering verified: 472 lifecycle/442 assembled checks, 131 passing accessibility scans, 70 candidate cases, 595 unit passes/14 skips and types/build. Qualified phone funding notice added; backend/calculations unchanged. New fictional preview c65dd04871874dcb / PID 80255 retained. Owner comparison and M7 human/operational gates remain pending; No-Go.
 
-- 2026-10-21 — Implemented M5 effective account scope with full SQL previews/save/undo; 284 isolated checks and 486 unit tests passed, category/Other rollover and wider M5 gates remain open.
+- 2026-10-28 — [[BUDGET_OVERVIEW_PASS_2_ATTENTION_COMMITMENTS_GOALS]] complete: one canonical priority beside hero, retained reminder controls and compact commitment/goal disclosures. Real fictional acknowledgement/Undo restores state and preserves financial facts; 30 workspace WCAG cases, 595 unit passes/14 skips and types/build pass. Backend unchanged; next pass three assembled verification.
 
-- 2026-10-21 — Implemented M5 saved-period/review/signed-carry foundation; 223 isolated checks and 475 unit tests passed, full M5 policy/frequency/performance gates remain open.
+- 2026-10-28 — [[BUDGET_OVERVIEW_PASS_1_SUMMARY_FORECAST]] complete: real hero/forecast combined, amount-based finish and guarded comparison graphic; backend/controllers unchanged. 595 unit passes/14 skips, 30 production WCAG/fit cases, seven boundary/guard cases, types/build and zero Budget writes. Ready for separately authorized pass two; no attention/bills/goals redesign yet.

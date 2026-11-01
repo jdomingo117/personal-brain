@@ -1,0 +1,641 @@
+
+> halcyon-app@0.1.0 test:budget:release
+> node scripts/test-budget-durable.mjs --release-candidate --secondary-ports --items --lifecycle --workspace
+
+Target: halcyon-budget-m2-44b18408f7d940c3; API=http://127.0.0.1:57521; DB=127.0.0.1:57522/postgres; fixtures=isolated-only
+PASS new isolated target has no identities or financial data
+PASS initial migration set replayed
+PASS all Budget tables retain RLS with no anonymous access or client writes
+PASS all Budget functions deny anonymous and authenticated direct execution
+PASS Budget definer functions pin their search path
+PASS private Budget analytics is invoker-secure and inaccessible to clients
+PASS candidate rejects unauthenticated reads
+PASS candidate rejects forged JWT
+PASS candidate rejects foreign browser origin
+PASS candidate rejects non-POST reads
+PASS candidate rejects malformed JSON
+PASS candidate rejects oversized request body
+PASS candidate rejects unknown command fields
+PASS candidate owner saves private unfinished input
+PASS candidate duplicate commit retains exact receipt
+PASS candidate conflict is explicit
+PASS candidate foreign owner draft remains empty
+PASS candidate owner retains private input
+PASS candidate write limiter counts invalid request 1
+PASS candidate write limiter counts invalid request 2
+PASS candidate write limiter counts invalid request 3
+PASS candidate write limiter counts invalid request 4
+PASS candidate write limiter counts invalid request 5
+PASS candidate write limiter counts invalid request 6
+PASS candidate write limiter counts invalid request 7
+PASS candidate write limiter counts invalid request 8
+PASS candidate write limiter counts invalid request 9
+PASS candidate write limiter counts invalid request 10
+PASS candidate write limiter rejects request eleven
+PASS candidate limiter provides bounded retry guidance
+PASS successful transport audits record only operation/action references
+PASS duplicate retries produce only one authoritative operation
+PASS real Edge emits fixed-field request metrics
+PASS real Edge telemetry records success
+PASS real Edge telemetry records conflict
+PASS real Edge telemetry records denied
+PASS real Edge telemetry records rejected
+PASS real Edge telemetry records rate_limited
+PASS private payload canary is absent from actual telemetry
+PASS assistance never treats missing coverage as zero
+PASS assistance names every excluded account window
+PASS eligible assistance uses six complete calendar months
+PASS a future confirmed bill is not falsely subtracted from unrelated historical spending
+PASS income suggestion is exact median earned income
+PASS confirmed recurring dates produce a separate bill suggestion
+PASS suggestion binds method, source and 256-bit fingerprint
+PASS only matching canonical recurring history is removed from everyday medians
+PASS fortnightly assistance requires and returns aligned complete windows
+PASS foreign account selection produces no financial suggestion
+PASS activation accepts validated provenance and preserves manual goal/future intent
+PASS authenticated clients cannot call assistance SQL directly
+PASS unresolved transfer ambiguity blocks affected suggestions
+PASS monthly temporal: exact transition boundary and original goal cadence
+PASS monthly temporal: explicit initial override and reserve opening counted once
+PASS monthly temporal: signed category and Other carry survive switch
+PASS monthly temporal: future account scope excludes only later activity
+PASS monthly temporal: historical navigation lists later saved periods without changing historical balances
+PASS monthly temporal: full continuing period keeps explicit override, not cadence rescaling
+PASS monthly temporal: child debt and Other carry are composed once
+PASS monthly temporal: late historical correction recomputes through both boundaries
+PASS monthly temporal: immutable review remains separate from latest facts
+PASS monthly temporal: original deletion invalidates cross-period refund without minting reserve
+PASS monthly temporal: account policy and goal schedule survive source recomputation
+PASS monthly temporal: real Edge composes the same latest goal and child balances
+PASS monthly temporal: earlier plan is not rewritable after dependent periods
+PASS monthly temporal: goal pause preserves override and rights, stops only future refill
+PASS monthly temporal: compatible goal undo restores explicit continuing override
+PASS fortnightly temporal: exact transition boundary and original goal cadence
+PASS fortnightly temporal: explicit initial override and reserve opening counted once
+PASS fortnightly temporal: signed category and Other carry survive switch
+PASS fortnightly temporal: future account scope excludes only later activity
+PASS fortnightly temporal: historical navigation lists later saved periods without changing historical balances
+PASS fortnightly temporal: full continuing period keeps explicit override, not cadence rescaling
+PASS fortnightly temporal: child debt and Other carry are composed once
+PASS fortnightly temporal: late historical correction recomputes through both boundaries
+PASS fortnightly temporal: immutable review remains separate from latest facts
+PASS fortnightly temporal: original deletion invalidates cross-period refund without minting reserve
+PASS fortnightly temporal: account policy and goal schedule survive source recomputation
+PASS fortnightly temporal: real Edge composes the same latest goal and child balances
+PASS fortnightly temporal: earlier plan is not rewritable after dependent periods
+PASS fortnightly temporal: goal pause preserves override and rights, stops only future refill
+PASS fortnightly temporal: compatible goal undo restores explicit continuing override
+PASS percentage materiality rounds up in exact integer cents
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS queue derives signed overspend and a separate missing-history issue
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS public queue exposes no raw source maps or baseline evidence
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS attention reads are side-effect free
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS real owner workspace composes the counted queue
+PASS foreign workspace cannot disclose another budget
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS foreign owner cannot change another tenant attention preference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS viewer reads attention but cannot save a preference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS same attention revision has one concurrent winner
+PASS attention receipt replays exactly with writes disabled
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS acknowledgement preserves money, plan version, template and financial Undo
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS compatible attention Undo restores active through a new event
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS unrelated source invalidation does not reopen a reviewed issue
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS ordinary spending below the saved materiality threshold stays quiet
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS exact material deterioration reopens without changing the saved acknowledgement
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS a relevant existing source reinterpretation reopens even with unchanged gap
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS stale issue hashes, stale attention versions and invalid snooze dates fail closed
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS snoozing has an explicit bounded expiry
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS show again now restores the issue without editing the plan
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS failed operation history insert rolls back attention event atomically
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS snooze expires on the named local date
+PASS attention history is immutable
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS funding and dated goal shortfall coexist without a cash forecast
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS target date changes reopen the same stable issue
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS presentation preference does not stale a saved frequency change
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS generic source change alone does not manufacture an income-date or forecast alert
+PASS R06 complete internal attention evidence and hashes equal pre-optimization reference
+PASS parent category attention uses its readable taxonomy label, not a raw slug
+PASS control preview rolls back events, movements, revisions and plan pointers
+PASS owner can preview lifecycle through Edge
+PASS foreign tenant cannot inspect lifecycle effects
+PASS viewer cannot preview lifecycle mutations
+PASS same-version lifecycle race commits exactly once
+PASS exact lifecycle receipt replays with writes disabled
+PASS paused budget remains readable without changing current reserves or allowances
+PASS pause blocks period generation and frequency transitions
+PASS resume requires carry review, creates no periods or allocations
+PASS compatible lifecycle undo restores paused state
+PASS archive release previews exact signed rights and future zero refill
+PASS archive preview preserves every unrelated continuing allocation and everyday remainder
+PASS failed final lifecycle insert rolls back state, money and version
+PASS release preserves current allocation, moves rights once, and never credits funding
+PASS saved archive does not zero unrelated future allowances
+PASS archived rights cannot be released or archived twice
+PASS archive undo appends inverse movement and restores future template
+PASS archive undo audit records reversed control, signed movement and actual restored template
+PASS everyday archive, fake fixed reserve, self and foreign destinations are rejected
+PASS an undone/voided reserve cannot hide transferred archive rights
+PASS archive transfer conserves rights without funding evidence
+PASS native reserve release accepts transferred rights exactly once
+PASS fixed archive retains current allowance and variance without inventing a reserve
+PASS retaining an archived shortfall preserves the signed debt in both saved and next previews
+PASS negative archive release reduces Other instead of forgiving a shortfall
+PASS archived lines cannot be revived through item edits or positive later-period allocation
+PASS late source correction leaves a visible archived remainder rather than sweeping it
+PASS corrected actual activity can still be matched to an archived purpose
+PASS lifecycle projections and signed movements are immutable
+PASS resume shows uncovered exact windows and known spending, never fabricated zero
+PASS resuming an ended plan does not fabricate gap periods
+PASS rollover preview leaves periods, policy history and version unchanged
+PASS signed category and Other opening balances reconcile without parent duplication
+PASS rollover requires authoritative preview and explicit impact/incomplete acceptance
+PASS failed final policy history write rolls back version and all temporary policy rows
+PASS missing/duplicate/orphan routes and identity remapping are rejected
+PASS concurrent rollover saves have exactly one winner
+PASS rollover receipt replay works with writes disabled
+PASS compatible undo restores the previous timeline
+PASS real owner Edge rollover preview succeeds
+PASS foreign rollover preview does not expose a plan
+PASS same-tenant viewer cannot preview rollover mutations
+PASS legacy limits/review controls cannot silently bypass a category policy
+PASS saved next period uses signed child/Other carry and unchanged new income
+PASS category-aware review is immediately consistent
+PASS late source correction updates child carry and preserves reviewed facts
+PASS removed category moves its full balance aside and releases Other explicitly
+PASS removed category is absent from saved next limits; protected money is not spendable
+PASS removed categories retain a named server-owned identity in later periods
+PASS protected money can be moved once into Other at a later boundary
+PASS frequency application preserves the effective category partition and exact 14-day window
+PASS restored protected money is credited once without creating income
+PASS later dependent period opening prevents destructive policy undo
+PASS rollover policy history is immutable
+PASS late negative retained balance reduces Other instead of becoming savings
+PASS missing source history is unavailable, never zero carry
+PASS retained savings stay protected while a later category shortfall reduces Other
+PASS preview evidence separates earlier protection from a new signed shortfall
+PASS late activity cannot reuse an older rollover effect hash
+PASS real scheduling uses dated future limits rather than the larger old category amount
+PASS a later allowance edit cannot commit a future category capacity failure
+PASS unauthenticated endpoint denied
+PASS viewer cannot write
+PASS member cannot write
+PASS Zod rejects invalid cent payload
+PASS malformed version is a validation error, not an exception
+PASS owner saves durable draft
+PASS lost-response retry returns identical receipt
+PASS changed payload cannot reuse request ID
+PASS draft survives fresh read
+PASS atomic activation succeeds
+PASS snapshot revision is durable
+PASS durable resource summary matches exact-cent foundation
+PASS unknown coverage is not labelled fresh
+PASS viewer reads plan without receiving owner draft
+PASS viewer draft read denied
+PASS foreign plan is not exposed
+PASS direct foreign table read is RLS-filtered
+PASS authenticated browser cannot call mutation RPC
+PASS authenticated browser cannot write tables
+PASS member cannot read owner-only setup payloads
+PASS SQL rejects foreign account IDs
+PASS live-reference ownership trigger rejects cross-tenant evidence
+PASS SQL independently rejects fractional cents
+PASS SQL rejects non-AUD selected accounts
+PASS invalid line references cannot enter a revision
+PASS old calculation method cannot silently change a live plan
+PASS concurrent same-key writes commit one result
+PASS concurrent request has one durable operation
+PASS undo appends a new version
+PASS undo preserves original activated revision
+PASS undo cannot be applied twice
+PASS disabled exposure still recovers committed result
+PASS disabled exposure blocks new writes
+PASS SQL rechecks verified owner independently of Edge
+PASS bulk source mutation advances revision
+PASS snapshot totals exceed detail cap without truncation
+PASS stale source rejects revision
+PASS source rollback also rolls back invalidation
+PASS failed allocation write rolls back revision header
+PASS failed write preserves current plan version
+PASS real classification RPC invalidates Budget
+PASS real split RPC invalidates Budget
+PASS real CSV import transaction invalidates Budget
+PASS real CSV undo invalidates Budget without blocked deletion
+PASS real transfer decision invalidates Budget
+PASS real source row writer and Budget command complete without reversed-row-lock deadlock
+PASS post-wait read sees newly committed source version
+PASS old undo cannot erase a dependent change
+PASS same-key different-payload race has one winner
+PASS same-key race rejects different canonical payload
+PASS two tabs with same expected revision cannot both commit
+PASS losing tab gets stale-plan conflict
+PASS history cannot be rewritten in place
+PASS opening intent cannot be rewritten in place
+PASS historical period timezone cannot be rewritten
+PASS period revision cannot masquerade as a future template
+PASS overlapping persisted periods are rejected
+PASS explicit complete coverage is recognized
+PASS pending-charge removal does not revoke unrelated complete coverage
+PASS outside-range settled deletion does not revoke unrelated complete coverage
+PASS routine sync timestamp does not revoke coverage
+PASS provider history remapping revokes old proof
+PASS global taxonomy edits invalidate each existing tenant gate
+PASS source delete invalidates even though row disappears
+PASS source delete revokes dependent coverage without erasing prior proof
+PASS account deletion preserves audited scope identity
+PASS missing account yields unknown actuals, not false zero
+PASS draft undo appends a new saved revision
+PASS draft undo restores original user input, not an empty reset
+PASS outdated-method draft preserves edits but is labelled stale
+PASS stale-method draft cannot activate without review
+PASS funding gap needs explicit acceptance
+PASS fortnightly activation stores real anchor-aligned boundaries
+PASS concurrent account deletion does not deadlock activation or pretend cash exists
+PASS archived live reference retains its original identity
+PASS source-dependent undo rejects later source changes
+PASS manual zero-income no-bank setup activates
+PASS activation undo archives instead of deleting history
+PASS activation undo retains period and template revisions
+PASS one-off cash cannot silently fund an unfunded future template
+PASS current and continuing funding gaps remain separate
+PASS one-off opening drawdown is not repeated in future resources
+PASS future-scope revision also excludes one-off cash
+PASS all Budget tables deny anonymous reads and authenticated writes
+PASS all Budget SQL helpers are service-only
+PASS five weekly bill dates allocate five payments
+PASS next full-period template uses real occurrence count
+PASS goal contributes once with no duplicate reserve or event
+PASS goal allocation is not confirmed funding
+PASS goal does not create a Planning event
+PASS 600 reserve plus 100 allocation minus 650 payment leaves 50
+PASS reserve payment is not charged to everyday again
+PASS partial purchase and refund reconcile reserve and achievement
+PASS only the remaining ordinary expense is everyday spending
+PASS refund capacity cannot be claimed by another goal
+PASS divided transfer fulfils only its exact capacity
+PASS both transfer legs cannot be claimed a second time
+PASS matched transfer does not add a second reserve credit
+PASS explicit reserve release preserves both signed legs
+PASS reserve release undo restores the source earmark
+PASS manual confirmation is separate from bank evidence
+PASS concurrent funding claims cannot overbook a shared confirmation
+PASS explicitly divided manual evidence exhausts its exact capacity
+PASS category overage remains signed within a positive parent
+PASS removing a category limit restores spending to Other
+PASS reallocation conserves total resources
+PASS same-key M4 replay returns the exact receipt
+PASS guarded reallocation undo restores both sides
+PASS failed move cannot spend opening reserves or change one leg
+PASS pausing preserves the existing reserve and stops future amounts
+PASS completed purchase stops refilling future goals
+PASS purchase completion retains achievement
+PASS compatible purchase undo restores schedule and removes match
+PASS deleted source is audited as changed instead of blocking ledger deletion
+PASS invalidated spending no longer consumes the reserve
+PASS original source identity survives source deletion
+PASS source list rejects a foreign tenant
+PASS authenticated workspace includes consistent item evidence
+PASS source read exposes signed-type-aware match capacity
+PASS Zod/Edge accepts an unknown-price goal only as a draft
+PASS unknown-price draft has no invented target
+PASS new-item undo voids its meaning without deleting immutable history
+PASS M4 facts conserve canonical settled effects
+PASS deleting a funding leg preserves the match but revokes bank proof
+PASS funding source deletion leaves immutable claim history
+PASS suggested investment link is not verified funding
+PASS confirmed purchase proof includes brokerage exactly
+PASS investment proof shares capacity without adding reserve credit
+PASS activity edit invalidates the source version
+PASS changed investment amount removes proof, not history
+PASS investment claim identity survives source change
+PASS ambiguous investment evidence is excluded
+PASS pending investment bank payment supplies no proof
+PASS copied investment source identity must still match
+PASS instrument currency edit invalidates existing Budget sources
+PASS foreign currency investment instrument supplies no AUD proof
+PASS redemption is not new contribution funding
+PASS competing bank-pair and investment paths suppress ambiguous proof
+PASS deleted investment activity does not block ledger cleanup
+PASS server detector receives complete historical parent evidence
+PASS observation cap reports full count without sampled detection
+PASS real Edge kernel detects monthly history
+PASS real server annual-only pass detects three renewals
+PASS historical detector refuses a foreign plan
+PASS historical detector refuses mixed source snapshots
+PASS featuring a goal preserves explicit period-only extra allocation
+PASS only one optional featured goal can be persisted
+PASS compatible undo restores featured presentation
+PASS derived reserve overflow rolls back the whole command
+PASS overflow does not leave an unreadable saved line
+PASS impact preparation commits one complete private projection only
+PASS failed second checkpoint preserves the first and every financial input
+PASS resumption needs no client cursor
+PASS prepared review equals the original complete calculation including hash
+PASS impact authority rejects foreign owners, viewers and stale generations
+PASS changing intent starts a fresh complete first check
+PASS replacing intent keeps a single bounded slot
+PASS invalid impact binding (expires_at) restarts rather than silently reuses
+PASS invalid impact binding (local_date) restarts rather than silently reuses
+PASS invalid impact binding (method) restarts rather than silently reuses
+PASS invalid impact binding (actor_role) restarts rather than silently reuses
+PASS semantic proof rejects mismatched inputs without changing money
+PASS actual applied inputs must match the prepared after-state or the whole save rolls back
+PASS failed final audit preserves the ready preparation and atomic financial state
+PASS receipt replay survives expired preparation and disabled writes
+PASS real Edge recovers the same receipt after preparation expiry
+PASS expired checkpoint safely falls back for compatible Undo
+PASS private impact table is not browser-readable
+PASS impact context cannot escape a request
+PASS scope preview rolls back all hypothetical periods, revisions, memberships and versions
+PASS scope preview uses complete income/spend and reserve effects
+PASS removing original evidence also invalidates its linked refund without deleting either claim
+PASS this-budget-only preview restores the previous activity choices at the next boundary
+PASS unassigned refund remains separate after its original expense is unavailable
+PASS scope commits require exact fresh preview and explicit impact/history acceptance
+PASS concurrent dated account saves have exactly one winner
+PASS same-key scope receipt survives disabled writes
+PASS current account edit preserves allocations, template and original period
+PASS materialized account windows are exact and non-overlapping
+PASS guarded undo restores the exact original dated membership projection
+PASS undo audit shows compensation in the actual reverse direction
+PASS future-only scope preserves current facts and shows the affected next window
+PASS future-only saved policy leaves current scope intact
+PASS this-and-future explicitly replaces already-saved future account choices
+PASS source changes reject stale scope previews and dependent undo
+PASS SQL scope policy rejects foreign, non-AUD and duplicate selected account IDs
+PASS real Edge exposes owner-only scope preview
+PASS foreign tenant cannot inspect account effects
+PASS same-tenant viewer cannot calculate mutation preview
+PASS failed policy history insert rolls back membership and plan version atomically
+PASS no-bank policy remains explicitly incomplete rather than verified zero
+PASS account policy cannot silently invalidate a pending frequency change
+PASS account policy intent and impact history are immutable
+PASS preserved limits must fit each new pool and failed preview writes roll back
+PASS frequency preview requires explicit incomplete-history acceptance
+PASS concurrent schedules leave exactly one pending intent
+PASS pending receipt replays before disabled/version checks
+PASS scheduling preserves active dates, revision and frequency
+PASS initial and continuing templates retain separately reviewed amounts
+PASS monthly-to-fortnight boundaries are exact
+PASS duplicate intent, early apply and ordinary period opening cannot bypass pending change
+PASS cancel appends state without changing current template
+PASS compatible cancellation undo restores pending intent
+PASS schedule undo is append-only cancellation
+PASS later plan edits mark saved frequency intent as requiring fresh review
+PASS undo cannot launder an outdated pending preview into a fresh one
+PASS foreign reader cannot inspect frequency history through workspace
+PASS frequency review snapshots are immutable
+PASS concurrent bridge application commits once
+PASS applied transition receipt replays exactly with writes disabled
+PASS bridge opens at exact boundary with immutable short-month dates
+PASS bridge and full continuing amounts remain distinct
+PASS old activated plan remains unchanged
+PASS applied periods cannot be deleted or historical plans rewritten
+PASS first full month follows bridge without gaps
+PASS reserve opening rights are not duplicated by the frequency switch
+PASS a linked refund across fortnight, bridge and monthly windows restores reserve once
+PASS late cross-frequency matching marks reviewed history changed without rewriting its snapshot
+PASS incomplete history needs explicit review qualification
+PASS review records signed closing variance
+PASS saved review is immediately consistent
+PASS concurrent next-period creation commits only one contiguous period
+PASS same-key next-period retry replays exactly even with writes disabled
+PASS next period starts at the exact old end
+PASS new period never repeats opening cash
+PASS reserve opening intent is not credited a second time
+PASS negative opening carry protects already-needed new allowance from a move
+PASS signed carry minus spending reconciles across periods
+PASS carry is not new income or a new allocation
+PASS default snapshot opens today instead of the last viewed period
+PASS second signed carry enters Other exactly once
+PASS late correction recomputes the full carry chain
+PASS late correction marks original review changed
+PASS recorded review totals remain immutable after source change
+PASS older review undo cannot erase dependent periods or source changes
+PASS reopening appends history without discarding the carry choice
+PASS compatible review undo appends the previous state
+PASS explicit start-fresh changes next carry, not the old signed variance
+PASS undo restores prior carry intent and derived downstream totals
+PASS real Edge rejects a completed review for an in-progress period
+PASS workspace can retrieve an explicit saved period
+PASS foreign workspace period is not disclosed
+PASS review financial snapshots cannot be rewritten
+PASS an old period cannot create an overlapping next period
+PASS unavailable history suppresses carry and everyday remainder
+PASS released reserve rights are carried exactly once
+PASS reviewed manual history remains explicitly provisional
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS 390px assisted setup has no horizontal overflow
+PASS phone assistance preview creates no draft or plan
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS insufficient history keeps the phone manual path usable
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS assisted browser draft conserves the optional one-change allocation
+PASS using assistance does not activate a budget
+PASS assisted draft still requires separate activation
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS stale assisted draft conversion preserves goal intent and labels provenance manual
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS assisted activation preserves the named goal target, date and future contribution
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS 1440px temporal: saved selection reloads original period with its own goal amount
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS 1440px temporal: saved selection reloads transition period with its own goal amount
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS 1440px temporal: saved selection reloads continuing period with its own goal amount
+PASS 1440px temporal: combined history has no horizontal overflow
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS 390px temporal: saved selection reloads original period with its own goal amount
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS 390px temporal: saved selection reloads transition period with its own goal amount
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS 390px temporal: saved selection reloads continuing period with its own goal amount
+PASS 390px temporal: combined history has no horizontal overflow
+PASS workspace returns tenant-bound account names and real currencies
+PASS workspace exposes no balances or raw transactions
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS saving setup has not activated a plan
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS authenticated desktop flow activates a saved monthly plan
+PASS desktop displays complete 1005-row SQL totals without coverage overclaim
+PASS period-only edit preserves future income
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS lost-response recovery survives reload with exactly one new revision
+PASS stale-source rejection preserves edits and requires fresh review
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS authenticated viewer has a read-only tablet workspace
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS phone no-bank zero-income fortnightly setup activates
+PASS 390px Budget workspace has no horizontal overflow
+PASS phone future funding gap needs explicit acceptance
+PASS read failure preserves last verified workspace with explicit warning
+PASS phone goal creation saves one allocation and a separate opening reserve
+PASS phone manual evidence does not add reserve credit again
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS compatible latest undo remains discoverable after reload
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS suggestion review does not create a bill before save
+PASS detected bill saves only after explicit reviewed confirmation
+PASS changed detector terms propose but do not rewrite saved bill
+PASS accepting detector proposal persists reviewed price
+PASS dirty Escape retains edits on decline and restores opener on confirmed close
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS phone purchase and linked refund preserve net achievement
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS phone release preview, balanced save, reload and compatible undo work together
+PASS phone M4 cards do not overflow
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS tablet replaces overlapping category with tenant-custom scope without duplicating pool
+PASS category removal leaves everyday allocation unchanged
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS phone period selector retains enough width to read the date range
+PASS phone review stores a qualified signed carry choice without rewriting the plan
+PASS phone opens the next contiguous saved period
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS selected period survives reload without allowing an early completed review
+PASS historical review compares original/latest allowance and canonical activity without page overflow
+PASS late source edit recomputes live carry while showing the immutable reviewed snapshot
+PASS M5 phone review/current navigation has no horizontal overflow
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS phone frequency preview saves separately reviewed amounts without changing current period
+PASS invalid blank amount and funding gap require correction and explicit review
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS pending frequency change and separate templates survive reload
+PASS frequency form and saved preview do not overflow phone canvas
+PASS real phone cancellation and guarded undo preserve pending intent
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS phone future-only account preview leaves current actuals unchanged
+PASS account effects table scrolls locally without overflowing the phone workspace
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS dated future account policy survives real signed-in reload without changing current figures
+PASS phone compatible account-policy undo restores saved timeline
+PASS account preview exposes pending, signed category and carry effects without hiding gaps
+PASS phone current-only account policy changes recorded scope without changing allowances
+PASS stale account save retains selections while refresh invalidates the prior effect preview
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS parent rollover shortcuts change category and Other rules before an explicit preview
+PASS phone rollover preview shows signed child carry and separate protected money
+PASS rollover controls and effect tables do not overflow phone workspace
+PASS future rollover save leaves current actuals and period unchanged
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS future rollover policy survives authenticated reload
+PASS category removal keeps its identity and requires a visible signed destination
+PASS changing a rollover rule discards confirmation and retains other local choices
+PASS leaving inline rollover restores keyboard focus to its trigger
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS phone pause survives reload and blocks frequency without hiding the saved plan
+PASS resume requires a separate carry acknowledgement and keeps one saved period
+PASS lifecycle preview retains choices but drops confirmation on refreshed facts and fits phone
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS real Edge archive persists zero future refill and preserves current and unrelated future allowances
+PASS phone compatible archive undo restores line controls and future allocation
+PASS desktop lifecycle preview uses native choices and has no page overflow
+PASS unsaved lifecycle exit supports cancelling and restores opener focus
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS inspect jumps to the actual everyday balance without losing period context
+PASS phone review quiets the reminder while keeping the signed gap and financial version
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS phone snooze validates dates, retains choices on stale refresh and protects unsaved period navigation
+Budget test dev-server: [vite] connecting...
+Budget test dev-server: [vite] connected.
+PASS attention and persistent gap summary do not overflow the phone workspace
+PASS desktop review supports cancelled exit and restores keyboard focus
+PASS non-monetary review copy does not invent a money gap
+PASS category inspection targets the existing allowance controls instead of a dead link
+PASS production Budget journeys have no browser runtime errors
+PASS disabled Edge still returns original commit receipt
+PASS disabled Edge rejects new writes
+PASS disabled Edge preserves authenticated plan reads
+PASS disabled workspace reads expose paused writes
+PASS disabled Edge exposes durable outcome lookup
+PASS only created fixture identities removed
+PASS fixture accounts and transactions removed
+PASS tenant cascades leave no Budget plans or source gates
+560 durable-boundary integration checks passed.
+Removed only disposable resources for halcyon-budget-m2-44b18408f7d940c3; no personal stack cleanup.

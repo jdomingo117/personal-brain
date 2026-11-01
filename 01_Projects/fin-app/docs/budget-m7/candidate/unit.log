@@ -1,0 +1,13 @@
+
+> halcyon-app@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.12 /private/var/folders/9x/g5gs98n95kj0m53j3g8dcypw0000gn/T/halcyon-m77-patched-source-b_vxbgaq/app
+
+
+ Test Files  65 passed | 2 skipped (67)
+      Tests  609 passed | 14 skipped (623)
+   Start at  16:37:03
+   Duration  2.35s (transform 2.18s, setup 0ms, import 4.59s, tests 3.18s, environment 6ms)
+
