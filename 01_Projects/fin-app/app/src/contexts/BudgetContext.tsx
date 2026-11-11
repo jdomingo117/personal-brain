@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type MutableRefObject } from 'react'
 import { useAuth } from './AuthContext'
 import { supabase } from '../lib/supabaseClient'
-import { BUDGET_ENABLED, BUDGET_METHOD, recoverBudgetCommand, type BudgetReadState, type Command, type Draft, type Receipt, type Setup, type Snapshot } from '../lib/budgetWorkspace'
+import { BUDGET_ENABLED, BUDGET_METHOD, recoverBudgetCommand, type BudgetAccountActivity, type BudgetCoverage, type BudgetReadState, type Command, type Draft, type Receipt, type Setup, type Snapshot } from '../lib/budgetWorkspace'
 import type { BudgetSourcesPage } from '../lib/budgetItems'
 import type {AccountScopeIntent,AccountScopePreview} from '../lib/budgetAccountPolicy'
 import type {RolloverIntent,RolloverPreview} from '../lib/budgetRollover'
@@ -40,6 +40,8 @@ type Workspace = {
   previewRollover:(intent:RolloverIntent)=>Promise<RolloverPreview>;
   previewControl:(intent:ControlIntent)=>Promise<ControlPreview>;
   assistedSetup:(input:AssistanceRequest)=>Promise<AssistanceResult>;
+  coverage:(accountId:string)=>Promise<BudgetCoverage>;
+  accountActivity:()=>Promise<BudgetAccountActivity>;
 }
 const BudgetContext=createContext<Workspace|null>(null)
 export function useBudget(){const ctx=useContext(BudgetContext);if(!ctx)throw new Error('Budget workspace is unavailable');return ctx}
@@ -69,6 +71,8 @@ function BudgetSession({children,identity,tenantId,owner,guardResolver,requestNa
   })
   const mounted=useRef(true),working=useRef(false),sequence=useRef(0)
   const taskGuard=useRef<BudgetNavigationGuard|null>(null)
+  const coverage=useCallback((accountId:string)=>invoke<BudgetCoverage>('query-budget',{action:'coverage',account_id:accountId}),[])
+  const accountActivity=useCallback(()=>invoke<BudgetAccountActivity>('query-budget',{action:'account_activity'}),[])
   const guardTaskNavigation=useCallback((guard:BudgetNavigationGuard)=>{
     taskGuard.current=guard
     return ()=>{if(taskGuard.current===guard)taskGuard.current=null}
@@ -133,7 +137,9 @@ function BudgetSession({children,identity,tenantId,owner,guardResolver,requestNa
       const receipt=recovery?await recoverBudgetCommand(command,b=>invoke('query-budget',b),b=>invoke('manage-budget',b)):await invoke<Receipt>('manage-budget',command)
       if(!mounted.current)return null
       if(receipt.request_id!==command.request_id||receipt.status!=='committed')throw new BudgetApiError('The saved result needs to be checked again.',false)
-      checkpoint(null);setEditing(null);setNotice(receipt.result.attention_version?'Review preference saved. Budget amounts are unchanged.':command.action==='save_draft'?'Draft saved. Your budget is not active yet.':'Budget saved. No money was moved.')
+      const coverageChange=command.action==='confirm_coverage'||command.action==='revoke_coverage'
+      checkpoint(null);if(!coverageChange)setEditing(null)
+      setNotice(receipt.result.attention_version?'Review preference saved. Budget amounts are unchanged.':command.action==='save_draft'?'Draft saved. Your budget is not active yet.':command.action==='confirm_coverage'?'Account history dates confirmed. Transactions are unchanged.':command.action==='revoke_coverage'?'History confirmation removed. Transactions are unchanged.':'Budget saved. No money was moved.')
       await refresh();return receipt
     }catch(e){
       if(mounted.current) {
@@ -162,7 +168,7 @@ function BudgetSession({children,identity,tenantId,owner,guardResolver,requestNa
     catch(e){if(e instanceof BudgetApiError&&!e.definitive)throw Error('We couldn’t finish checking the budget effects. Completed checks are saved. Review the effects again to continue; no budget change has been saved.');throw e}
   }
   return <BudgetContext.Provider value={{snapshot,draft,editing,setEditing,loading,busy,error,notice,pending,readState,preparation,impactPreparation,canWrite:BUDGET_ENABLED&&owner&&!!snapshot?.write_enabled&&!pending&&!preparation&&!busy&&!loading,
-    refresh,run,sources,assistedSetup:async input=>{
+    refresh,run,sources,coverage,accountActivity,assistedSetup:async input=>{
       if(!owner||pending||working.current||loading)throw Error('Load the latest Budget workspace before checking history.')
       const result=await invoke<AssistanceResult>('query-budget',{action:'assisted_setup',...input})
       if(!mounted.current||result.source_revision!==snapshot?.source_revision)throw Error('Account activity changed while suggestions were being prepared. Check history again.')

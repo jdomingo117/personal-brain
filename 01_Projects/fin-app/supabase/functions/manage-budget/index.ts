@@ -1,9 +1,10 @@
 import { withBudgetTelemetry } from '../_shared/budgetTelemetry.ts'
 import { withAuth } from '../_shared/withAuth.ts'
-import { BudgetCommand, budgetFailure } from '../_shared/budgetApi.ts'
+import { BudgetCommand, budgetFailure, requireBudgetAccess } from '../_shared/budgetApi.ts'
 
 Deno.serve(withBudgetTelemetry('manage-budget',withAuth({redactErrorDetails:true,schema:BudgetCommand,requireRole:'owner',maxBodyBytes:262144,
   rateLimit:{limit:10,windowSec:60,onError:'closed'}},async ctx => {
+  requireBudgetAccess(ctx.user.id,ctx.role)
   const {request_id,...command}=ctx.body
   // SQL resolves duplicate receipts before inspecting mutable drafts, then validates the stored
   // ready setup in the same transaction. A pre-read here would introduce a receipt/draft race.

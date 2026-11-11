@@ -1,5 +1,5 @@
 {
-  "decision": "M7.7 local candidate verified; live provider authorized but blocked by depleted Gemini prepayment credits; release No-Go",
+  "decision": "M7.7 candidate verified, including all eight live-provider golden tests; remaining human, hosted and release gates open; release No-Go",
   "schema_migrations": 104,
   "source_files_bound": 563,
   "financial_sql_changed": false,
@@ -48,15 +48,65 @@
     "parent_pid": 80255,
     "primary_node_modules_modified": false
   },
-  "cleaned_projects": 16,
+  "cleaned_projects": 20,
   "open_gates": [
-    "Live provider qualification: Google HTTP402 depleted prepayment credits (owner authorization granted)",
     "M7.3 observed human accessibility",
     "M7.4 independent beginner comprehension",
     "M7.5 hosted/cold/load qualification",
     "M7.8 owner release/exposure decision"
   ],
   "golden_live": {
+    "date": "2026-11-09",
+    "status": "passed",
+    "project_id": "halcyon-golden-isolated-1794145158491",
+    "golden_result": {
+      "passed": 8,
+      "failed": 0,
+      "did_not_run": 0
+    },
+    "duration": "1.8m",
+    "provider_generation_probe": {
+      "model": "gemini-2.5-flash",
+      "synthetic_input_only": true,
+      "http_status": 200,
+      "generated": true
+    },
+    "cold_ai_classification_passed": true,
+    "fresh_ui_review_passed": true,
+    "preview_cancel_preserved_transaction_and_merchant_cache": true,
+    "source_hashes_verified": 563,
+    "fixture_hashes_verified": 2,
+    "browser_typecheck": "passed",
+    "temporary_provider_environment_removed": true,
+    "retained_preview_database_running": true,
+    "attempts": {
+      "halcyon-golden-isolated-1794144792841": {
+        "result": "docker_credential_helper_stalled",
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      },
+      "halcyon-golden-isolated-1794144986037": {
+        "result": "sandbox_blocked_chromium_launch",
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      },
+      "halcyon-golden-isolated-1794145091281": {
+        "result": "missing_statement_fixtures_in_test_copy",
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      },
+      "halcyon-golden-isolated-1794145158491": {
+        "result": "passed",
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    }
+  },
+  "golden_live_previous": {
     "status": "blocked_provider_prepayment_credits",
     "authorization": "granted",
     "initial_project": "halcyon-golden-isolated-1793256035206",

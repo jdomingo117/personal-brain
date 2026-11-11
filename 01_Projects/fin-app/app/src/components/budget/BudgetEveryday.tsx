@@ -12,7 +12,6 @@ export default function BudgetEveryday({presentation:p,canWrite,rollover,policyM
   <div className="budget-everyday-heading"><div><p className="micro text-muted">DAY-TO-DAY COSTS</p><h3>Your everyday spending</h3></div><span className="budget-everyday-tag">{p.categoryMode==='unavailable'?'Category details unavailable':p.categoryMode==='limits'?'Category limits on':'One shared allowance'}</span></div>
   <p className="budget-everyday-intro">{p.categoryMode==='limits'?'Keep an eye on a few categories. The rest stays together.':'One allowance covers everyday costs. Category limits are optional.'}</p>
   {p.coverage==='none'&&<p className="budget-everyday-notice">Manual plan · recorded spending is unavailable; remaining amounts are provisional.</p>}
-  {p.coverage==='partial'&&<p className="budget-everyday-notice">Known activity only · missing history can change these balances.</p>}
   {p.phase==='future'&&<p className="budget-everyday-notice">Future allowance · balances are provisional and spending is not recorded activity.</p>}
   {p.everyday.remaining.freshness==='stale'&&<p className="budget-everyday-notice">Previously loaded amounts · finish the data check or check the saved result before relying on these figures.</p>}
   {p.everyday.remaining.availability==='unavailable'&&<p className="budget-everyday-notice">Balances are unavailable. Refresh saved data before relying on them.</p>}
@@ -22,13 +21,13 @@ export default function BudgetEveryday({presentation:p,canWrite,rollover,policyM
    <ul className="budget-everyday-rows">{rows.map(row=>{
     const over=row.remaining.availability==='known'&&row.remaining.cents<0
     return <li key={row.id} data-budget-category={row.id}><details className="budget-everyday-row">
-     <summary><span className="budget-everyday-name"><strong>{row.name}</strong><small>View allowance details</small></span>
+     <summary><span className="budget-everyday-name"><strong>{row.name}</strong><small>Details</small></span>
       <span className="budget-everyday-number"><small>Planned</small><BudgetValue name={row.plannedName} value={row.planned}/></span>
       <span className="budget-everyday-number"><small>Spent</small><BudgetValue name={row.usedName} value={row.spent}/></span>
       <span className={`budget-everyday-number${over?' text-neg':''}`}><small>{over?'Over plan':'Left'}</small><strong><BudgetValue name={row.remainingName} value={row.remaining}/></strong>{over&&<span className="budget-everyday-over">Over plan</span>}</span>
      </summary>
-     <div className="budget-everyday-detail"><dl className="budget-totals"><dt>{rollover?'Carried across categories':'Carried into Other'}</dt><dd><BudgetValue name={row.carryName} value={row.carry}/></dd></dl>
-      <p className="detail-copy text-muted">{p.categoryMode==='limits'?'This is part of the shared everyday allowance. Its remaining balance includes applicable carry and allowance movements.':'Your shared allowance includes any carry and reserve rights moved here. You can use it without setting category limits.'}</p>
+     <div className="budget-everyday-detail"><dl className="budget-totals"><dt>{rollover?'Carried across categories':'Carried over'}</dt><dd><BudgetValue name={row.carryName} value={row.carry}/></dd></dl>
+      <p className="detail-copy text-muted">{p.categoryMode==='limits'?'This is part of the shared everyday allowance. Its remaining balance includes applicable carry and allowance movements.':'One amount for all everyday spending. Category limits are optional.'}</p>
       <div className="budget-everyday-actions"><Button variant="ghost" disabled={!canWrite} onClick={onMove}>Move an allowance</Button><Button variant="ghost" disabled={!canWrite} onClick={onActivity}>Review activity & credits</Button></div>
      </div>
     </details></li>
@@ -36,15 +35,7 @@ export default function BudgetEveryday({presentation:p,canWrite,rollover,policyM
   </>}
   <div className="budget-everyday-footer"><Button variant="ghost" disabled={!canWrite||policyManaged} onClick={onLimits}>Category limits</Button><span className="detail-copy text-muted">One shared total. Nothing counted twice.</span></div>
   {policyManaged&&<p className="budget-everyday-notice">Use Rollover and category settings to change next-budget categories and decide where their balances go.</p>}
-  <details className="budget-everyday-calculation"><summary>How the everyday allowance adds up</summary><div className="budget-everyday-detail">
-   <dl className="budget-totals" data-budget-line={p.everyday.id??undefined}>
-    <dt>Planned</dt><dd><BudgetValue  value={p.everyday.planned}/></dd>
-    <dt>{rollover?'Carried across categories':'Carried into Other'}</dt><dd><BudgetValue name={p.categoryMode==='pool'?undefined:'everyday-carry'} value={p.everyday.carry}/></dd>
-    <dt>Reserve rights moved here</dt><dd><BudgetValue name="everyday-rights" value={p.everyday.rightsMoved}/></dd>
-    <dt>Recorded everyday spending</dt><dd><BudgetValue  value={p.everyday.spent}/></dd>
-    <dt>Remaining in this allowance</dt><dd><BudgetValue  value={p.everyday.remaining}/></dd>
-   </dl><p className="detail-copy text-muted">Assigned bill/reserve spending is not also everyday spending. Unmatched credits ({credits}) and explicitly excluded spending ({excluded}) stay separate.</p>
-  </div></details>
+  <p className="detail-copy text-muted">Bills and set-asides you match aren’t counted as everyday spending too. Unmatched refunds ({credits}) and spending you’ve excluded ({excluded}) stay separate.</p>
   <div className="budget-everyday-actions budget-everyday-tools"><Button variant="ghost" disabled={!canWrite} onClick={onMove}>Move an allowance</Button><Button variant="ghost" disabled={!canWrite} onClick={onActivity}>Review activity & credits</Button><Button variant="ghost" disabled={!canWrite} onClick={onReserve}>Add a set-aside fund</Button><Button variant="ghost" disabled={!canWrite} onClick={onTransfer}>Plan a transfer</Button></div>
  </section>
 }

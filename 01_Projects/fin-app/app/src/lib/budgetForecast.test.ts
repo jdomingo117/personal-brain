@@ -19,6 +19,6 @@ it('never presents Within plan from unavailable data, and distinguishes known ze
  f.flexible.status='unavailable';expect(forecastReadProblem(s,'ready',false,now)).toBeNull()
  f.flexible.available=true;f.flexible.status='within_plan';f.flexible.projected_cents=0;for(const m of f.flexible.history)m.gross_cents=0;f.flexible.median!.gross_cents=0
  expect(forecastReadProblem(s,'ready',false,now)).toBeNull()
- expect(forecastReason('not_enough_history')).toContain('missing months are not zero')
- expect(forecastReason('incomplete_coverage')).toContain('cannot establish a Within plan')
+ expect(forecastReason('not_enough_history')).toContain('aren’t counted as $0')
+ expect(forecastReason('incomplete_coverage')).toContain('until this budget’s spending is up to date')
 })

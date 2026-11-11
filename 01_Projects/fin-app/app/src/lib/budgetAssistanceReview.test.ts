@@ -80,7 +80,7 @@ describe('R04 explicit inputs and preservation',()=>{
  it('keeps negative observations separate from non-negative user-chosen allocations',()=>{
   const signed={...result,observations:{everyday:{median_cents:-51,min_cents:-300,max_cents:20}},suggestions:{...result.suggestions,everyday_cents:null}}
   const r=review()
-  expect(()=>applyAssistance(base(),signed,undefined,r)).toThrow(/own non-negative/)
+  expect(()=>applyAssistance(base(),signed,undefined,r)).toThrow(/own (non-negative )?everyday/)
   r.everyday_cents=0
   const next=applyAssistance(base(),signed,undefined,r)
   expect(next.lines[0].allocation_cents).toBe(0)

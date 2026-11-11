@@ -1,0 +1,67 @@
+{
+  "date": "2026-11-09",
+  "status": "r09_verified_isolated",
+  "schema_migrations": 105,
+  "source_manifest_sha256": "f25d4634aca40e3be474affab1fe64c81840db975d547ec14b10eb432486a022",
+  "changed_or_added_sources": [
+    "app/scripts/test-budget-coverage.mjs",
+    "app/scripts/test-budget-forecast.mjs",
+    "app/scripts/test-budget-workspace.mjs",
+    "app/src/components/BudgetAssistance.tsx",
+    "app/src/components/Controls.tsx",
+    "app/src/components/budget/BudgetHistoryCoverage.tsx",
+    "app/src/components/budget/BudgetSettings.tsx",
+    "app/src/contexts/BudgetContext.tsx",
+    "app/src/lib/budgetWorkspace.ts",
+    "app/src/views/Budget.tsx",
+    "supabase/functions/_shared/budgetApi.ts",
+    "supabase/functions/query-budget/index.ts",
+    "supabase/migrations/20261109000000_budget_history_coverage.sql"
+  ],
+  "combined_assertions": 422,
+  "r09_assertions": 31,
+  "provider_disabled_golden_passes": 8,
+  "unit_passes": 609,
+  "unit_skips": 14,
+  "typechecks": "full/focused/browser passed",
+  "production_build": "passed",
+  "attempt_cleanup": {
+    "coverage.log": {
+      "project": "halcyon-budget-m2-aa60136f3f0042f1",
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0
+    },
+    "coverage-rerun.log": {
+      "project": "halcyon-budget-m2-2155976798024657",
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0
+    },
+    "coverage-final.log": {
+      "project": "halcyon-budget-m2-989b9dec38294dd5",
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0
+    },
+    "coverage-verified.log": {
+      "project": "halcyon-budget-m2-bec1b2a4a8c448e2",
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0
+    },
+    "golden.log": {
+      "project": "halcyon-golden-isolated-1794146688017",
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0
+    },
+    "golden-verified.log": {
+      "project": "halcyon-golden-isolated-1794147089947",
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0
+    }
+  },
+  "release_decision": "No-Go; human and hosted qualification and target preflight remain open"
+}

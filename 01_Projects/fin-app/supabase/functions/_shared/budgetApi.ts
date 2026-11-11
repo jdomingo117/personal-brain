@@ -1,5 +1,17 @@
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
-import { SafeHttpError } from './withAuth.ts'
+import { SafeHttpError, type TenantRole } from './withAuth.ts'
+
+export function requireBudgetAccess(userId: string, role: TenantRole): void {
+  const ownerId = Deno.env.get('BUDGET_PILOT_OWNER_USER_ID')
+  // Shared access is used by the disposable multi-user regression and preview harnesses.
+  if (ownerId === undefined && Deno.env.get('BUDGET_TEST_SHARED_ACCESS') === 'true') return
+  if (role === 'owner' && userId === ownerId) return
+  throw new SafeHttpError(403, {
+    code: 'budget_access_restricted',
+    message: 'Budget is available only to the invited owner during this pilot.',
+    retryable: false,
+  })
+}
 
 const Money = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)
 const Version = z.string().regex(/^(0|[1-9]\d*)$/).max(19).refine(v => /^(0|[1-9]\d*)$/.test(v) && v.length<=19 && BigInt(v) <= 9223372036854775807n)
@@ -15,6 +27,8 @@ const FrequencyTemplate=z.object({income_cents:Money,accept_gap:z.boolean(),line
 const Item=z.object({type:z.enum(['bill','reserve','goal','contribution']),name:z.string().trim().min(1).max(60),target_cents:Money.nullable(),estimated:z.boolean(),due_date:DateOnly.nullable(),
  cadence:z.enum(['once','weekly','fortnightly','monthly','quarterly','annual']),anchor:DateOnly,amount_cents:Money,state:z.enum(['draft','saving','paused','purchase-recorded']),recurring_id:z.string().uuid().nullable(),planning_goal_id:z.string().uuid().nullable(),source_account_id:z.string().uuid().nullable().optional(),source_merchant_key:z.string().min(1).max(240).nullable().optional(),featured:z.boolean().optional()}).strict()
 export const BudgetCommand = z.discriminatedUnion('action',[
+  z.object({...common,action:z.literal('confirm_coverage'),account_id:z.string().uuid(),first_date:DateOnly,last_date:DateOnly,confirmed:z.literal(true)}).strict(),
+  z.object({...common,action:z.literal('revoke_coverage'),coverage_id:z.string().uuid()}).strict(),
   z.object({...active,action:z.literal('set_attention'),expected_attention:Version,issue_key:z.string().min(1).max(160),issue_hash:z.string().regex(/^[a-f0-9]{64}$/),state:z.enum(['acknowledged','snoozed','active']),until:DateOnly.nullable()}).strict(),
   z.object({...active,...Control,action:z.literal('set_control'),preview_hash:z.string().regex(/^[a-f0-9]{64}$/),accept_impact:z.boolean(),accept_incomplete:z.boolean(),accept_carry:z.boolean()}).strict(),
   z.object({...active,...Rollover,action:z.literal('set_rollover'),preview_hash:z.string().regex(/^[a-f0-9]{64}$/),accept_impact:z.boolean(),accept_incomplete:z.boolean()}).strict(),
@@ -41,6 +55,8 @@ export const BudgetCommand = z.discriminatedUnion('action',[
   z.object({...common,action:z.literal('undo'),operation_id:z.string().uuid()}).strict(),
 ])
 export const BudgetQuery = z.discriminatedUnion('action',[
+  z.object({action:z.literal('coverage'),account_id:z.string().uuid()}).strict(),
+  z.object({action:z.literal('account_activity')}).strict(),
   z.object({action:z.literal('assisted_setup'),timezone:z.string().min(1).max(100).optional(),frequency:z.enum(['monthly','fortnightly']),start_date:DateOnly,anchor:DateOnly.optional(),account_ids:z.array(z.string().uuid()).max(100)}).strict(),
   z.object({action:z.literal('prepare_history'),plan_id:z.string().uuid(),period_id:z.string().uuid(),expected_source:Version,expected_plan:Version}).strict(),
   z.object({action:z.literal('preview_control'),...Control,plan_id:z.string().uuid(),period_id:z.string().uuid(),expected_source:Version,expected_plan:Version,expected_method:z.string().min(1).max(64)}).strict(),
@@ -60,6 +76,9 @@ export function budgetFailure(error: { code?: string; message?: string }): never
   if(code==='budget_invalid_attention_period')throw new SafeHttpError(422,{code,message:'Review preferences can be changed for the budget currently in progress. Saved history remains available to inspect.',retryable:false})
   if(code==='budget_invalid_attention_date')throw new SafeHttpError(422,{code,message:'Choose a reminder date after today, no later than the end of this budget.',retryable:false})
   if(code==='budget_invalid_accounts')throw new SafeHttpError(422,{code,message:'Choose no more than 100 available AUD accounts for assisted setup.',retryable:false})
+  if(code==='budget_invalid_coverage_dates'||error.code==='22008')throw new SafeHttpError(422,{code:code??'invalid_input',message:code?'Choose a date range of up to 10 years, ending today or earlier.':'Check the dates and try again.',retryable:false})
+  if(code==='budget_coverage_already_confirmed'||code==='budget_coverage_unavailable')throw new SafeHttpError(409,{code,message:code==='budget_coverage_already_confirmed'?'You already confirmed these dates.':'This confirmation is no longer available. Refresh to see your saved dates.',retryable:false})
+  if(code==='budget_coverage_limit')throw new SafeHttpError(422,{code,message:'This account already has 50 saved confirmations. Remove an old confirmation before adding another.',retryable:false})
   if(code==='budget_assistance_review_required')throw new SafeHttpError(422,{code,message:'Review expected income, pay dates and individual costs, or explicitly keep this draft as manual estimates.',retryable:false})
   if(code==='budget_stale_assistance')throw new SafeHttpError(409,{code,message:'The history behind these suggestions changed. Recheck it, or explicitly keep your edited amounts as manual estimates.',retryable:false})
   if(code==='budget_paused')throw new SafeHttpError(409,{code,message:'Budget planning is paused. Review the uncovered dates and carry before resuming and opening another budget.',retryable:false})

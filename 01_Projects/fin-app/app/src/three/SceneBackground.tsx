@@ -39,10 +39,12 @@ export default function SceneBackground({
   view,
   motionOn = true,
   dark = false,
+  quiet = view === 'budget' || view === 'ingestion' || view === 'transfers',
 }: {
   view: View
   motionOn?: boolean
   dark?: boolean
+  quiet?: boolean
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const api = useRef<{ setView: (v: View) => void; setMotion: (on: boolean) => void; setDark: (d: boolean) => void } | null>(null)
@@ -254,11 +256,11 @@ export default function SceneBackground({
 
   return (
     <>
-      <div className={`scene-wash ${view === 'ingestion' || view === 'transfers' ? 'scene-wash--quiet' : ''}`} aria-hidden />
+      <div className={`scene-wash ${quiet ? 'scene-wash--quiet' : ''}`} aria-hidden />
       <canvas
         ref={canvasRef}
         aria-hidden
-        className={`fixed inset-0 transition-opacity ${view === 'ingestion' || view === 'transfers' ? 'opacity-25' : 'opacity-100'}`}
+        className={`fixed inset-0 transition-opacity ${quiet ? 'opacity-25' : 'opacity-100'}`}
         style={{ width: '100vw', height: '100vh', zIndex: 0 }}
       />
     </>

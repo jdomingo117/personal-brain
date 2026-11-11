@@ -9,7 +9,7 @@ type: implementation-plan
 status: m7-verification-in-progress
 project: Halcyon
 created: 2026-10-20
-updated: 2026-10-29
+updated: 2026-11-09
 related:
   - "[[BUDGET_SCOPE_BASELINE]]"
   - "[[BUDGET_FEATURE_SPEC]]"
@@ -21,7 +21,13 @@ related:
 # Budget V1 — technical implementation plan
 
 
-**M7.7 local candidate verified — 29 October 2026.** [[BUDGET_M7_CANDIDATE_OPERATIONS]] records final patched-installation passes: 560 lifecycle, 391 forecast/assistance/candidate assertions, eight provider-disabled golden tests, 78 passing WCAG scans, 609 unit passes/14 existing skips, types/build and eight telemetry-summary assertions. Budget now has fixed-field privacy-safe request metrics and redacted audit/error diagnostics. Compatible development dependency updates (Vite 6.4.5 / Vitest 4.1.12 in the lock) clear 17 npm advisory entries; no runtime dependency version or financial SQL changed. All sixteen M7.7 test projects, including the two live attempts, are cleaned up. [[BUDGET_OPERATIONS_RUNBOOK]] supplies private-exposure/monitoring/recovery procedures. The owner subsequently authorized the live Gemini categorization test; [[BUDGET_M7_LIVE_CATEGORIZATION]] records two isolated attempts and a definitive generation HTTP402 / RESOURCE_EXHAUSTED response: prepayment credits are depleted. Live classification/fresh-review remains unpassed pending owner-restored credits and a rerun; no billing change was attempted. Human/hosted/M7.8 gates remain open; No-Go. No deployment or personal migration.
+**R09 history coverage implemented — 9 November 2026.** [[BUDGET_R09_HISTORY_COVERAGE]] records the owner-only date confirmation and removal flow, plus isolated proof that forecasts and assistance use attested ranges and return to their safe fallback when evidence is revoked. No personal or hosted migration. Observed accessibility, independent beginner comprehension, hosted performance and exact target preflight remain open.
+
+**M7.8 decision recorded — 9 November 2026: No-Go for real-data release.** The owner expressed approval to release Budget V1. [[BUDGET_M7_RELEASE_DECISION]] reconciles that approval with the verified candidate and the requirements open at the decision: R09 history coverage entry point, M7.3 observed accessibility, M7.4 independent beginner comprehension, M7.5 hosted/cold/load, and a named private target with its own preflight. No target was migrated or enabled.
+
+**M7.7 live categorization verified — 9 November 2026.** After the owner restored Gemini credits, [[BUDGET_M7_LIVE_CATEGORIZATION]] recorded **eight passing live-provider golden tests**. The suite verified real cold AI classification, a fresh uncached Ledger suggestion, and unchanged transaction and merchant-cache state after closing the preview. All four rerun targets were cleaned up and the temporary provider file was removed. This completes the M7.7 evidence used in the decision above.
+
+**M7.7 local candidate verified — 29 October 2026.** [[BUDGET_M7_CANDIDATE_OPERATIONS]] records final patched-installation passes: 560 lifecycle, 391 forecast/assistance/candidate assertions, eight provider-disabled golden tests, 78 passing WCAG scans, 609 unit passes/14 existing skips, types/build and eight telemetry-summary assertions. Budget now has fixed-field privacy-safe request metrics and redacted audit/error diagnostics. Compatible development dependency updates (Vite 6.4.5 / Vitest 4.1.12 in the lock) clear 17 npm advisory entries; no runtime dependency version or financial SQL changed. All sixteen M7.7 test projects, including the two live attempts, are cleaned up. [[BUDGET_OPERATIONS_RUNBOOK]] supplies private-exposure/monitoring/recovery procedures. The owner subsequently authorized the live Gemini categorization test; [[BUDGET_M7_LIVE_CATEGORIZATION]] records two isolated attempts and a definitive generation HTTP402 / RESOURCE_EXHAUSTED response: prepayment credits are depleted. The October attempts did not verify live classification/fresh-review; the November rerun above resolves that finding. Human/hosted/M7.8 gates remain open; No-Go. No deployment or personal migration.
 
 **M7.6 isolated migration/recovery rehearsal complete — 29 October 2026.** [[BUDGET_M7_MIGRATION_RECOVERY]] records 164 passing final assertions: populated forward migration from 64 to 104 migrations, pre-/post-Budget auth/application backups restored into separate databases, exact 81/108-table content and sequence parity, original-user password sign-in, tenant RLS, signed-cent totals, recorded review/reserves/edited drafts and receipt preservation with writes disabled/re-enabled. The focused workspace suite passes 25 tests. All three rehearsal projects are cleaned up; private fictional backups remain ignored outside Docker, and preview96/personal data are unchanged. Next engineering: M7.7 final candidate cross-feature/security/operations review. M7.3/M7.4 human, M7.5 hosted/cold/load and M7.8 release gates remain open; No-Go.
 
@@ -640,12 +646,7 @@ silently shipping a reduced feature. Final migration DDL is reviewed after these
 
 ## 15. Immediate next step
 
-M7.1 baseline audit and M7.2 automated accessibility audit are complete in
-[[BUDGET_M7_RELEASE_VERIFICATION]] and [[BUDGET_M7_ACCESSIBILITY]]. Following owner visual feedback,
-next planned work is **BUI-01 — reference/action/data mapping**, then the bounded presentation
-bursts in [[BUDGET_UI_IMPLEMENTATION_HANDOFF]]. M7.3 human accessibility validation resumes on
-stable revised flows, with renewed automated evidence. R01–R05 require separately bounded engineering
-follow-ups before the final release candidate; M6's historical closeout does not waive them.
+[[BUDGET_M7_RELEASE_DECISION]] records the M7.8 No-Go for real-data rollout and the owner's release approval. R09 is implemented and has isolated end-to-end proof in [[BUDGET_R09_HISTORY_COVERAGE]]. M7.3/M7.4 human observations and M7.5 hosted qualification remain open. Bind the exact private target and complete the target-specific preflight before exposure.
 
 Preserve the distinction between planned allocations, canonical activity and verified per-line/
 funding evidence. The concept remains presentation reference. M7 retains human comprehension and

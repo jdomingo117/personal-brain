@@ -2,18 +2,18 @@
 type: runbook
 status: prepared-not-exposure-authorized
 project: Halcyon
-updated: 2026-10-29
+updated: 2026-11-10
 ---
 
 # Budget — private exposure, monitoring and recovery
 
 **Operational owner:** project owner. **Technical responder:** project maintainer working in this repository/chat. **Frequency:** each authorized migration/exposure, each incident, and during an explicitly staffed private pilot. **Last verified:** 29 October 2026 on disposable projects only.
 
-This packet supports M7.7. It does not authorize deployment, personal migration, live provider calls, infrastructure creation or an unattended pilot. The release decision remains No-Go until the open gates in [[BUDGET_M7_RELEASE_VERIFICATION]] are reconciled. No hosted alerts, external log drain or on-call rota has been created. An unfamiliar human has not independently rehearsed this runbook; the automated local steps have engineering evidence only.
+This packet supports Budget release and rollback. The approved local owner-only pilot is live, as recorded in [[BUDGET_M7_RELEASE_DECISION]]. Future target changes or wider exposure require their own release decision. Hosted alerts, external log drains and a hosted on-call rota remain pending.
 
 ## Prerequisites and ownership
 
-Before touching a persistent target, the owner must identify and authorize that exact target and scope. Record API/project/database identity without secrets; use the [[SYSTEM_INTEGRITY]] preflight. Rehearsal archives under `backups/budget-m7/` contain fictional fixtures and are not personal backups. Obtain a new protected auth+application backup and verify a restore on a separate recovery target for the actual migration.
+Before touching a persistent target, the owner must identify and authorize that exact target and scope. Record API/project/database identity without secrets and use the [[SYSTEM_INTEGRITY]] preflight. Obtain a fresh protected Auth and application backup and verify a restore on a separate recovery target for the actual migration. The release decision identifies the protected local main-app backup separately from the fictional rehearsal archives.
 
 The deployment operator must have the target's protected deployment configuration, existing platform roles/extensions and separate JWT/provider/encryption secret recovery sources. Keep credentials and raw financial input out of logs, screenshots, chat, source control and public evidence. Assign an actual responder and observation window before any private pilot; if no responder is available, leave exposure off.
 
@@ -29,6 +29,7 @@ npx tsc --noEmit -p tsconfig.budget-workspace.json
 npm run test:browser:typecheck
 npm run build
 npm run test:budget:release
+node scripts/test-budget-durable.mjs --release-candidate --secondary-ports --candidate-alternate --owner-pilot-only
 npm run test:golden:budget-candidate
 ```
 
@@ -50,6 +51,8 @@ If identities, totals or grants differ unexpectedly, stop exposure and investiga
 
 The server enforces `BUDGET_V1_ENABLED==='true'`; absent/false disables new Budget commands. The frontend independently requires `VITE_BUDGET_V1_ENABLED==='true'` for write affordances. A frontend flag is not authority to bypass the server. Reads and interrupted-save recovery remain available with writes off.
 
+For the private pilot, set `BUDGET_PILOT_OWNER_USER_ID` in the protected Edge configuration to the verified Supabase Auth user ID for the invited owner. Both Budget endpoints check the authenticated ID and the resolved tenant owner role. With the owner ID absent or incorrect, both endpoints deny Budget access. Leave `BUDGET_TEST_SHARED_ACCESS` unset on the target. The guarded fictional harnesses use it for multi-user regression. Migration 107 removes direct browser grants for Budget V1 reads, so apply it with writes disabled before exposing either endpoint to the pilot. Verify the invited owner can read and that another authenticated user is denied in the isolated candidate.
+
 For the authorized deployment, set server flag false through its protected environment configuration and restart/redeploy that target's Edge runtime. A local long-lived runtime can retain old environment values; changing a file alone is not sufficient. Do not stop a runtime by a broad Docker name pattern. Match the exact captured project label and container ID.
 
 Expected with writes disabled:
@@ -60,7 +63,7 @@ Expected with writes disabled:
 - Snapshot/workspace/draft reads continue; workspace reports `write_enabled=false`.
 - Plans, allocations, drafts, immutable reviews, reserve movements and operation counts remain identical. Transport audit/session records may legitimately append and are not financial changes.
 
-If these fail, retain writes off and escalate to the maintainer. After all release gates and explicit target/exposure authorization, enable the server flag and frontend build for the agreed private cohort. Verify observed source inputs against snapshots, matches, carry and recorded reviews before widening exposure. Record the exact build/source manifest and rollback configuration. This pilot has not been started.
+If these fail, retain writes off and escalate to the maintainer. After the scoped release decision, enable the server and frontend flags for the agreed private audience. Verify observed source inputs against snapshots, matches, carry and recorded reviews before widening exposure. Record the exact build/source manifest and rollback configuration.
 
 ## Step 4 — inspect content-free telemetry
 
@@ -122,9 +125,9 @@ If database recovery is required, preserve the current volume and inspect a prot
 | Hosted infrastructure, secret recovery or live-provider fixture transmission | Project owner | Obtain explicit scope/target authorization before using those services or credentials |
 | Human accessibility/comprehension evidence and final release exceptions | Project owner and actual participants | Follow [[BUDGET_M7_HUMAN_VALIDATION]] and record observations/decisions; do not replace them with AI scores |
 
-29 October 2026: M7.6 verifies isolated backup/restore/disable-preservation; M7.7 adds request telemetry, security checks and an operational packet. Private exposure and hosted recovery/monitoring have not been authorized by this packet. The owner separately authorized the live-provider golden test; two isolated attempts are recorded in [[BUDGET_M7_LIVE_CATEGORIZATION]] and blocked by depleted Gemini prepayment credits.
+29 October 2026: M7.6 verifies isolated backup/restore/disable-preservation; M7.7 adds request telemetry, security checks and an operational packet. Private exposure and hosted recovery/monitoring have not been authorized by this packet. The owner separately authorized the live-provider golden test; the October attempts were blocked by depleted Gemini credits. All eight live golden tests passed on 9 November after the owner restored credits, as recorded in [[BUDGET_M7_LIVE_CATEGORIZATION]].
 
 
 ## Gemini generation blocked by prepayment credits
 
-The authorized M7.7 follow-up receives HTTP200 for model metadata but HTTP402 / RESOURCE_EXHAUSTED for generation, with a depleted-prepayment message. Model listing is not proof that generation is available. Stop generation retries; the project owner must restore credits to the billing account linked to the configured API key using [Google’s prepay instructions](https://ai.google.dev/gemini-api/docs/billing#prepay). Do not automatically buy credits or alter billing. Once restored, rerun the already-authorized isolated live golden variant from the patched install, retaining narrow protected credential handling and labelled cleanup. Require actual cold AI classification and fresh uncached UI-review/nonmutation assertions before closing this qualification. No live-provider pass is currently recorded.
+The October M7.7 follow-up received HTTP200 for model metadata but HTTP402 / RESOURCE_EXHAUSTED for generation, with a depleted-prepayment message. Model listing is not proof that generation is available. Stop generation retries; the project owner must restore credits to the billing account linked to the configured API key using [Google’s prepay instructions](https://ai.google.dev/gemini-api/docs/billing#prepay). Do not automatically buy credits or alter billing. Once restored, rerun the already-authorized isolated live golden variant from the patched install, retaining narrow protected credential handling and labelled cleanup. Require actual cold AI classification and fresh uncached UI-review/nonmutation assertions before closing this qualification. This happened in October; the 9 November rerun passed after credits were restored.

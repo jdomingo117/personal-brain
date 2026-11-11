@@ -5,6 +5,7 @@ import { useScramble } from '../hooks/useScramble'
 import { supabase } from '../lib/supabaseClient'
 import { useData } from '../contexts/DataContext'
 import { reviewCount } from '../lib/ledger'
+import ThemeToggle from './ThemeToggle'
 
 const barSpring = { type: 'spring', stiffness: 120, damping: 20 } as const
 
@@ -73,9 +74,21 @@ function RailItem({ item, badge, badgeLabel }: { item: (typeof NAV)[number]; bad
   )
 }
 
+/** "just now", "5m ago", "3h ago", "2d ago" */
+function timeAgo(iso: string, now = Date.now()): string {
+  const minutes = Math.max(0, Math.round((now - new Date(iso).getTime()) / 60000))
+  if (!Number.isFinite(minutes) || minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.round(minutes / 60)
+  return hours < 48 ? `${hours}h ago` : `${Math.round(hours / 24)}d ago`
+}
+
 export default function Shell({ children }: { children: ReactNode }) {
   const { view, go, toast } = useView()
-  const { profile, transactions } = useData()
+  const { profile, transactions, accounts } = useData()
+  // Real sync status only: the latest bank-provider sync. Imported accounts have no sync to report.
+  const lastSync = accounts.map((a) => (a.connectionId ? a.lastSyncedAt : undefined)).filter((d): d is string => !!d).sort().at(-1)
+  const syncAgo = lastSync ? timeAgo(lastSync) : null
 
   const pendingTransferReview = transactions.filter(
     (t) => t.transferState === 'suggested' || t.transferState === 'unmatched',
@@ -97,7 +110,7 @@ export default function Shell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="relative z-[5] grid h-screen w-screen grid-rows-[auto_1fr_auto]">
+    <div className={`relative z-[5] grid w-screen grid-rows-[auto_1fr_auto] ${view === 'budget' ? 'h-dvh' : 'h-screen'}`}>
       {/* top letterbox bar */}
       <motion.header
         initial={{ y: -70 }}
@@ -158,12 +171,15 @@ export default function Shell({ children }: { children: ReactNode }) {
       >
         <span className="hidden items-center gap-2.5 sm:flex">
           <span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px_var(--color-accent)]" />
-          System nominal · all accounts synced
+          {syncAgo ? 'Bank sync connected' : 'No bank sync'}
         </span>
         <span className="capitalize text-white/40">{view === 'landing' ? 'Session secured' : view}</span>
-        <span className="hidden sm:inline">
-          Last sync <b className="font-semibold text-white/70">2m ago</b>
-        </span>
+        <div className="flex items-center gap-4">
+          {syncAgo && <span className="hidden sm:inline">Last bank sync <b className="font-semibold text-white/70">{syncAgo}</b></span>}
+          {view === 'budget' && <div data-budget-theme-dock className="pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)]">
+            <ThemeToggle docked />
+          </div>}
+        </div>
         <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       </motion.footer>
     </div>

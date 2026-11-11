@@ -1,16 +1,18 @@
 ---
 type: verification-record
-status: blocked-provider-credits
+status: verified-live-provider
 project: Halcyon
 created: 2026-10-29
-updated: 2026-10-29
+updated: 2026-11-09
 ---
 
 # M7.7 — authorized live categorization follow-up
 
-**Authorization is granted; the live qualification is blocked by Gemini prepayment credits.** The owner explicitly replied, “Yes, you are free to run the remaining categorization test.” The configured credential was used only for the authorized isolated test and bounded diagnostics. No billing/account configuration, model, production function, migration or personal database was changed.
+**All eight live-provider golden tests passed on 9 November 2026.** The owner restored the Gemini credits and requested the rerun. The synthetic generation probe returned HTTP200. The browser suite in `halcyon-golden-isolated-1794145158491` passed in 1.8 minutes, including actual cold classification, a fresh uncached Ledger suggestion, and a transaction and merchant-cache comparison after closing the preview. Browser TypeScript passed; the rerun matched all 563 candidate source hashes and both statement fixture hashes. No executable code changed on 9 November.
 
-## Outcome and diagnosis
+Three earlier launches that day stopped before the live classification assertions due to a stalled Docker credential helper, the macOS Chromium sandbox restriction, and missing fixtures in the temporary source copy. The successful run used a temporary public-image Docker configuration, the permissions required to launch Chromium, and both verified fixtures. All four targets have zero labelled containers, volumes and networks, and the temporary provider environment was removed. Sanitized evidence is in `docs/budget-m7/candidate/live-provider/2026-11-09/`.
+
+## October attempts and diagnosis
 
 | Check | Observed result |
 | --- | --- |
@@ -20,9 +22,9 @@ updated: 2026-10-29
 | One tiny synthetic JSON generation probe, no financial input | **HTTP402**, provider status **RESOURCE_EXHAUSTED**, message states prepayment credits are depleted |
 | Cleanup | Both new projects have zero labelled containers/volumes/networks; temporary allowlisted credential file removed; retained preview database running and Budget HTTP200 |
 
-Google's [Gemini prepay documentation](https://ai.google.dev/gemini-api/docs/billing#prepay) describes HTTP402 when the billing account's prepay balance reaches zero. The actual generation response independently confirms that condition here. Successful model listing does not establish generation availability. No further generation attempts were made after confirming the billing block.
+Google's [Gemini prepay documentation](https://ai.google.dev/gemini-api/docs/billing#prepay) describes HTTP402 when the billing account's prepay balance reaches zero. The October generation response independently confirmed that condition. Generation retries stopped until the owner reported restored credits.
 
-The earlier local candidate remains verified within its recorded scope: 560 lifecycle assertions, 391 forecast/assistance/candidate assertions, eight provider-disabled golden tests, 609 unit passes/14 existing skips, 78 WCAG scans and patched npm audit zero. This follow-up does not convert those provider-disabled results into a live pass.
+The earlier local candidate remains verified within its recorded scope: 560 lifecycle assertions, 391 forecast/assistance/candidate assertions, eight provider-disabled golden tests, 609 unit passes/14 existing skips, 78 WCAG scans and patched npm audit zero. The November live suite is separately recorded above.
 
 ## Test correction
 
@@ -33,7 +35,7 @@ The live branch of `app/e2e/golden-pass.spec.ts` now deliberately exercises the 
 3. Open the current Ledger **Review selected (1)** action and require a real fresh `review-categorization` response with `geminiCalls>=1`, `fromCache=0` and an AI-origin proposal.
 4. Close the preview and compare transaction and merchant-cache state to prove preview/cancel does not reclassify rows or teach the cache.
 
-No AI classification is fabricated or seeded as proof. The actual run is currently blocked at step1. Steps2–4 are prepared but have not passed live. Current Review selected/Close preview labels replace stale selector text. The patched installation's browser TypeScript check passes after this test-only change. No production source or financial assertion was weakened.
+No AI classification is fabricated or seeded as proof. All four steps passed live on 9 November. Current Review selected/Close preview labels replace stale selector text. The patched installation's browser TypeScript check passes after this test-only change. No production source or financial assertion was weakened.
 
 The pre-follow-up source binding is preserved in `docs/budget-m7/candidate/source-manifest-pre-live.json`; the current source manifest binds the corrected test. Only `app/e2e/golden-pass.spec.ts` changed among those executable/config sources. Older local suite totals are retained as historical evidence, not claimed as fresh reruns.
 
@@ -45,6 +47,4 @@ Public evidence in `docs/budget-m7/candidate/live-provider/` contains sanitized 
 
 ## Next step and release status
 
-The owner needs to restore a positive prepay balance for the billing account linked to the Gemini project, following the [official billing procedure](https://ai.google.dev/gemini-api/docs/billing#prepay). Authorization for the same categorization test remains recorded; no new provider-use confirmation is required for the same scope. Rerun from the patched installation once credits are available, with the same narrow temporary-provider environment and fresh disposable project.
-
-**M7.7 live-provider qualification remains open / R08 externally blocked. Release remains No-Go.** M7.3 observed accessibility, M7.4 independent comprehension, M7.5 hosted/cold/load qualification and M7.8 owner release/exposure decision also remain open. No deployment, persistent migration, credit purchase or billing change was performed.
+**M7.7 live-provider qualification and R08 are closed. Release remains No-Go.** M7.3 observed accessibility, M7.4 independent comprehension, M7.5 hosted/cold/load qualification and M7.8 owner release/exposure decision remain open. No deployment or persistent migration was performed.

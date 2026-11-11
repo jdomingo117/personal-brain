@@ -1,0 +1,51 @@
+{
+  "date": "2026-11-09",
+  "status": "passed",
+  "project_id": "halcyon-golden-isolated-1794145158491",
+  "golden_result": {
+    "passed": 8,
+    "failed": 0,
+    "did_not_run": 0
+  },
+  "duration": "1.8m",
+  "provider_generation_probe": {
+    "model": "gemini-2.5-flash",
+    "synthetic_input_only": true,
+    "http_status": 200,
+    "generated": true
+  },
+  "cold_ai_classification_passed": true,
+  "fresh_ui_review_passed": true,
+  "preview_cancel_preserved_transaction_and_merchant_cache": true,
+  "source_hashes_verified": 563,
+  "fixture_hashes_verified": 2,
+  "browser_typecheck": "passed",
+  "temporary_provider_environment_removed": true,
+  "retained_preview_database_running": true,
+  "attempts": {
+    "halcyon-golden-isolated-1794144792841": {
+      "result": "docker_credential_helper_stalled",
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0
+    },
+    "halcyon-golden-isolated-1794144986037": {
+      "result": "sandbox_blocked_chromium_launch",
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0
+    },
+    "halcyon-golden-isolated-1794145091281": {
+      "result": "missing_statement_fixtures_in_test_copy",
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0
+    },
+    "halcyon-golden-isolated-1794145158491": {
+      "result": "passed",
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0
+    }
+  }
+}

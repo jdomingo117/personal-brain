@@ -68,9 +68,13 @@ export async function runBudgetForecastChecks({newUser,sql,quote:q,check,edge,so
  check('R01 uneven month lengths retain exact rational rate until final cent',large.projected_cents,want)
  check('R01 material projected overspend has its own attention issue',[large.status,details().attention.items.some(i=>i.key==='forecast:flexible'&&i.kind==='projected_overspend')],['likely_to_exceed',true])
  const derive=allocation=>{const st=snap();return JSON.parse(sql(`SELECT public.budget_forecast_facts(${q(u.tenant)},${q(u.id)},${q(st.plan.id)},${q(st.period.id)},${source(u.tenant)},${q(st.plan.version)},jsonb_set(public.budget_workspace_details(${q(u.tenant)},${q(u.id)},${q(st.plan.id)},${q(st.period.id)},${source(u.tenant)},${q(st.plan.version)}),'{items,0,planned_cents}',to_jsonb(${allocation}::numeric)));`)).flexible}
- if(want>4501){check('R01 exactly $25 projected excess is below strict alert trigger',derive(want-2500).status,'within_plan');check('R01 one cent beyond $25 projected excess triggers warning',derive(want-2501).status,'likely_to_exceed')}
  check('R01 unsafe combined allocation fails closed',derive('9007199254740992').reason,'amount_too_large')
  if(remaining>0){
+  // Keep the allowance below $500 so the $25 floor, rather than 5%, governs this case on any run date.
+  const floorRate=Math.ceil(4000/remaining),floorProjection=2000+floorRate*remaining
+  dates.months.forEach((m,i)=>sql(`UPDATE public.transactions SET amount=${-m.days*floorRate} WHERE id=${q(ids[i])};`))
+  check('R01 exactly $25 projected excess is below strict alert trigger',derive(floorProjection-2500).status,'within_plan')
+  check('R01 one cent beyond $25 projected excess triggers warning',derive(floorProjection-2501).status,'likely_to_exceed')
   const rate=Math.floor(100000/(remaining+1)),actual=105000-rate*remaining
   dates.months.forEach((m,i)=>sql(`UPDATE public.transactions SET amount=${-m.days*rate} WHERE id=${q(ids[i])};`))
   sql(`UPDATE public.transactions SET amount=${-actual} WHERE tenant_id=${q(u.tenant)} AND date=${q(dates.today)} AND amount=-2000;`)
@@ -137,11 +141,15 @@ export async function runBudgetForecastBrowserChecks({fixture,signedPage,check,r
   await expect(page.getByRole('region',{name:'Budget overview'})).toContainText('not your bank balance')
   const summary=region.locator('summary');await summary.focus();await page.keyboard.press('Enter')
   await expect(region).toContainText('median of those three daily averages')
-  await expect(region).toContainText('Fixed bills use dates, not daily pacing')
+  await expect(region).toContainText('Bills, by their due dates')
   await expect(region).toContainText('Unmatched does not prove unpaid')
   for(const m of fixture.dates.months)await expect(region).toContainText(m.start)
   const violations=(await new AxeBuilder({page}).include('[aria-label="Spending estimate"]').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations
   check(`R01 forecast WCAG scan ${width} ${theme}`,violations,[])
+  check(`R01 forecast scale labels stay separate ${width} ${theme}`,await region.locator('.budget-forecast-scale > span').evaluateAll(([start,allowance])=>{
+   const left=start.getBoundingClientRect(),right=allowance.getBoundingClientRect()
+   return left.right<=right.left||left.bottom<=right.top
+  }),true)
   check(`R01 no horizontal overflow ${width} ${theme}`,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true)
   await page.screenshot({path:`${repo}/${capture}/forecast-${width}-${theme}.png`,fullPage:true})
   if(width===390&&theme==='light'){

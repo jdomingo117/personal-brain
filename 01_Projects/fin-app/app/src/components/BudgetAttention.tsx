@@ -28,8 +28,8 @@ export default function BudgetAttention(){
  }
 
  return <section ref={root} aria-label="Budget checks" className="budget-checks">
-  <h3 tabIndex={-1} className="font-display text-xl font-bold">{active.length?'Start here':'Budget checks'}</h3>
-  <p className="budget-checks-count">{a.active_count} to check · {a.total-active.length} reviewed or snoozed.</p>
+  <h3 tabIndex={-1} className="font-display text-xl font-bold">{active.length?'Things to check':'Budget checks'}</h3>
+  <p className="budget-checks-count">{a.active_count} to check{a.total-active.length>0?` · ${a.total-active.length} done or snoozed`:''}.</p>
   {s.details?.controls?.paused&&<p className="detail-copy">Your budget is paused, but real bills and recorded spending can still need attention.</p>}
   {active.length===0&&<p className="outcome-panel">{!a.forecast_available||forecastReadProblem(s,b.readState,!!b.pending)?'A complete spending estimate is unavailable. Review the estimate’s history and evidence in the overview; no overall Within plan conclusion is available.':a.total?'Nothing new to review right now. Earlier checks remain available below.':'No issues detected in the available information. This is not a guarantee that every payment is recorded or that money is available to spend.'}</p>}
   {money.length>0&&<div className="space-y-2"><h4 className="font-semibold">These gaps still remain</h4><p className="detail-copy">Reviewed or snoozed does not mean resolved. Parent and category amounts can overlap—do not add these together.</p><ul className="space-y-2 body-copy">{money.map(i=><li key={i.key} className="flex flex-wrap justify-between gap-2"><span>{i.label} · {i.state==='snoozed'?`show again ${i.until}`:'reviewed'}</span><strong className="tabular-nums">{fmtCents(-i.gap_cents!)}</strong></li>)}</ul></div>}

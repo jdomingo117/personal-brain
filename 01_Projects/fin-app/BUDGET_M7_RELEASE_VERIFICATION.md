@@ -4,10 +4,10 @@ tags:
   - budgeting
   - engineering
 type: release-verification
-status: in-progress
+status: decision-recorded-no-go
 project: Halcyon
 created: 2026-10-22
-updated: 2026-10-29
+updated: 2026-11-09
 related:
   - "[[BUDGET_IMPLEMENTATION_PLAN]]"
   - "[[BUDGET_FEATURE_SPEC]]"
@@ -19,7 +19,13 @@ related:
 # M7 — release verification
 
 
-**M7.7 local candidate verified — 29 October 2026.** [[BUDGET_M7_CANDIDATE_OPERATIONS]] records final patched-installation passes: 560 lifecycle, 391 forecast/assistance/candidate assertions, eight provider-disabled golden tests, 78 passing WCAG scans, 609 unit passes/14 existing skips, types/build and eight telemetry-summary assertions. Budget now has fixed-field privacy-safe request metrics and redacted audit/error diagnostics. Compatible development dependency updates (Vite 6.4.5 / Vitest 4.1.12 in the lock) clear 17 npm advisory entries; no runtime dependency version or financial SQL changed. All sixteen M7.7 test projects, including the two live attempts, are cleaned up. [[BUDGET_OPERATIONS_RUNBOOK]] supplies private-exposure/monitoring/recovery procedures. The owner subsequently authorized the live Gemini categorization test; [[BUDGET_M7_LIVE_CATEGORIZATION]] records two isolated attempts and a definitive generation HTTP402 / RESOURCE_EXHAUSTED response: prepayment credits are depleted. Live classification/fresh-review remains unpassed pending owner-restored credits and a rerun; no billing change was attempted. Human/hosted/M7.8 gates remain open; No-Go. No deployment or personal migration.
+**R09 history coverage implemented — 9 November 2026.** [[BUDGET_R09_HISTORY_COVERAGE]] records the owner-only date confirmation and removal flow, plus isolated proof that forecasts and assistance use attested ranges and return to their safe fallback when evidence is revoked. No personal or hosted migration. Observed accessibility, independent beginner comprehension, hosted performance and exact target preflight remain open.
+
+**M7.8 decision recorded — 9 November 2026: No-Go for real-data release.** The owner expressed approval to release Budget V1. [[BUDGET_M7_RELEASE_DECISION]] reconciles that approval with the verified candidate and the requirements open at the decision: R09 history coverage entry point, M7.3 observed accessibility, M7.4 independent beginner comprehension, M7.5 hosted/cold/load, and a named private target with its own preflight. No target was migrated or enabled.
+
+**M7.7 live categorization verified — 9 November 2026.** After the owner restored Gemini credits, [[BUDGET_M7_LIVE_CATEGORIZATION]] recorded **eight passing live-provider golden tests**. The suite verified real cold AI classification, a fresh uncached Ledger suggestion, and unchanged transaction and merchant-cache state after closing the preview. All four rerun targets were cleaned up and the temporary provider file was removed. This completes the M7.7 evidence used in the decision above.
+
+**M7.7 local candidate verified — 29 October 2026.** [[BUDGET_M7_CANDIDATE_OPERATIONS]] records final patched-installation passes: 560 lifecycle, 391 forecast/assistance/candidate assertions, eight provider-disabled golden tests, 78 passing WCAG scans, 609 unit passes/14 existing skips, types/build and eight telemetry-summary assertions. Budget now has fixed-field privacy-safe request metrics and redacted audit/error diagnostics. Compatible development dependency updates (Vite 6.4.5 / Vitest 4.1.12 in the lock) clear 17 npm advisory entries; no runtime dependency version or financial SQL changed. All sixteen M7.7 test projects, including the two live attempts, are cleaned up. [[BUDGET_OPERATIONS_RUNBOOK]] supplies private-exposure/monitoring/recovery procedures. The owner subsequently authorized the live Gemini categorization test; [[BUDGET_M7_LIVE_CATEGORIZATION]] records two isolated attempts and a definitive generation HTTP402 / RESOURCE_EXHAUSTED response: prepayment credits are depleted. The October attempts did not verify live classification/fresh-review; the November rerun above resolves that finding. Human/hosted/M7.8 gates remain open; No-Go. No deployment or personal migration.
 
 **M7.6 isolated migration/recovery rehearsal complete — 29 October 2026.** [[BUDGET_M7_MIGRATION_RECOVERY]] records 164 passing final assertions: populated forward migration from 64 to 104 migrations, pre-/post-Budget auth/application backups restored into separate databases, exact 81/108-table content and sequence parity, original-user password sign-in, tenant RLS, signed-cent totals, recorded review/reserves/edited drafts and receipt preservation with writes disabled/re-enabled. The focused workspace suite passes 25 tests. All three rehearsal projects are cleaned up; private fictional backups remain ignored outside Docker, and preview96/personal data are unchanged. Next engineering: M7.7 final candidate cross-feature/security/operations review. M7.3/M7.4 human, M7.5 hosted/cold/load and M7.8 release gates remain open; No-Go.
 
@@ -149,7 +155,7 @@ evidence is from the production records, not the fictional concept's checkbox li
 | AC44, AC45, AC46 | Foundation/items/temporal: real 14-day windows, bills and goal cadence | Existing plan/item and R04 assisted pay-date/individual schedule proof recorded | Technical / U,L |
 | AC47, AC48, AC49 | Frequency/temporal/policy interaction suites: both directions, bridge/full amounts, historical reload | Recorded technical; full responsive/human review remains M7.2–M7.4 | Technical + human / L,H |
 | SG01 | Assistance SQL/Edge, unit and signed reference vectors | R02 calendar/fortnight and R05 signed estimator proof recorded in [[BUDGET_R05_SIGNED_ESTIMATOR]] | Technical / U,A |
-| SG02 | Assistance: missing coverage, foreign scope; browser manual fallback | Recorded examples; zero-activity/user-confirmed coverage and revocation audit remain | Technical / A,L |
+| SG02 | Assistance: missing coverage, foreign scope; browser manual fallback | Covered zero and manual fallback verified; durable fixtures verify user-confirmed provenance and revocation. R09 adds and verifies the real owner-confirmation path and withdrawal | Technical / A,L |
 | SG03 | Recent-change manual route; unresolved transfer rejects suggestions | R04 individual confirmation and irregular-cost/deadline proof recorded; paid/unresolved inputs take the manual route | Technical / A,L |
 | SG04 | Canonical historical expense/refund/transfer and recurring separation | R05 reference parity recorded: signed median/range, reviewed splits, repayments, credits, deduplication and exact cents | Technical / U,A |
 | SG05 | [[BUDGET_R03_READINESS]]: complete usage, exact current-room boundary, future intent and allocation conservation | R03/R04 technical proof recorded, including protected draft preservation | Technical / U,A,L |
@@ -160,11 +166,12 @@ evidence is from the production records, not the fictional concept's checkbox li
 
 ## Release findings requiring bounded follow-up
 
-These are findings against the approved requirements, not authority to remove them or an assertion
-that all cases above fail. Implement and test fixes in separate small tasks before M7.8.
+These are findings against the approved requirements. Remaining items require closure or a separately recorded scope decision before enabling Budget V1.
 
 | ID | Concrete finding and implication | Required closure |
 | --- | --- | --- |
+| R09 — real history coverage; verified in isolation | Fixture-only coverage previously left ordinary accounts without a supported entry point. | [[BUDGET_R09_HISTORY_COVERAGE]] proves the authenticated confirmation path, zero-spend evidence, tenant guards, withdrawal and source deletion fallback. Actual target migration and human gates remain open. |
+| R08 — live-provider qualification; resolved | The October golden run was blocked by Gemini HTTP402 after its prepayment credits ran out. | On 9 November the generation probe returned HTTP200 and all eight live golden tests passed. See [[BUDGET_M7_LIVE_CATEGORIZATION]]. |
 | R07 — development dependency advisories; corrected in candidate | M7.7 npm audit identified 17 affected development package entries (14 high/3 moderate); runtime-only audit zero. | Compatible package/lock updates verified with a fresh installation: Vite 6.4.5 / Vitest 4.1.12, twenty dev-only version changes, full npm audit zero and final candidate suites pass. Primary installed tools/retained preview stay historical until deliberate retirement; fresh patched install required for release work. See [[BUDGET_M7_CANDIDATE_OPERATIONS]]. |
 | R06 — dense-ledger capacity; corrected locally | Initial 100k SQL target miss and 1m timeout/assistance target miss. | [[BUDGET_M7_R06_OPTIMIZATION]]: schema104 passes original local repeated-read targets with canonical evidence/source equivalence and invalidation checks. First 1m checkpoint rebuild 4.326s SQL; hosted/cold/load qualification remains open. |
 | R01 — forecast; engineering corrected | The original audit found suppression only, with no eligible forecast. | [[BUDGET_R01_SPENDING_FORECAST]] records migration 96 and the owner-approved monthly daily-average interpretation, exact-cent/date/scope/history guards, fixed/pending paths, acknowledgment reopening and affected regression. Owner review of the new forecast and M7 human/operational/release gates remain. |
@@ -186,8 +193,8 @@ the frozen baseline; routine correctness fixes can proceed in their bounded task
 | M7.4 | Independent beginner walkthroughs for AC30/AC33/SG09 and goal meanings | Protocol prepared in [[BUDGET_M7_HUMAN_VALIDATION]]; human tester no longer available, sessions/results pending; AI critique is supporting evidence only |
 | M7.5 | Measured complete-history/assistance capacity and query plans; local and hosted evidence labelled separately | Local repeated-read admission passes in [[BUDGET_M7_R06_OPTIMIZATION]]: 187 capacity / 142 history / 537 backend checks. R06 corrected locally; first 1m rebuild 4.326s SQL. Hosted/cold/load qualification remains pending by owner instruction; no full M7.5 closure |
 | M7.6 | Isolated additive migration, auth/application backup catalog/restore, counts/aggregate parity and disable-preservation rehearsal | Complete locally in [[BUDGET_M7_MIGRATION_RECOVERY]]: 164 final assertions, two real restores/original-user sign-ins, exact table/sequence/aggregate parity and disable/re-enable preservation. Actual persistent/hosted migration requires its own authorized preflight |
-| M7.7 | Candidate cross-feature regression (L/G), security/telemetry review, private-exposure and operational packet | Local candidate verified in [[BUDGET_M7_CANDIDATE_OPERATIONS]]: 560/391 separate assertions, eight provider-disabled G tests, 78 WCAG scans, 609 unit passes and zero npm findings in the patched candidate. Telemetry and [[BUDGET_OPERATIONS_RUNBOOK]] delivered. Live-provider G categorization/fresh-review is authorized but blocked by depleted Gemini prepayment credits (HTTP402); see [[BUDGET_M7_LIVE_CATEGORIZATION]]. No full unqualified G/M7.7 closure |
-| M7.8 | All findings/gates reconciled; Go/No-Go with owner decision and explicit exposure authorization | Pending; current decision No-Go |
+| M7.7 | Candidate cross-feature regression (L/G), security/telemetry review, private-exposure and operational packet | Local candidate verified in [[BUDGET_M7_CANDIDATE_OPERATIONS]]: 560/391 separate assertions, eight provider-disabled G tests, 78 WCAG scans, 609 unit passes and zero npm findings in the patched candidate. Telemetry and [[BUDGET_OPERATIONS_RUNBOOK]] delivered. Eight live-provider golden tests now pass, including cold AI classification, uncached Ledger review and cancellation preservation; see [[BUDGET_M7_LIVE_CATEGORIZATION]]. M7.7 verified |
+| M7.8 | All findings/gates reconciled; Go/No-Go with owner decision and explicit exposure authorization | Decision recorded in [[BUDGET_M7_RELEASE_DECISION]]: owner approval noted, No-Go for real-data release, no target exposure authorized. R09 is now verified in isolation; M7.3–M7.5 qualifications and target preflight remain open. |
 
 R01–R05 should be addressed as individually requested engineering follow-ups before the final
 candidate run; do not fold their implementation into one accessibility or planning task. M7.2

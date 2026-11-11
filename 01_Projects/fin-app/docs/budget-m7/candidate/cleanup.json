@@ -85,5 +85,25 @@
     "containers": 0,
     "volumes": 0,
     "networks": 0
+  },
+  "halcyon-golden-isolated-1794144792841": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-golden-isolated-1794144986037": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-golden-isolated-1794145091281": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "halcyon-golden-isolated-1794145158491": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
   }
 }

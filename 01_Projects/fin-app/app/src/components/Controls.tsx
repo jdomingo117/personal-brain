@@ -7,6 +7,7 @@ export function Button({
   variant = 'primary',
   type = 'button',
   disabled,
+  ariaLabel,
   className = '',
 }: {
   children: ReactNode
@@ -14,6 +15,7 @@ export function Button({
   variant?: 'primary' | 'ghost'
   type?: 'button' | 'submit'
   disabled?: boolean
+  ariaLabel?: string
   className?: string
 }) {
   const base =
@@ -23,7 +25,7 @@ export function Button({
       ? 'bg-ink text-surface hover:-translate-y-px hover:shadow-lg'
       : 'border border-[var(--hair)] text-ink hover:bg-black/[0.03]'
   return (
-    <motion.button type={type} disabled={disabled} onClick={onClick} whileTap={disabled ? undefined : { scale: 0.97 }} className={`${base} ${styles} ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+    <motion.button type={type} disabled={disabled} aria-label={ariaLabel} onClick={onClick} whileTap={disabled ? undefined : { scale: 0.97 }} className={`${base} ${styles} ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
       {children}
     </motion.button>
   )
@@ -87,7 +89,7 @@ export function Select({
         aria-label={ariaLabel}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full cursor-pointer appearance-none rounded-[10px] border border-[var(--hair)] bg-[var(--input-bg)] py-2.5 pl-3.5 pr-9 text-[13px] font-medium text-ink outline-none transition focus:border-accent focus:ring-4 focus:ring-[var(--accent-wash)] ${inputClassName}`}
+        className={`native-select w-full cursor-pointer appearance-none rounded-[10px] border border-[var(--hair)] bg-[var(--input-bg)] py-2.5 pl-3.5 pr-9 text-[13px] font-medium text-ink outline-none transition focus:border-accent focus:ring-4 focus:ring-[var(--accent-wash)] ${inputClassName}`}
       >
         {children}
       </select>

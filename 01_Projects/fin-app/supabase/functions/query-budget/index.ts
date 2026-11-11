@@ -1,11 +1,22 @@
 import { withBudgetTelemetry } from '../_shared/budgetTelemetry.ts'
 import { withAuth, SafeHttpError } from '../_shared/withAuth.ts'
-import { BudgetQuery,budgetFailure } from '../_shared/budgetApi.ts'
+import { BudgetQuery,budgetFailure,requireBudgetAccess } from '../_shared/budgetApi.ts'
 import { budgetRecurring } from '../_shared/budgetRecurring.ts'
 
 Deno.serve(withBudgetTelemetry('query-budget',withAuth({redactErrorDetails:true,schema:BudgetQuery,requireRole:'viewer',maxBodyBytes:262144,
   rateLimit:{limit:30,windowSec:60,onError:'closed'}},async ctx => {
+  requireBudgetAccess(ctx.user.id,ctx.role)
   const workspace = ctx.body.action === 'workspace'
+  if(ctx.body.action==='coverage'){
+    const {data,error}=await ctx.admin().rpc('budget_coverage',{p_tenant:ctx.tenantId,p_actor:ctx.user.id,p_account:ctx.body.account_id})
+    if(error)budgetFailure(error)
+    return data
+  }
+  if(ctx.body.action==='account_activity'){
+    const {data,error}=await ctx.admin().rpc('budget_account_activity',{p_tenant:ctx.tenantId,p_actor:ctx.user.id})
+    if(error)budgetFailure(error)
+    return data
+  }
   if(ctx.body.action==='assisted_setup'){
     const {data,error}=await ctx.admin().rpc('budget_assisted_setup',{p_tenant:ctx.tenantId,p_actor:ctx.user.id,p_input:ctx.body})
     if(error){
@@ -45,12 +56,13 @@ Deno.serve(withBudgetTelemetry('query-budget',withAuth({redactErrorDetails:true,
   const {data,error}=await ctx.admin().rpc('budget_query',{p_tenant:ctx.tenantId,p_actor:ctx.user.id,p_input:workspace?{action:'snapshot',...('period_id' in ctx.body?{period_id:ctx.body.period_id}:{})}:ctx.body})
   if(error)budgetFailure(error)
   if(workspace) {
-    // RLS reads only. Never send account balances, credentials or raw ledger rows to setup.
+    // Read account names through RLS. Budget scope is private and constrained to the resolved tenant and plan.
+    // Never send account balances, credentials or raw ledger rows to setup.
     // A source change between these reads and a command is rejected by the SQL source gate.
     const accounts=await ctx.db.from('accounts').select('id,name,currency').eq('tenant_id',ctx.tenantId).order('id').limit(501)
     if(accounts.error)budgetFailure(accounts.error)
     if((accounts.data?.length??0)>500)throw new SafeHttpError(422,{code:'account_scope_limit',message:'This private Budget version supports up to 500 accounts.',retryable:false})
-    const scope=data.plan?await ctx.db.from('budget_account_memberships').select('original_account_id,account_id,role,start_date,end_date').eq('tenant_id',ctx.tenantId).eq('plan_id',data.plan.id).order('id').limit(501):{data:[],error:null}
+    const scope=data.plan?await ctx.admin().from('budget_account_memberships').select('original_account_id,account_id,role,start_date,end_date').eq('tenant_id',ctx.tenantId).eq('plan_id',data.plan.id).order('id').limit(501):{data:[],error:null}
     if(scope.error)budgetFailure(scope.error)
     if((scope.data?.length??0)>500)throw new SafeHttpError(422,{code:'account_scope_limit',message:'This budget has more account history than this private version supports.',retryable:false})
     let details=null

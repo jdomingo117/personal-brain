@@ -34,6 +34,8 @@ interface AccountConnRow {
   synced_through: string | null
   backfill_cursor: string | null
   backfill_done: boolean
+  coverage_walk_started_at: string | null
+  coverage_walk_cursor: string | null
 }
 
 /**
@@ -71,7 +73,7 @@ Deno.serve(
 
     const { data: accountConns, error: acErr } = await ctx.db
       .from('account_connections')
-      .select('id, account_id, provider_account_id, cutover_date, synced_through, backfill_cursor, backfill_done')
+      .select('id, account_id, provider_account_id, cutover_date, synced_through, backfill_cursor, backfill_done, coverage_walk_started_at, coverage_walk_cursor')
       .eq('connection_id', connection_id)
     if (acErr) throw acErr
     if (!accountConns || accountConns.length === 0) {
@@ -101,6 +103,9 @@ Deno.serve(
     const totals = { pages_fetched: 0, rows_seen: 0, rows_inserted: 0, rows_updated: 0, rows_rejected_pre_cutover: 0 }
     let pendingDropped = 0
     let budgetExceeded = false
+    // Accounts whose Budget history coverage needs a verification walk (see
+    // verifyHistory below). Walked only after every account's normal pass.
+    const verifyQueue: AccountConnRow[] = []
     // Widest span of dates any row written this run actually landed on — the
     // window handed to the post-sync rescan below. Not provider_posted_at:
     // that's a timestamp for ordering/watermarking, `date` is what
@@ -134,13 +139,102 @@ Deno.serve(
       const upAccounts = await listUpAccounts(token)
       const balanceByProviderAccountId = new Map(upAccounts.map((a) => [a.id, a.balance.valueInBaseUnits]))
 
+      /**
+       * Inserts fetched Up transactions this account does not have yet. Existing
+       * rows are left untouched — a history walk must not reset categories,
+       * classifications or edits that later processing applied.
+       */
+      const insertMissing = async (transactions: UpTransaction[], acctConn: AccountConnRow) => {
+        const mapped = await Promise.all(
+          transactions.map((t) => toRow(t, acctConn, connection.provider, ctx.user.id, ctx.tenantId)),
+        )
+        const rows = mapped.filter((r): r is NonNullable<typeof r> => r !== null)
+        if (rows.length === 0) return
+        const { data: existingRows, error: existingErr } = await ctx.db
+          .from('transactions')
+          .select('external_id')
+          .eq('account_id', acctConn.account_id)
+          .in('external_id', rows.map((r) => r.external_id))
+        if (existingErr) throw existingErr
+        const have = new Set((existingRows ?? []).map((r) => r.external_id))
+        const missing = rows.filter((r) => !have.has(r.external_id))
+        if (missing.length === 0) return
+        const merchantKeys = [...new Set(missing.map((row) => row.merchant_key))]
+        const userRules = new Map<string, { category: string; subcategory: string | null }>()
+        for (let i = 0; i < merchantKeys.length; i += 100) {
+          const { data: rules, error: rulesError } = await ctx.db
+            .from('merchant_rules')
+            .select('merchant_key, category, subcategory')
+            .eq('source', 'user')
+            .in('merchant_key', merchantKeys.slice(i, i + 100))
+          if (rulesError) throw rulesError
+          for (const rule of rules ?? []) userRules.set(rule.merchant_key, rule)
+        }
+        const payload = missing.map((r) => {
+          const rule = userRules.get(r.merchant_key)
+          return rule
+            ? { ...r, category: rule.category, subcategory: rule.subcategory, category_source: 'user' as const, category_confidence: 1, needs_review: false }
+            : r
+        })
+        const { error: insertErr } = await admin
+          .from('transactions')
+          .upsert(payload, { onConflict: 'account_id,dedupe_hash,occurrence', ignoreDuplicates: true })
+        if (insertErr) throw insertErr
+        totals.rows_inserted += payload.length
+        for (const r of payload) trackDate(r.date)
+      }
+
+      /**
+       * Budget history coverage: walks the account's full provider history from
+       * cutover, inserting anything missing. A completed walk proves every
+       * transaction posted before it began is recorded, so it becomes
+       * verified_provider coverage (budget_provider_coverage_base). Resumable via
+       * coverage_walk_cursor, persisted after each page like the backfill.
+       */
+      const verifyHistory = async (acctConn: AccountConnRow) => {
+        let walkUrl = acctConn.coverage_walk_started_at ? acctConn.coverage_walk_cursor : null
+        if (!walkUrl) {
+          // Recorded before the first page is requested: the walk's evidence
+          // only reaches the local day it started.
+          const { error } = await admin
+            .from('account_connections')
+            .update({ coverage_walk_started_at: new Date().toISOString(), coverage_walk_from: acctConn.cutover_date, coverage_walk_cursor: null })
+            .eq('id', acctConn.id)
+          if (error) throw error
+          walkUrl = buildTransactionsUrl(acctConn.provider_account_id, `${acctConn.cutover_date}T00:00:00+10:00`)
+        }
+        while (walkUrl) {
+          if (Date.now() > deadline) { budgetExceeded = true; return }
+          const page = await fetchTransactionPage(walkUrl, token)
+          totals.pages_fetched++
+          totals.rows_seen += page.transactions.length
+          await insertMissing(page.transactions, acctConn)
+          const { error } = await admin.from('account_connections').update({ coverage_walk_cursor: page.next }).eq('id', acctConn.id)
+          if (error) throw error
+          walkUrl = page.next
+        }
+        const { error } = await admin.rpc('budget_provider_coverage_base', { p_tenant: ctx.tenantId, p_account_connection: acctConn.id })
+        if (error) throw error
+      }
+
       for (const acctConn of accountConns as AccountConnRow[]) {
         if (Date.now() > deadline) { budgetExceeded = true; break }
 
         const backfillDoneAtStart = acctConn.backfill_done
+        // Taken before the first page request; coverage evidence ends at its local day.
+        const passStartedAt = new Date().toISOString()
+        let passSince: string | null = null
         let url: string | null
         let isBackfillPass = !acctConn.backfill_done
         if (isBackfillPass) {
+          if (!acctConn.backfill_cursor) {
+            // A fresh backfill is also a full history walk for Budget coverage.
+            const { error: walkErr } = await admin
+              .from('account_connections')
+              .update({ coverage_walk_started_at: passStartedAt, coverage_walk_from: acctConn.cutover_date, coverage_walk_cursor: null })
+              .eq('id', acctConn.id)
+            if (walkErr) throw walkErr
+          }
           url = acctConn.backfill_cursor ?? buildTransactionsUrl(acctConn.provider_account_id, `${acctConn.cutover_date}T00:00:00+10:00`)
         } else {
           const sinceDate = acctConn.synced_through
@@ -148,7 +242,8 @@ Deno.serve(
             : new Date(`${acctConn.cutover_date}T00:00:00Z`)
           const cutoverDate = new Date(`${acctConn.cutover_date}T00:00:00Z`)
           const since = sinceDate < cutoverDate ? cutoverDate : sinceDate
-          url = buildTransactionsUrl(acctConn.provider_account_id, since.toISOString())
+          passSince = since.toISOString()
+          url = buildTransactionsUrl(acctConn.provider_account_id, passSince)
         }
 
         let latestPostedAt: string | null = acctConn.synced_through
@@ -260,6 +355,27 @@ Deno.serve(
           url = page.next
         }
 
+        // Budget history coverage. Best-effort: a coverage problem never fails
+        // the sync that already landed. Only a pass that reached its last page
+        // counts as evidence.
+        if (url === null) {
+          try {
+            if (!backfillDoneAtStart) {
+              const { error } = await admin.rpc('budget_provider_coverage_base', { p_tenant: ctx.tenantId, p_account_connection: acctConn.id })
+              if (error) throw error
+            } else if (passSince) {
+              const { data: extended, error } = await admin.rpc('budget_provider_coverage_extend', {
+                p_tenant: ctx.tenantId, p_account_connection: acctConn.id, p_since: passSince, p_pass_started: passStartedAt,
+              })
+              if (error) throw error
+              if (extended?.reason === 'no_base' || extended?.reason === 'gap') verifyQueue.push(acctConn)
+            }
+          } catch (err) {
+            console.error('budget coverage update failed', String(err))
+          }
+        }
+        if (backfillDoneAtStart && acctConn.coverage_walk_cursor && !verifyQueue.includes(acctConn)) verifyQueue.push(acctConn)
+
         if (Date.now() > deadline) { budgetExceeded = true; break }
 
         // ── Pending refresh: re-check still-held rows by id ─────────────
@@ -313,6 +429,20 @@ Deno.serve(
           }
           await admin.from('accounts').update({ balance: freshBalance }).eq('id', acctConn.account_id)
           await admin.from('account_connections').update({ balance_as_of: new Date().toISOString() }).eq('id', acctConn.id)
+        }
+      }
+
+      for (const acctConn of verifyQueue) {
+        if (Date.now() > deadline) { budgetExceeded = true; break }
+        try {
+          await verifyHistory(acctConn)
+        } catch (err) {
+          if (err instanceof UpAuthError) throw err
+          // Restart cleanly next time rather than resume from a cursor Up refused.
+          console.error('budget coverage walk failed', String(err))
+          await admin.from('account_connections')
+            .update({ coverage_walk_started_at: null, coverage_walk_from: null, coverage_walk_cursor: null })
+            .eq('id', acctConn.id)
         }
       }
 

@@ -17,19 +17,19 @@ export function forecastReadProblem(s:Snapshot,state:BudgetReadState,pending=fal
  if(amounts.some(x=>x!==null&&!Number.isSafeInteger(x))||!Number.isInteger(f.flexible.remaining_days)||f.flexible.remaining_days<0)return 'The complete exact-cent estimate is unavailable. Refresh saved data or review the source amounts.'
  if(!Number.isFinite(Date.parse(f.checked_at)))return 'The estimate timestamp is unavailable. Refresh saved data.'
  if(f.flexible.available&&f.flexible.median&&!f.flexible.history.some(x=>x.start_date===f.flexible.median!.start_date&&x.end_date===f.flexible.median!.end_date&&x.days===f.flexible.median!.days&&x.gross_cents===f.flexible.median!.gross_cents))return 'The selected historical rate is unavailable. Refresh saved data.'
- if(f.flexible.available&&(!f.flexible.scope_valid||!f.flexible.integrity_ok||f.phase==='current'&&!f.flexible.coverage_complete))return 'Check data: the complete scope and evidence are required before relying on an estimate.'
+ if(f.flexible.available&&(!f.flexible.scope_valid||!f.flexible.integrity_ok||f.phase==='current'&&!f.flexible.coverage_complete))return 'We can’t estimate yet: some account history or matches need checking first.'
  if(f.flexible.available&&(f.flexible.allocation_cents===null||f.flexible.median===null||f.flexible.projected_cents===null||f.flexible.history.length!==3||f.flexible.history.some(x=>x.gross_cents===null||x.gross_cents<0||!Number.isInteger(x.days)||x.days<28||x.days>31)))return 'The full historical basis is unavailable. Refresh saved data before relying on this estimate.'
  try{for(const m of f.flexible.history){dateParts(m.start_date);dateParts(m.end_date);if(!m.start_date.endsWith('-01')||addMonths(m.start_date,1)!==m.end_date||daysBetween(m.start_date,m.end_date)!==m.days||m.end_date>f.as_of)throw Error('invalid basis')}if(!['within_plan','likely_to_exceed','exceeded','check_data','unavailable'].includes(f.flexible.status)||!f.flexible.available&&!['check_data','unavailable'].includes(f.flexible.status))throw Error('invalid status')}catch{return 'The complete historical basis or status is unavailable. Refresh saved data.'}
  return null
 }
 export function forecastReason(reason:string|null){switch(reason){
- case 'not_enough_history':return 'Not enough history to estimate finish. Three fully covered complete months are required; missing months are not zero.'
- case 'no_accounts':return 'Spending forecast unavailable without activity accounts. Your manual allocation is still usable.'
- case 'invalid_scope':return 'Check data: one or more selected accounts or saved scope dates are unavailable.'
- case 'incomplete_coverage':return 'Check data: current-period coverage is incomplete. Known activity alone cannot establish a Within plan estimate.'
- case 'unresolved_evidence':return 'Check data: unresolved transfers or changed matches can alter flexible spending.'
- case 'incomplete_fixed_schedule':return 'Check data: confirm each fixed bill’s amount and schedule before relying on a spending estimate.'
- case 'historical_period':return 'This is a completed period. Look back shows recorded results; a new forecast is not created retrospectively.'
+ case 'not_enough_history':return 'We need three complete months of history to estimate how this budget will finish. Months with missing history aren’t counted as $0.'
+ case 'no_accounts':return 'No accounts are linked to this budget, so there’s nothing to estimate from. Your plan still works.'
+ case 'invalid_scope':return 'One of this budget’s accounts or dates isn’t available, so we can’t estimate yet.'
+ case 'incomplete_coverage':return 'We can’t estimate how this budget will finish until this budget’s spending is up to date.'
+ case 'unresolved_evidence':return 'Some transfers or matches need sorting out first, because they could change your spending.'
+ case 'incomplete_fixed_schedule':return 'Check each bill’s amount and dates first. Bills are counted separately from everyday spending.'
+ case 'historical_period':return 'This budget has finished. Look back shows how it went.'
  case 'amount_too_large':return 'The complete estimate exceeds safe exact-cent bounds. No rounded or partial estimate is shown.'
- default:return 'Estimate unavailable. Review the complete history and saved inputs.'
+ default:return 'An estimate isn’t available right now.'
 }}

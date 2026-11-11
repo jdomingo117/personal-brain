@@ -235,6 +235,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           identifier,
           connectionId: connection?.id,
           cutoverDate: connection?.cutover_date,
+          lastSyncedAt: connection?.balance_as_of ?? undefined,
         }
       })
 

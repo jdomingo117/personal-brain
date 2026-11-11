@@ -21,6 +21,32 @@ export async function budgetSetupChecks(args){
   }
   if(viewport)await page.setViewportSize(viewport);await page.evaluate(value=>document.documentElement.classList.toggle('dark',value),dark)
  }
+ const entryUser=await newUser()
+ sql(`INSERT INTO public.accounts(user_id,tenant_id,name,type,balance,currency) VALUES(${quote(entryUser.id)},${quote(entryUser.tenant)},'Signal path fixture','Liquid',0,'AUD');`)
+ const entryPage=await signedPage(entryUser,390)
+ const entry=entryPage.getByRole('region',{name:'A plan that starts with you'})
+ const guided=entry.getByRole('button',{name:'Help me build a budget',exact:true})
+ const coverage=entry.getByRole('button',{name:'Review account history coverage',exact:true})
+ await expect(entry.getByRole('list',{name:'Guided setup steps'}).getByRole('listitem')).toHaveCount(3)
+ for(const width of [320,390,768,1440])for(const dark of [false,true]){
+  await entryPage.setViewportSize({width,height:900})
+  await entryPage.evaluate(theme=>document.documentElement.classList.toggle('dark',theme),dark)
+  check(`Signal path fits ${width}px in ${dark?'dark':'light'}`,await entry.evaluate(el=>el.scrollWidth<=el.clientWidth+1))
+  const scan=await new AxeBuilder({page:entryPage}).include('.budget-entry').withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa']).analyze()
+  check(`Signal path accessibility ${width}px in ${dark?'dark':'light'}`,scan.violations.map(v=>v.id),[])
+ }
+ await guided.hover()
+ await expect(entry.locator('.budget-entry-node').first()).not.toHaveCSS('box-shadow','none')
+ await expect(guided.locator('.budget-entry-arrow')).toHaveCSS('transform','none')
+ await coverage.click()
+ const coverageTask=entryPage.getByRole('dialog',{name:'Account history coverage',exact:true})
+ await expect(coverageTask).toBeVisible()
+ await coverageTask.getByRole('button',{name:'Close',exact:true}).click()
+ await expect(coverage).toBeFocused()
+ await guided.click()
+ await expect(entryPage.getByRole('dialog',{name:'Help me build a budget',exact:true})).toBeVisible()
+ check('Signal path opens guided setup and history coverage without starting a budget',snapshotSQL(entryUser).plan,null)
+ await entryPage.close()
  for(const frequency of ['monthly','fortnightly']){
   const u=await newUser(),page=await signedPage(u,390),writes=[]
   page.on('request',r=>{if(r.url().includes('/functions/v1/manage-budget'))writes.push(r.postDataJSON())})

@@ -4,7 +4,8 @@ import {prepareTestImpact} from './budget-test-impact.mjs'
 
 /** Durable checkpoint adversarial tests, only in the isolated provisioner. */
 export async function runBudgetImpactPreparationChecks({newUser,sql,quote,check,edge,source,commandSQL}){
- const u=await newUser(),foreign=await newUser(),e=randomUUID(),r=randomUUID()
+ const u=await newUser(),foreign=await newUser()
+ const [r,e]=[randomUUID(),randomUUID()].sort()
  const start=sql(`SELECT date_trunc('month',now() AT TIME ZONE 'Australia/Sydney')::date;`)
  const a=sql(`INSERT INTO public.accounts(user_id,tenant_id,name,type,balance,currency) VALUES(${quote(u.id)},${quote(u.tenant)},'Impact fictional','Liquid',0,'AUD') RETURNING id;`).split('\n')[0]
  const snap=()=>JSON.parse(sql(`SELECT public.budget_query(${quote(u.tenant)},${quote(u.id)},'{"action":"snapshot"}');`))
@@ -27,6 +28,9 @@ export async function runBudgetImpactPreparationChecks({newUser,sql,quote,check,
  const ready=step()
  const raw=JSON.parse(sql(`SELECT public.budget_preview_account_scope_unprepared(${quote(u.tenant)},${quote(u.id)},${quote(JSON.stringify(scope))}::jsonb);`))
  check('prepared review equals the original complete calculation including hash',ready,raw)
+ const impactPeriods=[...ready.before,...ready.after]
+ check('impact items have stable line order even when fixture insertion order differs',
+  impactPeriods.map(period=>period.items.map(item=>item.line_id)),impactPeriods.map(()=>[r,e]))
  assert.throws(()=>step({...scope,expected_method:'old'}),/budget_stale_method/)
  assert.throws(()=>step({...scope,expected_source:String(BigInt(scope.expected_source)+1n)}),/budget_stale_source/)
  assert.throws(()=>step({...scope,expected_plan:String(BigInt(scope.expected_plan)+1n)}),/budget_stale_plan/)

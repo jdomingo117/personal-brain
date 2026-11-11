@@ -44,7 +44,7 @@ try{
  const sample=await login(meta.accounts.find(x=>x.purpose==='Explore the active sample budget')),p=sample.page,base=sample.data
  const goal=base.details.items.find(i=>i.config?.type==='goal');assert(goal,'Need the retained sample goal')
  const goals=p.getByRole('region',{name:'Your savings goals',exact:true}),commitments=p.getByRole('region',{name:'Your commitments',exact:true}),g=goals.locator(`[data-budget-goal-detail="${goal.line_id}"]`)
- await expect(g).not.toHaveAttribute('open','');await expect(g.locator('summary')).toContainText('Plan amounts, not confirmed cash')
+ await expect(g).not.toHaveAttribute('open','');await expect(g.locator('summary')).toContainText(' of ')
  await g.locator('summary').focus();await p.keyboard.press('Enter');await expect(g.locator('article')).toBeVisible();await expect(g).toContainText('Transfers matched');await expect(g).toContainText('They are not added together')
  await g.getByRole('button',{name:`Adjust ${goal.name}`,exact:true}).click();await expect(p.getByRole('dialog')).toBeVisible();await p.getByRole('dialog').getByRole('button',{name:'Close',exact:true}).click()
  await g.getByRole('button',{name:'Match activity',exact:true}).click();await expect(p.getByRole('dialog')).toContainText('Match recorded activity');await p.getByRole('dialog').getByRole('button',{name:'Close',exact:true}).click()

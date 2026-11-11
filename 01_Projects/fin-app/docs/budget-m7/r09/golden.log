@@ -1,0 +1,4 @@
+Target: halcyon-golden-isolated-1794147089947; API=http://127.0.0.1:55421; DB=127.0.0.1:55422/postgres; fixtures=isolated-only
+Golden provider mode: disabled; no provider credential copied; AI refresh remains untested
+Running 8 tests using 1 worker
+  8 passed (27.4s)

@@ -14,25 +14,26 @@ export function reviewProblem(base:Setup,result:AssistanceResult,r:AssistanceRev
  try{
   const scope={...base,frequency:result.frequency,start_date:result.start_date,anchor:result.anchor},p=setupPeriod(scope)
   const income=r.apply_income?r.income.amount_cents:base.income_cents
-  if(!r.income.confirmed||!Number.isSafeInteger(income)||income<0||r.income.amount_cents!==income)return 'Confirm your chosen take-home amount, including 0 if intentional.'
-  if(r.income.pay_dates.length>100||new Set(r.income.pay_dates).size!==r.income.pay_dates.length)return 'Use distinct expected pay dates (up to 100).'
-  for(const date of r.income.pay_dates){dateParts(date);if(date<p.start||date>=p.end)return 'Expected pay dates must be inside the selected budget.'}
-  if(income>0&&!r.income.pay_dates.length)return 'Enter and confirm the actual expected pay dates for this budget.'
-  if(r.apply_everyday){const chosen=r.everyday_cents??result.suggestions.everyday_cents;if(chosen===null||!Number.isSafeInteger(chosen)||chosen<0)return 'Credits exceed spending in the observed median. Choose and confirm your own non-negative everyday allowance.'}
+  if(!r.income.confirmed)return 'Confirm your take-home pay and pay dates.'
+  if(!Number.isSafeInteger(income)||income<0||r.income.amount_cents!==income)return 'Enter your take-home pay. 0 is fine if you don’t expect any.'
+  if(r.income.pay_dates.length>100||new Set(r.income.pay_dates).size!==r.income.pay_dates.length)return 'Each pay date can only appear once (up to 100).'
+  for(const date of r.income.pay_dates){dateParts(date);if(date<p.start||date>=p.end)return 'Pay dates need to fall inside this budget’s dates.'}
+  if(income>0&&!r.income.pay_dates.length)return 'Add the pay dates you expect in this budget.'
+  if(r.apply_everyday){const chosen=r.everyday_cents??result.suggestions.everyday_cents;if(chosen===null||!Number.isSafeInteger(chosen)||chosen<0)return 'Enter your own everyday amount, since refunds outweighed spending in your history.'}
   if(!r.irregular_confirmed)return 'Review annual, quarterly and other essential costs, deadlines and existing reserves.'
   if(r.costs.length>100||new Set(r.costs.map(c=>c.line_id)).size!==r.costs.length)return 'Check individual cost identities.'
   for(const c of r.costs){
    if(!c.confirmed)return `Confirm ${c.name||'each selected cost'} individually.`
-   if(c.paid)return `${c.name} is already paid. Use the manual matching route; assistance will not create another outstanding bill.`
+   if(c.paid)return `${c.name} is marked as already paid. Clear that in Edit, then match the payment in the editor after using this draft.`
    if(!c.selected)continue
-   if(!c.name.trim()||c.name.trim().length>60||!Number.isSafeInteger(c.amount_cents)||c.amount_cents<0||!Number.isSafeInteger(c.opening_cents)||c.opening_cents<0||!['bill','reserve'].includes(c.type))return 'Enter a valid name, amount and opening reserve for each selected cost.'
-   if(c.type==='bill'&&c.opening_cents!==0)return 'Keep existing reserves separate from regular bills.'
+   if(!c.name.trim()||c.name.trim().length>60||!Number.isSafeInteger(c.amount_cents)||c.amount_cents<0||!Number.isSafeInteger(c.opening_cents)||c.opening_cents<0||!['bill','reserve'].includes(c.type))return 'Each included cost needs a valid name and amount.'
+   if(c.type==='bill'&&c.opening_cents!==0)return 'A regular bill can’t have money already set aside. Make it a set-aside, or clear that amount.'
    dateParts(c.anchor);if(c.due_date)dateParts(c.due_date)
-   if(c.type==='reserve'&&(!c.due_date||!Number.isSafeInteger(c.target_cents)||c.target_cents!<=0))return 'Confirm the full bill target and deadline for each essential reserve, or keep it as a manual estimate.'
+   if(c.type==='reserve'&&(!c.due_date||!Number.isSafeInteger(c.target_cents)||c.target_cents!<=0))return 'Each set-aside needs its full bill target and deadline (due date).'
    costAllocation(c,scope)
    if(c.type==='reserve')sumCents([c.opening_cents,c.amount_cents])
    const old=base.lines.find(l=>l.id===c.line_id)
-   if(old&&old.kind!==(c.type==='bill'?'fixed':'reserve'))return 'A cost cannot replace a protected allowance of another type.'
+   if(old&&old.kind!==(c.type==='bill'?'fixed':'reserve'))return 'This cost can’t replace an existing amount of a different type.'
   }
   return null
  }catch(e){return (e as Error).message}
@@ -54,13 +55,13 @@ export function reviewedResult(base:Setup,result:AssistanceResult,r:AssistanceRe
  const target=result.target&&r.costs.some(c=>c.recurring_id&&!c.selected)?{...result.target,coverage_complete:false,settled_everyday_cents:null}:result.target
  let projection_blocker:string|undefined
  try{
- for(const cost of r.costs.filter(c=>c.selected&&c.type==='reserve')){const funding=reserveCostFunding(cost,merged,result.target?.as_of);if(funding&&funding.shortfall!>0)projection_blocker='An essential reserve has a deadline shortfall. Review its contribution before relying on a goal outcome.'}
+ for(const cost of r.costs.filter(c=>c.selected&&c.type==='reserve')){const funding=reserveCostFunding(cost,merged,result.target?.as_of);if(funding&&funding.shortfall!>0)projection_blocker='An essential reserve (set-aside) will have a shortfall at its due date. Set aside more before relying on a goal estimate.'}
  const p=setupPeriod(merged),through=addMonths(result.target&&result.target.as_of>p.start?result.target.as_of:p.start,12)
  let next=p,largest=0
  while(next.start<=through){const dated=sumCents(r.costs.filter(c=>c.selected&&c.type==='bill').map(c=>sumCents(occurrenceDates(c.anchor,c.cadence,next.start,next.end>through?addDays(through,1):next.end).map(()=>c.amount_cents))));const selectedNow=sumCents(r.costs.filter(c=>c.selected&&c.type==='bill').map(c=>costAllocation(c,merged)));largest=Math.max(largest,dated-selectedNow);next=periodContaining(next.end,merged.frequency==='monthly'?{frequency:'monthly',timezone:merged.timezone}:{frequency:'fortnightly',timezone:merged.timezone,anchor:merged.anchor!})}
- if(sumCents([...merged.lines.map(l=>l.allocation_cents),largest])>merged.income_cents)projection_blocker='A current or scheduled future bill leaves a funding gap. Review income and protected allowances before relying on a goal outcome.'
- }catch{projection_blocker='The complete future cost check is unavailable. Review dates and amounts before relying on a goal outcome.'}
- if(!projection_blocker&&base.lines.some(line=>line.kind!=='everyday'&&line.id!==base.assistance?.goal_intent?.line_id&&!r.costs.some(c=>c.line_id===line.id&&c.selected&&c.confirmed)&&!base.assistance?.reviewed_inputs?.costs.some(c=>c.line_id===line.id&&c.selected&&c.confirmed)))projection_blocker='A protected allowance has no confirmed dated schedule. Its amount is kept, but review its schedule before relying on a goal outcome.'
+ if(sumCents([...merged.lines.map(l=>l.allocation_cents),largest])>merged.income_cents)projection_blocker='A current or scheduled future bill would leave you short. Check your pay and amounts before relying on a goal estimate.'
+ }catch{projection_blocker='We couldn’t check your upcoming bills. Check their dates and amounts before relying on a goal estimate.'}
+ if(!projection_blocker&&base.lines.some(line=>line.kind!=='everyday'&&line.id!==base.assistance?.goal_intent?.line_id&&!r.costs.some(c=>c.line_id===line.id&&c.selected&&c.confirmed)&&!base.assistance?.reviewed_inputs?.costs.some(c=>c.line_id===line.id&&c.selected&&c.confirmed)))projection_blocker='One of your existing amounts has no due dates. It’s kept as is, but add its schedule before relying on a goal estimate.'
  return {...result,target,projection_blocker,suggestions:{income_cents:merged.income_cents,everyday_cents:merged.lines.find(l=>l.kind==='everyday')!.allocation_cents,bills_cents:sumCents(merged.lines.filter(l=>l.kind!=='everyday').map(l=>l.allocation_cents))}}
 }
 
@@ -101,3 +102,14 @@ export function reserveCostFunding(c:ReviewedCost,setup:Setup,asOf?:string){
 }
 
 export function payDatesStillMatch(setup:Setup,dates:string[]){try{const p=setupPeriod(setup);return dates.every(d=>{dateParts(d);return d>=p.start&&d<p.end})}catch{return false}}
+
+/** The owner's single final review confirms every reviewed input at once. */
+export function confirmReview(r:AssistanceReview):AssistanceReview{
+ return {...r,income:{...r.income,confirmed:true},irregular_confirmed:true,costs:r.costs.map(c=>({...c,confirmed:true}))}
+}
+/** Identity of the reviewed values, ignoring confirmation flags: any change means the review must be confirmed again. */
+export function reviewSignature(r:AssistanceReview|undefined):string{
+ if(!r)return ''
+ const {income,costs,irregular_confirmed:_i,...rest}=r
+ return JSON.stringify({...rest,income:{...income,confirmed:undefined},costs:costs.map(c=>({...c,confirmed:undefined}))})
+}

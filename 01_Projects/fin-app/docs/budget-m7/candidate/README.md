@@ -2,6 +2,8 @@
 
 See `../../../BUDGET_M7_CANDIDATE_OPERATIONS.md` and `../../../BUDGET_OPERATIONS_RUNBOOK.md` for the result, operating procedure, retained-installation constraint and open gates.
 
+M7.8 reconciles this candidate in [[BUDGET_M7_RELEASE_DECISION]]; this directory retains the M7.7 test evidence.
+
 Final verification uses the compatible security-patched installation (Vite 6.4.5 / Vitest 4.1.12) with independent per-project Vite caches:
 
 | Evidence | Scope |
@@ -19,9 +21,9 @@ Final verification uses the compatible security-patched installation (Vite 6.4.5
 | `dependency-changes.json` | Twenty dev-only version updates verified against the deliberately retained prior installation; no runtime package version change |
 | `bundle-secret-check.json` | Patched build checked for configured private values, with no credential values retained |
 | `source-manifest.json` | 563 executable/config source hashes, all104 unchanged migrations, both golden statement-input hashes; environment files excluded |
-| `cleanup.json`, `summary.json` | Independent zero-resource verification for all14 attempt projects, preserved schema96 preview and compact final results |
+| `cleanup.json`, `summary.json` | Independent zero-resource verification for all 20 attempt projects, preserved schema96 preview and compact final results |
 
-The totals overlap across suites and are not added as unique assertions. Engineering WCAG scans do not close observed human accessibility or independent comprehension. Default golden candidate mode excludes general personal environment files and does not use a Gemini key. The owner subsequently authorized live-provider credential/fixture transmission. `live-provider/` records two isolated attempts, corrected explicit real-AI test coverage, passing browser TypeScript and complete cleanup. Gemini generation returns HTTP402 / RESOURCE_EXHAUSTED because prepayment credits are depleted; live classification/fresh-review is still unpassed. See [[BUDGET_M7_LIVE_CATEGORIZATION]]. `source-manifest-pre-live.json` preserves the earlier suite source binding; the current manifest differs only for the golden test.
+The totals overlap across suites and are not added as unique assertions. Engineering WCAG scans do not close observed human accessibility or independent comprehension. Default golden candidate mode excludes general personal environment files and does not use a Gemini key. The owner authorized live-provider use. `live-provider/` records the October billing failure and corrected explicit AI test; `live-provider/2026-11-09/` records the successful generation probe, all eight live golden passes, and cleanup after the owner restored credits. See [[BUDGET_M7_LIVE_CATEGORIZATION]]. `source-manifest-pre-live.json` preserves the earlier suite source binding; the current manifest differs only for the golden test.
 
 Earlier root project directories and earlier directories under `patched/` hold scoped supporting security evidence from intermediate attempts. Their metrics/fixture totals must not be added to final runs. Failed attempts exposed test-fixture interference, missing save synchronization, runtime readiness and parallel optimizer-cache concerns; the final runs retain the strict financial/input assertions. Sensitive authenticated browser traces and raw runtime logs were not copied here.
 

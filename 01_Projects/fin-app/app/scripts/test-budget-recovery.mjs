@@ -58,7 +58,7 @@ export async function runBudgetRecoveryChecks(c){
   await stopFunctions()
   const runtime=`supabase_edge_runtime_${project}`
   for(const id of run('docker',['ps','-aq','--filter',`name=^${runtime}$`]).split(/\s+/).filter(Boolean)){own(id);run('docker',['rm','-f',id])}
-  writeFileSync(resolve(work,'budget.env'),`BUDGET_V1_ENABLED=${enabled}\nALLOWED_ORIGINS=http://127.0.0.1:57300\n`,{mode:0o600})
+  writeFileSync(resolve(work,'budget.env'),`BUDGET_V1_ENABLED=${enabled}\nBUDGET_TEST_SHARED_ACCESS=true\nALLOWED_ORIGINS=http://127.0.0.1:57300\n`,{mode:0o600})
   await startFunctions()
  }
  function archive(label){

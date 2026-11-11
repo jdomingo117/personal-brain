@@ -248,9 +248,10 @@ body {
   opacity: 0.38;
 }
 
-/* native date pickers follow the app theme (calendar popup + picker glyph) */
-input[type="date"] { color-scheme: light; }
-.dark input[type="date"] { color-scheme: dark; }
+/* Native popups use the app theme, even when it differs from the system theme. */
+:is(input[type="date"], .native-select) { color-scheme: light; }
+.dark :is(input[type="date"], .native-select) { color-scheme: dark; }
+.native-select option { background-color: Canvas; color: CanvasText; }
 
 /* redact balances (Settings toggle) */
 .redacted .tabular-nums { filter: blur(7px); transition: filter 0.2s; }

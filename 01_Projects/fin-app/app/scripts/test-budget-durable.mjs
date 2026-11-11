@@ -21,6 +21,8 @@ const recovery=process.argv.includes('--recovery-only')
 const candidate=process.argv.includes('--release-candidate')
 if(candidate)assert(secondaryPorts&&!capacity&&!recovery&&!process.argv.includes('--manual-preview'),'Candidate validation uses only a fresh secondary-port project')
 const alternateCandidate=process.argv.includes('--candidate-alternate')
+const ownerPilotOnly=process.argv.includes('--owner-pilot-only')
+if(ownerPilotOnly)assert(candidate,'Owner pilot validation requires a disposable candidate stack')
 if(alternateCandidate)assert(candidate&&secondaryPorts&&!capacity&&!recovery,'Alternate candidate ports require a fresh candidate stack')
 const browserPort=alternateCandidate?57800:candidate?57600:57300
 if(recovery)assert(secondaryPorts&&!capacity,'Recovery requires its own secondary-port backend stack')
@@ -87,6 +89,18 @@ async function stopFunctions(){
  await Promise.race([exited,new Promise(r=>setTimeout(r,3000))])
  if(child.exitCode===null)child.kill('SIGKILL')
 }
+async function restartFunctions(config){
+ await stopFunctions()
+ const runtime=`supabase_edge_runtime_${project}`
+ const ids=run('docker',['ps','-aq','--filter',`name=^${runtime}$`]).split(/\s+/).filter(Boolean)
+ for(const id of ids){
+  const info=JSON.parse(run('docker',['inspect',id]))[0]
+  assert.equal(info.Config.Labels['com.supabase.cli.project'],project)
+  run('docker',['rm','-f',id])
+ }
+ writeFileSync(resolve(work,'budget.env'),`${config}\nALLOWED_ORIGINS=http://127.0.0.1:${browserPort}\n`,{mode:0o600})
+ await startFunctions()
+}
 async function waitForSleep(name){
  for(let n=0;n<80;n++){
   if(sql(`SELECT count(*) FROM pg_stat_activity WHERE application_name=${quote(name)} AND wait_event='PgSleep';`)==='1')return
@@ -123,7 +137,7 @@ enable_signup = true
 [auth.email]
 enable_confirmations = false
 `)
- writeFileSync(resolve(work,'budget.env'),`BUDGET_V1_ENABLED=true\nALLOWED_ORIGINS=http://127.0.0.1:${browserPort}\n`)
+ writeFileSync(resolve(work,'budget.env'),`BUDGET_V1_ENABLED=true\nBUDGET_TEST_SHARED_ACCESS=${!ownerPilotOnly}\nALLOWED_ORIGINS=http://127.0.0.1:${browserPort}\n`,{mode:0o600})
  console.log(`Target: ${project}; API=${api}; DB=127.0.0.1:${dbPort}/postgres; fixtures=isolated-only`)
  attempted=true
  run(cli,['start','--workdir',work],undefined,240_000)
@@ -136,6 +150,10 @@ enable_confirmations = false
  if(recovery){
   const {runBudgetRecoveryChecks}=await import('./test-budget-recovery.mjs')
   await runBudgetRecoveryChecks({repo,work,project,container,cli,api,anon,newUser,sql,quote,check,edge,source,startFunctions,stopFunctions,run})
+ }else if(ownerPilotOnly){
+  await startFunctions()
+  const {runBudgetOwnerPilotChecks}=await import('./test-budget-owner-pilot.mjs')
+  await runBudgetOwnerPilotChecks({api,anon,newUser,sql,quote,check,edge,source,restartFunctions})
  }else{
  await startFunctions()
  if(candidate){
@@ -233,13 +251,13 @@ enable_confirmations = false
  check('viewer draft read denied',(await edge(viewer,'query-budget',{action:'draft'})).status,403)
  check('foreign plan is not exposed',(await edge(b,'query-budget',{action:'snapshot',plan_id:plan})).status,404)
  const leaked=await fetch(`${api}/rest/v1/budget_plans?id=eq.${plan}`,{headers:{apikey:anon,Authorization:`Bearer ${b.token}`}})
- check('direct foreign table read is RLS-filtered',await leaked.json(),[])
+ check('direct foreign Budget table read is forbidden',leaked.status,403)
  const direct=await fetch(`${api}/rest/v1/rpc/budget_command`,{method:'POST',headers:{apikey:anon,Authorization:`Bearer ${a.token}`,'Content-Type':'application/json'},body:JSON.stringify({p_tenant:a.tenant,p_actor:a.id,p_request:randomUUID(),p_input:{},p_enabled:true})})
  check('authenticated browser cannot call mutation RPC',direct.status,403)
  const directWrite=await fetch(`${api}/rest/v1/budget_drafts`,{method:'POST',headers:{apikey:anon,Authorization:`Bearer ${a.token}`,'Content-Type':'application/json'},body:JSON.stringify({tenant_id:a.tenant})})
  check('authenticated browser cannot write tables',directWrite.status,403)
  const privateDraft=await fetch(`${api}/rest/v1/budget_drafts`,{headers:{apikey:anon,Authorization:`Bearer ${member.token}`}})
- check('member cannot read owner-only setup payloads',await privateDraft.json(),[])
+ check('member cannot read setup payloads directly',privateDraft.status,403)
  assert.throws(()=>sql(`SELECT public.budget_validate_setup(${quote(b.tenant)},${quote(JSON.stringify(payload))}::jsonb);`),/budget_account_unavailable/);check('SQL rejects foreign account IDs',true)
  assert.throws(()=>sql(`INSERT INTO public.account_activity_coverage(tenant_id,account_id,original_account_id,start_date,end_date,provenance,evidence,source_revision) VALUES(${quote(b.tenant)},${quote(account)},${quote(account)},'2026-10-01','2026-11-01','user_confirmed','{}',0);`),/budget_account_unavailable/);check('live-reference ownership trigger rejects cross-tenant evidence',true)
  assert.throws(()=>sql(`SELECT public.budget_validate_setup(${quote(a.tenant)},${quote(JSON.stringify({...payload,income_cents:.1}))}::jsonb);`),/budget_invalid_money/);check('SQL independently rejects fractional cents',true)
@@ -410,12 +428,7 @@ enable_confirmations = false
   await runBudgetWorkspaceChecks({repo,api,browserPort,viteCache:resolve(work,'vite-cache'),anon,newUser,sql,quote,check,edge,sqlAsync,temporalFixtures,assistanceFixture})
  }
  // Roll back exposure at the real Edge layer without hiding committed outcomes.
- await stopFunctions()
- const runtime=`supabase_edge_runtime_${project}`
- const runtimeIds=run('docker',['ps','-aq','--filter',`name=^${runtime}$`]).split(/\s+/).filter(Boolean)
- for(const id of runtimeIds){const info=JSON.parse(run('docker',['inspect',id]))[0];assert.equal(info.Config.Labels['com.supabase.cli.project'],project);run('docker',['rm','-f',id])}
- writeFileSync(resolve(work,'budget.env'),`BUDGET_V1_ENABLED=false\nALLOWED_ORIGINS=http://127.0.0.1:${browserPort}\n`)
- await startFunctions()
+ await restartFunctions('BUDGET_V1_ENABLED=false\nBUDGET_TEST_SHARED_ACCESS=true')
  check('disabled Edge still returns original commit receipt',(await edge(a,'manage-budget',savedBody)).body,saved.body)
  check('disabled Edge rejects new writes',(await edge(a,'manage-budget',{action:'save_draft',request_id:randomUUID(),expected_source:source(a.tenant),expected_draft:'2',payload:{}})).status,503)
  check('disabled Edge preserves authenticated plan reads',(await edge(a,'query-budget',{action:'snapshot'})).status,200)

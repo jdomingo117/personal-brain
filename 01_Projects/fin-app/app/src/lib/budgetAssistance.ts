@@ -32,11 +32,13 @@ export function assistanceEligible(result:AssistanceResult):boolean{
   months!==null&&months>=3&&Number.isInteger(result.period_count)&&result.period_count>=(result.frequency==='monthly'?3:6)
 }
 
-export function assistanceReasons(result:AssistanceResult):string[]{
+/** With coverageShown, omit the reasons the coverage checklist already explains. */
+export function assistanceReasons(result:AssistanceResult,{coverageShown=false}:{coverageShown?:boolean}={}):string[]{
   const reasons:string[]=[]
   if(result.method!==BUDGET_ASSIST_METHOD)reasons.push('These observations use an earlier calculation method. Check history again, or continue with your own amounts.')
   if(!result.account_count)reasons.push('Choose at least one AUD activity account to use history-based suggestions.')
   if(result.invalid_accounts.length)reasons.push('One or more selected accounts are unavailable or are not AUD accounts.')
+  if(coverageShown)return reasons.concat(result.integrity_ok?[]:['An unresolved transfer could change these totals. Resolve it before using history-based amounts.'])
   if(result.missing_coverage.length)reasons.push('Some account periods do not have complete coverage evidence. They were excluded, never treated as zero.')
   const minimum=result.frequency==='monthly'?3:6
   if(result.period_count<minimum)reasons.push(`At least ${minimum} complete comparable ${result.frequency==='monthly'?'months':'two-week periods'} are needed for a full suggested draft.`)

@@ -22,6 +22,8 @@ export type Account = {
   connectionId?: string
   /** CSV imports may add history before this date; the provider owns this date and everything after it. */
   cutoverDate?: string
+  /** When the bank provider last refreshed this account (provider accounts only). */
+  lastSyncedAt?: string
 }
 export interface AllocationSlice {
   label: string

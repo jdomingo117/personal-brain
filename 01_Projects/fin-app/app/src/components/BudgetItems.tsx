@@ -8,6 +8,8 @@ import BudgetTaskPanel from './BudgetTaskPanel'
 import BudgetEveryday from './budget/BudgetEveryday'
 import BudgetCommitments from './budget/BudgetCommitments'
 import BudgetGoals from './budget/BudgetGoals'
+import BudgetBillFinder from './budget/BudgetBillFinder'
+import BudgetUnplanned,{hasUnplanned,readUnplannedOk,writeUnplannedOk} from './budget/BudgetUnplanned'
 import BudgetValue from './BudgetValue'
 import {budgetPresentation} from '../lib/budgetPresentation'
 import { fmtCents } from '../data'
@@ -30,6 +32,8 @@ export default function BudgetItems(){
  const b=useBudget(),s=b.snapshot,d=s?.details
  const presentation=budgetPresentation(s,b.readState,{pendingWrite:!!b.pending})
  const [task,setTask]=useState<Task|null>(null)
+ // 'Keep it as a buffer', remembered per period on this device.
+ const [okPeriods,setOkPeriods]=useState<Record<string,boolean>>({})
  if(!s?.plan||!s.period||!d)return null
  const canWrite=b.canWrite&&(!d.lifecycle||d.lifecycle.state==='current')
  const items=d.items.filter(i=>!i.config?.voided).sort((a,c)=>Number(!!c.config?.featured)-Number(!!a.config?.featured))
@@ -51,27 +55,27 @@ export default function BudgetItems(){
     {!item.archived&&c.recurring_id&&(()=>{const r=d.recurring.find(r=>r.id===c.recurring_id);const cadenceMap:Record<string,BudgetItemConfig['cadence']>={Weekly:'weekly',Biweekly:'fortnightly',Monthly:'monthly',Quarterly:'quarterly',Annual:'annual'};const changed=!r||r.state!=='active'||(r.amount_cents!==null&&r.amount_cents!==c.amount_cents)||(r.cadence&&cadenceMap[r.cadence]!==c.cadence);return changed?<div className="outcome-panel space-y-3"><p className="text-warn">Update proposed. Saved rate: {fmtCents(c.amount_cents)}. {r?.state==='active'&&r.amount_cents!==null?`Managed recurring rate: ${fmtCents(r.amount_cents)}.`:'This managed source is stopped or unavailable.'} Your saved allocation is unchanged.</p><Button disabled={!canWrite} variant="ghost" onClick={()=>setTask({kind:'item',type:'bill',item,proposal:r?.state==='active'?{amount_cents:r.amount_cents??c.amount_cents,cadence:r.cadence?cadenceMap[r.cadence]??c.cadence:c.cadence}:{state:'paused',recurring_id:r?.id??null}})}>Review bill update</Button></div>:null})()}
    </article>
  }
+ const hasBills=items.some(i=>i.kind==='fixed'&&!i.archived)
+ const unplannedOk=okPeriods[s.period.id]??readUnplannedOk(s.period.id)
+ const setUnplannedOk=(ok:boolean)=>{writeUnplannedOk(s.period!.id,ok);setOkPeriods(m=>({...m,[s.period!.id]:ok}))}
+ // While the unplanned prompt shows, it carries the add-bill and save actions; don't repeat them.
+ const promptShown=hasUnplanned(presentation)&&!unplannedOk
+ // Opens the bill suggestions and brings them into view.
+ const findBills=d.recurring_evidence?()=>{const el=document.getElementById('budget-find-bills') as HTMLDetailsElement|null;if(el){el.open=true;el.scrollIntoView({block:'start'});el.querySelector('summary')?.focus()}}:undefined
  return <section className="mt-6 space-y-4" aria-label="Bills and savings goals">
+  <BudgetUnplanned presentation={presentation} ok={unplannedOk} setOk={setUnplannedOk} hasBills={hasBills} canWrite={canWrite} onAddBill={()=>setTask({kind:'item',type:'bill'})} onSave={()=>setTask({kind:'item',type:'goal'})} onFindBills={findBills}/>
   <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-display text-2xl font-bold">Your budget in action</h3><p className="body-copy text-muted mt-1">Plan for the important things. Match real activity when it happens.</p></div>
-   <div className="flex flex-wrap gap-2"><Button variant="ghost" disabled={!canWrite} onClick={()=>setTask({kind:'item',type:'goal'})}>Save for something</Button><Button disabled={!canWrite} variant="ghost" onClick={()=>setTask({kind:'item',type:'bill'})}>Add a bill</Button></div></div>
+   {!promptShown&&<div className="flex flex-wrap gap-2"><Button variant="ghost" disabled={!canWrite} onClick={()=>setTask({kind:'item',type:'goal'})}>Save for something</Button><Button disabled={!canWrite} variant="ghost" onClick={()=>setTask({kind:'item',type:'bill'})}>Add a bill</Button></div>}</div>
   {d.undo_operation_id&&<Button variant="ghost" disabled={!canWrite} onClick={async()=>{if(window.confirm('Undo the latest compatible budget change? No bank or ledger transaction will be changed.'))await b.run({action:'undo',operation_id:d.undo_operation_id})}}>Undo last budget change</Button>}
   <div className="budget-overview-columns"><div className="budget-overview-primary">
-  <BudgetCommitments items={items} presentation={presentation} renderItem={renderItem}/>
-  <details className="budget-allowance-tools"><summary>Everyday allowance & category tools</summary>
+  <BudgetCommitments items={items} presentation={presentation} renderItem={renderItem} onAddBill={canWrite&&!promptShown?()=>setTask({kind:'item',type:'bill'}):undefined} onFindBills={promptShown?undefined:findBills}/>
+  <details className="budget-allowance-tools"><summary>Category limits and moving money</summary>
   <BudgetEveryday presentation={presentation} canWrite={canWrite} rollover={!!d.rollover?.enabled} policyManaged={!!d.rollover_policy?.timeline.length} credits={fmtCents(d.unassigned_credit_cents)} excluded={fmtCents(d.excluded_cents)}
    onMove={()=>setTask({kind:'move'})} onLimits={()=>setTask({kind:'limits'})} onActivity={()=>setTask({kind:'match',lineId:presentation.everyday.id??''})} onReserve={()=>setTask({kind:'item',type:'reserve'})} onTransfer={()=>setTask({kind:'item',type:'contribution'})}/>
   </details>
   {d.recurring_unavailable&&<p className="outcome-panel text-warn">Bill suggestions couldn’t be checked in time. Your saved plan is still available, and you can add bills yourself or refresh later.</p>}
-  {d.recurring_evidence&&<details className="glass p-5"><summary className="min-h-11 cursor-pointer py-3 font-semibold">Find bills from recorded spending</summary><p className="body-copy text-muted">Suggestions only—not bills added to your plan. Based on selected accounts through {d.recurring_evidence.as_of}. Confirm the amount and next due date; missing history can change a pattern. Annual checks use up to three years; other patterns use the last year.</p>
-   {d.recurring_evidence.limited&&<p className="outcome-panel text-warn">There are more merchant histories than this review supports. Showing {d.recurring_evidence.group_limit} of {d.recurring_evidence.group_count}; add other bills manually.</p>}
-   <ul className="space-y-4 mt-4">{d.recurring_evidence.proposals.filter(p=>p.state!=='no-pattern').map(p=>{const saved=items.find(i=>i.config?.source_account_id===p.account_id&&i.config?.source_merchant_key===p.merchant_key),override=d.recurring.find(r=>r.account_id===p.account_id&&r.merchant_key===p.merchant_key),signal=p.signal&&override?{...p.signal,expected:override.amount_cents??p.signal.expected,cadence:override.cadence??p.signal.cadence,nextExpected:override.next_date??p.signal.nextExpected,status:override.next_date?'active' as const:p.signal.status}:p.signal;
-    const changed=saved&&signal&&(saved.config!.amount_cents!==Math.round(signal.expected)||saved.config!.cadence!==cadenceMap[signal.cadence]||signal.status==='dormant');
-    return <li key={`${p.account_id}:${p.merchant_key}`} className="space-y-2"><p className="body-copy">{p.merchant_key} · {s.accounts.find(a=>a.id===p.account_id)?.name??'Selected account'} · {p.count} recorded charges</p>
-    <p className="detail-copy text-muted">{signal?`${signal.status==='dormant'?'No recent payment—check whether this bill is still needed.':`${fmtCents(Math.round(signal.expected))} · ${signal.cadence}. ${signal.kind==='variable'?'Estimated from variable payments; rounded to the nearest cent.':'Based on the latest price.'}`} ${saved?`Saved amount: ${fmtCents(saved.config!.amount_cents)}. Your plan has not changed.`:''}`:p.state==='early-annual'?'Possible annual bill: two payments are not enough to confirm a pattern. Add manually if you recognise it.':'Too many observations for a reliable bounded review. Add this bill manually.'}</p>
-    {(!override||override.state==='active')&&signal&&(signal.status==='active'||!!saved)&&(!saved||changed)&&!saved?.archived&&<Button variant="ghost" disabled={!canWrite} onClick={()=>setTask({kind:'item',type:'bill',item:saved,proposal:{name:saved?.name??p.merchant_key.slice(0,60),amount_cents:Math.round(signal.expected),cadence:cadenceMap[signal.cadence],anchor:saved?.config?.anchor??signal.nextExpected,source_account_id:p.account_id,source_merchant_key:p.merchant_key,recurring_id:override?.id??null,state:signal.status==='dormant'?'paused':saved?.config?.state??'saving'}})}>{saved?'Review detected bill update':'Review suggested bill'}</Button>}
-    {override&&override.state!=='active'&&<p className="detail-copy text-muted">You stopped or dismissed this recurring item. It will not be suggested as an active bill.</p>}</li>})}</ul>
-   {!d.recurring_evidence.proposals.some(p=>p.state!=='no-pattern')&&<p className="body-copy mt-3">No reliable bill patterns yet. You can always add a bill yourself.</p>}
-  </details>}
+  {d.recurring_evidence&&<BudgetBillFinder evidence={d.recurring_evidence} items={items} recurring={d.recurring} accountName={id=>s.accounts.find(a=>a.id===id)?.name??'Selected account'} canWrite={canWrite}
+   onReview={(item,proposal)=>setTask({kind:'item',type:'bill',item,proposal})}/>}
   </div><div className="budget-overview-secondary">
   <BudgetGoals items={items} presentation={presentation} snapshot={s} canWrite={canWrite} onAdjust={item=>setTask({kind:'item',type:'goal',item})} onMatch={item=>setTask({kind:'match',lineId:item.line_id})} onAdd={()=>setTask({kind:'item',type:'goal'})}/>
   </div></div>

@@ -23,7 +23,8 @@
     "test:browser:typecheck": "tsc --noEmit -p e2e/tsconfig.json",
     "test:golden:budget-candidate": "node scripts/run-golden-pass.mjs --release-candidate",
     "test:golden": "node scripts/run-golden-pass.mjs",
-    "test:gate2": "node scripts/run-golden-pass.mjs --gate2"
+    "test:gate2": "node scripts/run-golden-pass.mjs --gate2",
+    "test:golden:categorize-pending": "node scripts/run-golden-pass.mjs --categorize-pending"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.7",

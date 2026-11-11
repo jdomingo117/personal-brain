@@ -22,7 +22,22 @@ export async function budgetCandidateChecks({repo,newUser,sql,quote,check,signed
     check(`${state} ${width} ${dark?'dark':'light'} funding gap precedes positive allowance`,(await notice.boundingBox()).y<(await page.locator('.budget-hero-amount').boundingBox()).y)
     if(state==='failed-refresh')await expect(notice).toContainText('Previously loaded funding gap')
    }
-   if(state==='healthy')check(`${width} ${dark?'dark':'light'} theme control stays in the header without covering money`,await page.getByRole('button',{name:'Toggle dark mode',exact:true}).evaluate(el=>{const a=el.getBoundingClientRect();return !!el.closest('.budget-page-header')&&getComputedStyle(el).position==='static'&&[...document.querySelectorAll('[data-budget-amount]')].filter(n=>n.getClientRects().length).every(n=>{const b=n.getBoundingClientRect();return a.right<=b.left||a.left>=b.right||a.bottom<=b.top||a.top>=b.bottom})}))
+   if(state==='healthy'){
+    const dock=page.locator('[data-budget-theme-dock]')
+    const toggle=dock.getByRole('button',{name:'Toggle dark mode',exact:true})
+    await expect(toggle).toBeVisible()
+    const screen=page.locator('.scroll-region')
+    const separated=()=>toggle.evaluate(el=>{
+     const control=el.getBoundingClientRect()
+     const content=document.querySelector('.scroll-region').getBoundingClientRect()
+     return el.offsetHeight>=44 && control.top>=content.bottom && control.left>innerWidth/2 && control.right<=innerWidth && control.bottom<=innerHeight
+    })
+    await expect.poll(separated).toBe(true)
+    await screen.evaluate(el=>{el.scrollTop=el.scrollHeight})
+    await expect.poll(separated).toBe(true)
+    await screen.evaluate(el=>{el.scrollTop=0})
+    check(`${width} ${dark?'dark':'light'} theme dock stays below Budget while scrolling`,true)
+   }
    check(`${state} ${width} ${dark?'dark':'light'} page and surface fit`,await root.evaluate(el=>el.scrollWidth<=el.clientWidth+1&&document.documentElement.scrollWidth<=innerWidth+1))
    const scan=await new AxeBuilder({page}).include(surface).withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa']).analyze()
    check(`${state} ${width} ${dark?'dark':'light'} WCAG scan`,scan.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})),[])
@@ -57,12 +72,14 @@ export async function budgetCandidateChecks({repo,newUser,sql,quote,check,signed
  await theme.click();await expect(theme).toHaveAttribute('aria-pressed',pressed==='true'?'false':'true')
  await expect.poll(()=>page.evaluate(()=>document.documentElement.classList.contains('dark'))).toBe(pressed!=='true')
  await theme.click();await expect(theme).toHaveAttribute('aria-pressed',pressed)
- check('inline theme control preserves the actual shared preference toggle',true)
+ check('docked theme control preserves the actual shared preference toggle',true)
  await page.getByRole('navigation').getByRole('button',{name:'Landing',exact:true}).click()
  await expect(theme).toHaveCount(1);await expect.poll(()=>theme.evaluate(el=>getComputedStyle(el).position)).toBe('fixed')
  await page.getByRole('navigation').getByRole('button',{name:'Budget',exact:true}).click()
  await expect(theme).toHaveCount(1);await expect.poll(()=>theme.evaluate(el=>getComputedStyle(el).position)).toBe('static')
- check('other routes keep one floating theme control and Budget keeps one in-flow control',true)
+ await expect(page.locator('[data-budget-theme-dock]').getByRole('button',{name:'Toggle dark mode',exact:true})).toBeVisible()
+ await expect(page.locator('.scene-wash')).toHaveClass(/scene-wash--quiet/)
+ check('other routes keep one floating theme control and Budget keeps one docked control',true)
 
  await page.getByRole('button',{name:'My plan',exact:true}).click()
  await matrix(page,'my-plan',{verify:async()=>{await expect(amount(page,'plan-income')).toHaveText('$6,000.00');await expect(amount(page,'plan-unallocated')).toHaveText('$200.00')}})

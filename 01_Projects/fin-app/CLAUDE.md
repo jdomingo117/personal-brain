@@ -64,22 +64,22 @@ hand to find the transfer-linker gap.
 
 ## Recent changes
 
-- 2026-10-29 — [[BUDGET_M7_LIVE_CATEGORIZATION]] records owner-authorized live attempts blocked by Gemini HTTP402/depleted prepayment credits; explicit real-AI test corrected and browser types pass, both projects/temporary credentials cleaned. Owner restores credits then rerun; No-Go.
+- 2026-11-12 — Merged Budget's two bill finders onto shared rules and wording; bill evidence now checks bill-like merchants first (migrations 20261112000000/010000).
 
-- 2026-10-29 — [[BUDGET_M7_CANDIDATE_OPERATIONS]] verifies M7.7 local candidate (560/391 assertions, eight provider-disabled golden tests, 78 WCAG scans, 609 unit passes) and adds privacy-safe telemetry/ops. Compatible dev-lock patch clears 17 npm findings; primary preview/install preserved, fourteen projects cleaned. Live-provider approval plus human/hosted/release gates remain, No-Go.
+- 2026-11-12 — Simplified the Budget overview: one plain line per goal, plain estimate/check wording, duplicate everyday breakdown removed.
 
-- 2026-10-29 — [[BUDGET_M7_MIGRATION_RECOVERY]] completes M7.6 locally: 164 assertions, two auth/application restores with original-user sign-in, exact table/sequence/cents parity and disable/re-enable preservation; 25 focused unit tests pass. Private backups retained, three isolated projects cleaned, preview/personal unchanged. Next M7.7; human/hosted/release gates open, No-Go.
+- 2026-11-12 — Budget overview turns unplanned pay into a visible next step (bills, a goal, or keep as a buffer).
 
-- 2026-10-29 — [[BUDGET_M7_R06_OPTIMIZATION]] verifies schema104 local capacity admission with canonical financial/evidence and cache invalidation proof; 187/142/537 separate suites pass. Cold rebuild/hosted qualifications remain; preview/personal data unchanged, No-Go.
+- 2026-11-12 — Budget overview names accounts whose imports or sync are behind instead of showing a confident $0 spent; the shell footer shows real bank-sync status.
 
-- 2026-10-29 — [[BUDGET_M7_CAPACITY]] measures 10k/100k/1m and restores history admission via migration 97 in disposable targets. R06 capacity remains open: 100k SQL target missed, 1m workspace timeout and assistance target miss. Exact cleanup verified; preview96 retained, hosted deferred by owner; No-Go.
+- 2026-11-11 — Rewrote Budget assistance copy for beginners, with calculation detail moved into one "How we worked this out" disclosure.
 
-- 2026-10-28 — [[BUDGET_OVERVIEW_COPY_REFINEMENT]] implements the three approved copy changes. Six width/theme axe/copy checks, future/stale guards, TypeScript/build pass; two presentation files changed, zero Budget writes. Human/operational gates remain open; No-Go.
+- 2026-11-11 — Budget assistance keeps history-based amounts when circumstances changed, clearing only what the owner says changed.
 
-- 2026-10-28 — Owner accepted all three real Overview clarity questions; [[BUDGET_M7_HUMAN_VALIDATION]] prepares observed accessibility and independent beginner sessions. Human tester no longer available; AI critique complete in `docs/budget-ui/human-validation/ai-critique.md`, with copy/disclosure recommendations; actual human observations pending. Production sources unchanged; release No-Go.
+- 2026-11-11 — Budget assistance amounts are one pre-filled review screen with suggested pay dates and a single final confirmation.
 
-- 2026-10-28 — [[BUDGET_OVERVIEW_PASS_3_VERIFICATION]] engineering verified: 472 lifecycle/442 assembled checks, 131 passing accessibility scans, 70 candidate cases, 595 unit passes/14 skips and types/build. Qualified phone funding notice added; backend/calculations unchanged. New fictional preview c65dd04871874dcb / PID 80255 retained. Owner comparison and M7 human/operational gates remain pending; No-Go.
+- 2026-11-11 — Budget assistance offers detected regular payments as bills (saved as pinned recurring series) and caps confirmations at the last import.
 
-- 2026-10-28 — [[BUDGET_OVERVIEW_PASS_2_ATTENTION_COMMITMENTS_GOALS]] complete: one canonical priority beside hero, retained reminder controls and compact commitment/goal disclosures. Real fictional acknowledgement/Undo restores state and preserves financial facts; 30 workspace WCAG cases, 595 unit passes/14 skips and types/build pass. Backend unchanged; next pass three assembled verification.
+- 2026-11-11 — Budget assistance pre-selects spending accounts and flags unused ones via a new account-activity read (migration 20261111010000).
 
-- 2026-10-28 — [[BUDGET_OVERVIEW_PASS_1_SUMMARY_FORECAST]] complete: real hero/forecast combined, amount-based finish and guarded comparison graphic; backend/controllers unchanged. 595 unit passes/14 skips, 30 production WCAG/fit cases, seven boundary/guard cases, types/build and zero Budget writes. Ready for separately authorized pass two; no attention/bills/goals redesign yet.
+- 2026-11-11 — Fixed post-sync categorize-pending 42501: apply_merchant_categories is now service-role only via ctx.admin() and writes only unresolved rows (migration 20261111000000), applied to the local main DB after a verified backup.

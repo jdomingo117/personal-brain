@@ -1,16 +1,16 @@
 ---
 type: verification-record
-status: local-candidate-verified-live-provider-blocked-credits
+status: candidate-verified-live-provider-passed
 project: Halcyon
 created: 2026-10-29
-updated: 2026-10-29
+updated: 2026-11-09
 ---
 
 # M7.7 — Candidate regression, security and operations
 
 **The local candidate, security controls, privacy-safe telemetry and operational packet are verified.** Final checks use the corrected dependency lock in a fresh isolated installation: **560 lifecycle assertions**, **391 forecast/assistance/responsive-candidate assertions**, **eight provider-disabled golden tests**, **609 unit passes / 14 existing skips**, **eight standalone telemetry-summary assertions**, full/focused/browser TypeScript and a production build. These are separate suites with overlapping assertions, not an additive unique total.
 
-M7.7 retains one external qualification: **the authorized live Gemini categorization/fresh-review test is blocked by depleted provider prepayment credits**. The owner authorized the previously rejected credential/fixture egress. Two isolated attempts ran; a bounded generation probe returned HTTP402 / RESOURCE_EXHAUSTED. No live AI classification or fresh UI review passed. [[BUDGET_M7_LIVE_CATEGORIZATION]] records the diagnosis and explicit real-AI fixture correction. The eight provider-disabled golden passes remain scoped to imports/transfers/ledger contracts.
+**Live-provider qualification also passed on 9 November.** After the owner restored Gemini credits, all eight golden tests passed with live generation enabled, including real cold classification, uncached Ledger review and cancellation preservation. See [[BUDGET_M7_LIVE_CATEGORIZATION]] for the earlier billing failure and the separate passing evidence.
 
 Release remains **No-Go**. M7.3 observed human accessibility, M7.4 independent beginner comprehension, M7.5 hosted/cold/load qualification and M7.8 release/target-exposure decision remain open. No persistent migration, deployment or private pilot occurred.
 
@@ -28,7 +28,7 @@ Release remains **No-Go**. M7.3 observed human accessibility, M7.4 independent b
 
 Final logs, security inventories, safe telemetry samples/aggregates, before/after dependency reports, package delta, captures, source hashes and cleanup are in `docs/budget-m7/candidate/`. The final 560/391 logs are named `lifecycle.log` and `forecast-candidate.log`. Golden stdout states the provider-disabled qualification explicitly.
 
-All sixteen M7.7 project IDs (including the two authorized live attempts) from the attempt logs were independently checked for **zero remaining labelled containers, volumes and networks**. The retained preview remains `halcyon-budget-m2-c65dd04871874dcb`, schema 96, at `http://127.0.0.1:57300/budget`. Its parent process, credentials, database and existing `node_modules` were preserved. The personal 54321 stack was not inspected or mutated.
+All twenty M7.7 project IDs (including the October live attempts and four November launches) from the attempt logs were independently checked for **zero remaining labelled containers, volumes and networks**. The retained preview remains `halcyon-budget-m2-c65dd04871874dcb`, schema 96, at `http://127.0.0.1:57300/budget`. Its parent process, credentials, database and existing `node_modules` were preserved. The personal 54321 stack was not inspected or mutated.
 
 ## Security and telemetry changes
 
@@ -82,8 +82,6 @@ Failed/pre-patch attempt totals remain historical and are not added to final res
 
 ## External qualification and next decision
 
-The owner authorized `--release-candidate --live-provider`, including narrow credential use and fixture transmission. Execution is blocked by Gemini generation HTTP402 / RESOURCE_EXHAUSTED, explicitly reporting depleted prepayment credits; model metadata returns HTTP200. Stop generation retries until the owner restores credits on the billing account linked to the configured key. No credit purchase or billing modification was attempted. Existing authorization covers the rerun after restoration. Default candidate mode stays provider disabled.
+The owner authorized `--release-candidate --live-provider` with narrow credential use and fixture transmission. The October HTTP402 prepayment block is resolved. The November isolated run verifies all eight golden tests on the recorded candidate source, including actual AI classification and review. The default candidate command remains provider disabled; the optional live variant and its separate evidence are documented in [[BUDGET_M7_LIVE_CATEGORIZATION]].
 
-The live test now explicitly requests a real cold AI assignment, imports the actual returned assignment, and checks a fresh uncached review plus preview/cancel nonmutation. This test-only change passes browser TypeScript; its live assertions remain unpassed. The original source binding is preserved in `source-manifest-pre-live.json`; the current binding differs only for `app/e2e/golden-pass.spec.ts`. Earlier suite totals are historical results for their recorded source, not new reruns.
-
-After that qualification (or an explicit documented release exception), reconcile M7.3/M7.4/M7.5 and assemble M7.8's Go/No-Go decision. Current decision remains **No-Go**. Persistent target selection, backup/restore preflight and exposure authorization are still separate from source implementation and local testing.
+Reconcile M7.3/M7.4/M7.5 and assemble M7.8's Go/No-Go decision. The current decision remains **No-Go**. Persistent target selection, backup/restore preflight and exposure authorization are separate from source implementation and local testing.

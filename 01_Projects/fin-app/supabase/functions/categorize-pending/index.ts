@@ -113,10 +113,16 @@ Deno.serve(
       }
     }
 
+    // Service-role RPC, scoped by the membership-verified ctx.tenantId: browser
+    // roles hold no UPDATE on transactions (20261004010000), so the RLS client
+    // cannot write here. The RPC itself only touches this tenant's rows that are
+    // still Uncategorized with category_source IS NULL, so a user correction
+    // made between the read above and this write always wins
+    // (20261111000000_categorize_pending_service_rpc.sql).
     let categorized = 0
     const CHUNK = 500
     for (let i = 0; i < assignments.length; i += CHUNK) {
-      const { data: updated, error: applyErr } = await ctx.db.rpc('apply_merchant_categories', {
+      const { data: updated, error: applyErr } = await ctx.admin().rpc('apply_merchant_categories', {
         p_tenant_id: ctx.tenantId,
         p_assignments: assignments.slice(i, i + CHUNK),
       })

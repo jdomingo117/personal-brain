@@ -1,0 +1,130 @@
+.ambient-shell {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100dvh;
+  color: var(--color-ink);
+}
+
+.ambient-masthead, .ambient-dock {
+  background: var(--color-bar);
+  color: var(--bar-ink, #eef1f4);
+}
+
+.ambient-masthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px clamp(16px, 4vw, 54px);
+  font-size: 13px;
+}
+
+.ambient-masthead span:first-child { font-weight: 800; letter-spacing: .16em; }
+.ambient-frame { display: grid; grid-template-columns: 172px minmax(0, 1fr); min-height: 0; }
+.ambient-rail { border-right: 1px solid var(--hair); padding: 31px 12px; }
+.ambient-rail > div { display: flex; gap: 10px; padding: 10px 12px; color: var(--color-muted); font-size: 14px; }
+.ambient-rail > div > span:first-child { font-variant-numeric: tabular-nums; }
+.ambient-rail .ambient-current { color: var(--color-accent-ink); font-weight: 700; background: var(--accent-wash); border-radius: 8px; }
+.ambient-scroll { overflow: auto; }
+.ambient-content { max-width: 1130px; margin-inline: auto; padding: clamp(18px, 5vw, 58px) clamp(14px, 4vw, 46px) 32px; }
+.ambient-title { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+.ambient-title h1 { font: 850 clamp(38px, 6vw, 64px)/1 var(--font-display); letter-spacing: -.055em; margin: 7px 0 8px; }
+.ambient-title p, .ambient-secondary { color: var(--color-muted); }
+.ambient-kicker { font-size: 12px; letter-spacing: .13em; text-transform: uppercase; font-weight: 800; }
+.ambient-title .ambient-kicker { color: var(--color-accent-ink); }
+.ambient-choices { color: var(--color-muted); display: flex; gap: 6px; }
+.ambient-choices legend { font-size: 13px; }
+.ambient-choices button { min-height: 44px; padding: 0 13px; border: 1px solid var(--hair); border-radius: 8px; background: var(--input-bg); color: var(--color-ink); }
+.ambient-choices button[aria-pressed='true'] { border-color: var(--color-accent-ink); color: var(--color-accent-ink); font-weight: 700; }
+.ambient-layout-choices { flex-wrap: wrap; margin-top: 15px; }
+.ambient-layout-note { margin-top: 7px; font-size: 14px; color: var(--color-muted); }
+.ambient-section-label { display: inline-block; margin: 18px 0 12px; padding: 5px 0; border-bottom: 2px solid var(--color-accent-ink); font-weight: 700; }
+
+.ambient-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: clamp(18px, 4vw, 42px);
+  padding: clamp(18px, 4vw, 38px);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+}
+
+.ambient-amount {
+  font: 850 clamp(40px, 7vw, 76px)/1.1 var(--font-display);
+  letter-spacing: -.065em;
+  font-variant-numeric: tabular-nums;
+  margin-block: 5px;
+}
+
+.ambient-estimate { margin-top: 23px; padding-top: 14px; border-top: 1px solid var(--hair); }
+.ambient-estimate > div:first-child { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; }
+.ambient-estimate h3 { font-size: 15px; font-weight: 650; }
+.ambient-estimate p, .ambient-next p:not(.ambient-kicker) { color: var(--color-muted); }
+.ambient-meter { display: flex; height: 9px; border-radius: 8px; overflow: hidden; background: var(--track); margin: 9px 0 7px; }
+.ambient-meter span:first-child { background: var(--color-accent-ink); }
+.ambient-meter span:last-child { background: repeating-linear-gradient(135deg, var(--color-muted) 0 1px, transparent 1px 5px); }
+.ambient-next { border-left: 1px solid var(--hair); padding-left: clamp(18px, 4vw, 32px); }
+.ambient-next h3, .ambient-detail h2 { font: 750 22px/1.2 var(--font-display); margin-block: 7px; }
+.ambient-next summary { cursor: pointer; min-height: 44px; align-content: center; margin-top: 10px; color: var(--color-accent-ink); font-weight: 750; }
+.ambient-next details p { margin-block: 4px; }
+.ambient-detail { border: 1px solid var(--hair); border-radius: 16px; padding: 14px clamp(16px, 4vw, 30px); margin-top: 18px; }
+.ambient-detail dl > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-block: 8px; }
+.ambient-detail dl > div + div { border-top: 1px solid var(--hair); }
+.ambient-detail dd { display: flex; flex-direction: column-reverse; text-align: right; }
+.ambient-detail small { display: block; color: var(--color-muted); }
+
+.ambient-content[data-layout='statement'] .ambient-hero {
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.ambient-content[data-layout='open'] .ambient-hero {
+  padding-inline: 0;
+  border: 0;
+  border-block: 1px solid var(--hair);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.ambient-content:not([data-layout='tiles']) .ambient-detail {
+  padding: 0;
+  margin-top: 24px;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.ambient-content:not([data-layout='tiles']) .ambient-detail dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  border-top: 1px solid var(--hair);
+  padding-block: 12px;
+}
+
+.ambient-content:not([data-layout='tiles']) .ambient-detail dl { border-bottom: 1px solid var(--hair); }
+.ambient-content:not([data-layout='tiles']) .ambient-detail dd {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ambient-content:not([data-layout='tiles']) .ambient-detail small { text-align: left; }
+.ambient-detail strong { font-variant-numeric: tabular-nums; }
+
+/* The utility strip has its own grid row, so scrollable figures cannot pass underneath the control. */
+.ambient-dock { display: flex; align-items: center; justify-content: flex-end; padding: 7px max(16px, env(safe-area-inset-right)) max(7px, env(safe-area-inset-bottom)); }
+.ambient-dock button { position: static; color: inherit; padding: 0; background: color-mix(in srgb, currentColor 13%, transparent); border-color: color-mix(in srgb, currentColor 30%, transparent); box-shadow: none; }
+
+@media (max-width: 760px) {
+  .ambient-frame { grid-template-columns: minmax(0, 1fr); }
+  .ambient-rail { display: none; }
+  .ambient-hero { grid-template-columns: minmax(0, 1fr); }
+  .ambient-next { border-left: 0; border-top: 1px solid var(--hair); padding: 13px 0 0; }
+  .ambient-content:not([data-layout='tiles']) .ambient-detail dd { flex-direction: column-reverse; align-items: end; gap: 0; }
+  .ambient-content:not([data-layout='tiles']) .ambient-detail small { text-align: right; }
+}

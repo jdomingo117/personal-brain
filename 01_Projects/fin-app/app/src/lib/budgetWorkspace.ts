@@ -26,6 +26,8 @@ export type Snapshot = {
 export type Draft = {draft: unknown;draft_version:string;source_revision:string;method:string;stale?:boolean}
 export type Command = {action:string;request_id:string;expected_source:string;expected_method:string;[key:string]:unknown}
 export type Receipt = {request_id:string;operation_id:string;status:'committed';result:Record<string,unknown>}
+export type BudgetAccountActivity = {as_of:string;accounts:{account_id:string;type:string;last_activity_date:string|null;recent_activity_count:number;window_start:string}[]}
+export type BudgetCoverage = {source_revision:string;latest_date:string;confirmations:{id:string;first_date:string;last_date:string;provenance:'user_confirmed'}[]}
 
 /** Strict decimal entry: blank, exponents, negative amounts and excess precision are not zero. */
 export function parseBudgetMoney(input:string):number|null {
